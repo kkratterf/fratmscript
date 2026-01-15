@@ -19,11 +19,12 @@ let isWasmLoaded = false
 
 export async function loadWasm(): Promise<{ loaded: boolean; version?: string }> {
   try {
-    // Fetch and initialize WASM module from public directory
-    const wasmJsUrl = new URL('/pkg/fratm_wasm.js', window.location.origin).href
+    // Use Vite's BASE_URL for correct path on GitHub Pages
+    const base = import.meta.env.BASE_URL || '/'
+    const wasmJsUrl = `${window.location.origin}${base}pkg/fratm_wasm.js`
     const module = await import(/* @vite-ignore */ wasmJsUrl) as WasmModule
     // Initialize the WASM module with the .wasm file path
-    const wasmBinaryUrl = new URL('/pkg/fratm_wasm_bg.wasm', window.location.origin).href
+    const wasmBinaryUrl = `${window.location.origin}${base}pkg/fratm_wasm_bg.wasm`
     await module.default({ module_or_path: wasmBinaryUrl })
     wasmModule = module
     isWasmLoaded = true

@@ -10,7 +10,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  base: './',
+  base: '/fratmscript/',
   build: {
     outDir: 'dist',
   },
