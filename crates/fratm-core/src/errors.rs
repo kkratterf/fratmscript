@@ -1,6 +1,6 @@
-//! Error types and Napoletano error messages
+//! Error types and Neapolitan error messages
 //!
-//! Tutti l'errori so' in napoletano! 🤌
+//! All errors are in Neapolitan dialect! 🤌
 
 use thiserror::Error;
 use serde::{Serialize, Deserialize};

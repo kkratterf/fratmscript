@@ -165,7 +165,7 @@ impl Parser {
     fn parse_for(&mut self) -> Result<Statement, ParseError> {
         let start = self.current_span();
         self.expect(&TokenKind::Pe)?;
-        // "ogni" è ora opzionale per retrocompatibilità
+        // "ogni" is now optional for backwards compatibility
         self.match_token(&TokenKind::Ogni);
         self.expect(&TokenKind::LeftParen)?;
         let init = if self.check(&TokenKind::Tien) { Some(Box::new(self.parse_let_declaration()?)) }
@@ -322,7 +322,7 @@ impl Parser {
 
     fn parse_or(&mut self) -> Result<Expression, ParseError> {
         let mut expr = self.parse_and()?;
-        // Supporta sia "o" che "||" style
+        // Supports both "o" and "||" style
         while self.match_token(&TokenKind::Or) {
             let right = self.parse_and()?;
             let span = self.span_from(expr.span().start);
@@ -333,7 +333,7 @@ impl Parser {
 
     fn parse_and(&mut self) -> Result<Expression, ParseError> {
         let mut expr = self.parse_equality()?;
-        // Supporta sia "e" che "pure" (entrambi significano AND)
+        // Supports both "e" and "pure" (both mean AND)
         while self.match_token(&TokenKind::And) || self.match_token(&TokenKind::Pure) {
             let right = self.parse_equality()?;
             let span = self.span_from(expr.span().start);
@@ -410,31 +410,31 @@ impl Parser {
     }
 
     fn parse_unary(&mut self) -> Result<Expression, ParseError> {
-        // Negazione numerica: -x
+        // Numeric negation: -x
         if self.match_token(&TokenKind::Minus) {
             let start = self.previous().span;
             let operand = self.parse_unary()?;
             return Ok(Expression::Unary { operator: UnaryOp::Negate, operand: Box::new(operand), span: self.span_from(start.start) });
         }
-        // Negazione logica: no, !, manco
+        // Logical negation: no, !, manco
         if self.match_token(&TokenKind::Not) || self.match_token(&TokenKind::Manco) {
             let start = self.previous().span;
             let operand = self.parse_unary()?;
             return Ok(Expression::Unary { operator: UnaryOp::Not, operand: Box::new(operand), span: self.span_from(start.start) });
         }
-        // Await: aspett
+        // Await keyword: aspett
         if self.match_token(&TokenKind::Aspett) {
             let start = self.previous().span;
             let argument = self.parse_unary()?;
             return Ok(Expression::Await { argument: Box::new(argument), span: self.span_from(start.start) });
         }
-        // Delete: leva
+        // Delete keyword: leva
         if self.match_token(&TokenKind::Leva) {
             let start = self.previous().span;
             let operand = self.parse_unary()?;
             return Ok(Expression::Delete { operand: Box::new(operand), span: self.span_from(start.start) });
         }
-        // Typeof: chè è - per ora non implementato come keyword composta, useremo CheE se presente
+        // Typeof: chè è - not yet implemented as compound keyword, will use CheE if present
         self.parse_call()
     }
 
@@ -546,31 +546,31 @@ impl Parser {
             }
             TokenKind::LeftBrace => {
                 let mut properties = Vec::new();
-                // Salta newline iniziali
+                // Skip initial newlines
                 while self.check(&TokenKind::Newline) { self.advance(); }
                 if !self.check(&TokenKind::RightBrace) {
                     loop {
-                        // Salta newline prima della key
+                        // Skip newlines before the key
                         while self.check(&TokenKind::Newline) { self.advance(); }
                         if self.check(&TokenKind::RightBrace) { break; }
                         let key = self.expect_identifier()?;
                         self.expect(&TokenKind::Colon)?;
                         let value = self.parse_expression()?;
                         properties.push((key, value));
-                        // Salta newline dopo il valore
+                        // Skip newlines after the value
                         while self.check(&TokenKind::Newline) { self.advance(); }
                         if !self.match_token(&TokenKind::Comma) { break; }
-                        // Salta newline dopo la virgola
+                        // Skip newlines after the comma
                         while self.check(&TokenKind::Newline) { self.advance(); }
                         if self.check(&TokenKind::RightBrace) { break; }
                     }
                 }
-                // Salta newline finali
+                // Skip trailing newlines
                 while self.check(&TokenKind::Newline) { self.advance(); }
                 self.expect(&TokenKind::RightBrace)?;
                 Ok(Expression::Object { properties, span: self.span_from(span.start) })
             }
-            _ => Err(ParseError::new(format!("Ma che è '{}' qua? Aspettavo un'espressione!", token.kind), span)),
+            _ => Err(ParseError::new(format!("What is '{}' here? Expected an expression!", token.kind), span)),
         }
     }
 
@@ -588,17 +588,17 @@ impl Parser {
     fn match_token(&mut self, kind: &TokenKind) -> bool { if self.check(kind) { self.advance(); true } else { false } }
     fn expect(&mut self, kind: &TokenKind) -> Result<&Token, ParseError> {
         if self.check(kind) { Ok(self.advance()) }
-        else { Err(ParseError::new(format!("Aspettavo '{}', ma ho trovato '{}'", kind, self.peek().kind), self.peek().span)) }
+        else { Err(ParseError::new(format!("Expected '{}', but found '{}'", kind, self.peek().kind), self.peek().span)) }
     }
     fn expect_identifier(&mut self) -> Result<String, ParseError> {
         let token = self.advance();
         if let TokenKind::Identifier(name) = &token.kind { Ok(name.clone()) }
-        else { Err(ParseError::new(format!("Aspettavo un nome, no '{}'", token.kind), token.span)) }
+        else { Err(ParseError::new(format!("Expected an identifier, not '{}'", token.kind), token.span)) }
     }
     fn expect_string(&mut self) -> Result<String, ParseError> {
         let token = self.advance();
         if let TokenKind::String(s) = &token.kind { Ok(s.clone()) }
-        else { Err(ParseError::new(format!("Aspettavo una stringa, no '{}'", token.kind), token.span)) }
+        else { Err(ParseError::new(format!("Expected a string, not '{}'", token.kind), token.span)) }
     }
     fn current_span(&self) -> Span { self.peek().span }
     fn span_from(&self, start: usize) -> Span { Span::new(start, self.previous().span.end, self.previous().span.line, 0) }

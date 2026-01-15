@@ -82,12 +82,6 @@ pub struct SourceMapBuilder {
     gen_line: usize,
     /// Current generated column
     gen_col: usize,
-    /// Previous generated column (for delta encoding)
-    prev_gen_col: usize,
-    /// Previous source line
-    prev_src_line: usize,
-    /// Previous source column
-    prev_src_col: usize,
     /// Symbol names
     names: Vec<String>,
 }
@@ -154,11 +148,10 @@ impl SourceMapBuilder {
     pub fn new_line(&mut self) {
         self.gen_line += 1;
         self.gen_col = 0;
-        self.prev_gen_col = 0;
     }
 
     /// Build the final source map
-    pub fn build(mut self, source_file: Option<&str>) -> SourceMap {
+    pub fn build(self, source_file: Option<&str>) -> SourceMap {
         let mappings = self.encode_mappings();
 
         SourceMap {
@@ -173,9 +166,8 @@ impl SourceMapBuilder {
     }
 
     /// Encode all mappings to VLQ string
-    fn encode_mappings(&mut self) -> String {
+    fn encode_mappings(&self) -> String {
         let mut result = String::new();
-        let mut prev_gen_col: i64 = 0;
         let mut prev_src_line: i64 = 0;
         let mut prev_src_col: i64 = 0;
         let mut prev_name: i64 = 0;
@@ -185,7 +177,7 @@ impl SourceMapBuilder {
                 result.push(';');
             }
 
-            prev_gen_col = 0; // Reset column for each line
+            let mut prev_gen_col: i64 = 0; // Reset column for each line
 
             for (seg_idx, segment) in line_segments.iter().enumerate() {
                 if seg_idx > 0 {
