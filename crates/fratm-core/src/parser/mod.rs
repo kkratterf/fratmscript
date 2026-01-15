@@ -495,7 +495,7 @@ impl Parser {
                 }
             }
             TokenKind::Stamm => {
-                self.expect(&TokenKind::A)?;
+                self.expect_identifier_a()?;
                 self.expect(&TokenKind::Di)?;
                 self.expect(&TokenKind::LeftParen)?;
                 let arguments = self.parse_arguments()?;
@@ -503,7 +503,7 @@ impl Parser {
             }
             // console.warn() - "avvis a dì(...)"
             TokenKind::Avvis => {
-                self.expect(&TokenKind::A)?;
+                self.expect_identifier_a()?;
                 self.expect(&TokenKind::Di)?;
                 self.expect(&TokenKind::LeftParen)?;
                 let arguments = self.parse_arguments()?;
@@ -511,7 +511,7 @@ impl Parser {
             }
             // console.error() - "scrive a dì(...)"
             TokenKind::Scrive => {
-                self.expect(&TokenKind::A)?;
+                self.expect_identifier_a()?;
                 self.expect(&TokenKind::Di)?;
                 self.expect(&TokenKind::LeftParen)?;
                 let arguments = self.parse_arguments()?;
@@ -599,6 +599,14 @@ impl Parser {
         let token = self.advance();
         if let TokenKind::String(s) = &token.kind { Ok(s.clone()) }
         else { Err(ParseError::new(format!("Expected a string, not '{}'", token.kind), token.span)) }
+    }
+    // Expect the identifier "a" specifically (used in "stamm a dì", "avvis a dì", etc.)
+    fn expect_identifier_a(&mut self) -> Result<(), ParseError> {
+        let token = self.advance();
+        if let TokenKind::Identifier(name) = &token.kind {
+            if name == "a" { return Ok(()); }
+        }
+        Err(ParseError::new(format!("Expected 'a', but found '{}'", token.kind), token.span))
     }
     fn current_span(&self) -> Span { self.peek().span }
     fn span_from(&self, start: usize) -> Span { Span::new(start, self.previous().span.end, self.previous().span.line, 0) }

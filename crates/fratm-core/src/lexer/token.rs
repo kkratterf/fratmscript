@@ -394,7 +394,7 @@ pub fn lookup_keyword(ident: &str) -> Option<TokenKind> {
         "nisciun" => Some(TokenKind::Nisciun),
         "boh" => Some(TokenKind::Boh),
         "stamm" => Some(TokenKind::Stamm),
-        "a" => Some(TokenKind::A),
+        // "a" is NOT a keyword - it's parsed contextually in "stamm a dì"
         "dì" => Some(TokenKind::Di),
         "mo" => Some(TokenKind::Mo),
         "vir" => Some(TokenKind::Vir),
