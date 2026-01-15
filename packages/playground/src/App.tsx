@@ -61,31 +61,36 @@ function App() {
 
   return (
     <ToastProvider position="bottom-right">
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="flex flex-col bg-background h-screen overflow-hidden">
         <LoadingOverlay isVisible={compiler.isLoading} />
 
+        {/* Sticky Header */}
         <Header
           onRun={handleRun}
           onShare={handleShare}
           isCompiling={compiler.status === 'compiling'}
         />
 
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 min-h-0">
+        {/* Main content area - fills remaining space */}
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 min-h-0 overflow-hidden">
           {/* Editor Panel */}
-          <div className="flex flex-col border-r border-border min-h-0">
-            <div className="px-4 py-2.5 bg-card flex justify-between items-center border-b border-border">
-              <span className="font-medium text-sm text-foreground">FratmScript</span>
+          <div className="flex flex-col border-border border-r min-h-0 overflow-hidden">
+            {/* Sticky panel header */}
+            <div className="flex justify-between items-center bg-card px-4 py-2.5 border-border border-b shrink-0">
+              <span className="font-medium text-muted-foreground text-sm">JavaScript ma comme si deve</span>
               <Badge variant="outline">v{compiler.version}</Badge>
             </div>
-            <div className="flex-1 min-h-0 bg-background">
+            {/* Scrollable editor */}
+            <div className="flex-1 bg-background min-h-0 overflow-auto">
               <Editor
                 value={code}
                 onChange={setCode}
                 onRun={handleRun}
               />
             </div>
-            <div className="px-4 py-2.5 bg-card border-t border-border flex items-center gap-3">
-              <label className="text-xs text-muted-foreground">Examples:</label>
+            {/* Sticky examples bar */}
+            <div className="flex items-center gap-3 bg-card px-4 py-2.5 border-border border-t shrink-0">
+              <label className="text-muted-foreground text-xs">Examples:</label>
               <NativeSelect
                 value={selectedExample}
                 onChange={handleExampleChange}
@@ -103,11 +108,13 @@ function App() {
           </div>
 
           {/* Output Panel */}
-          <div className="flex flex-col min-h-0">
-            <div className="px-4 py-2.5 bg-card flex items-center border-b border-border">
-              <span className="font-medium text-sm text-foreground">Output</span>
+          <div className="flex flex-col min-h-0 overflow-hidden">
+            {/* Sticky output header */}
+            <div className="flex items-center bg-card px-4 py-2.5 border-border border-b shrink-0">
+              <span className="font-medium text-foreground text-sm">Output</span>
             </div>
-            <div className="flex-1 min-h-0 bg-background overflow-auto">
+            {/* Scrollable output content */}
+            <div className="flex-1 bg-background min-h-0 overflow-auto">
               <OutputPanel
                 jsOutput={compiler.jsOutput}
                 consoleLogs={compiler.consoleLogs}
@@ -117,6 +124,7 @@ function App() {
           </div>
         </div>
 
+        {/* Sticky StatusBar */}
         <StatusBar
           status={compiler.status}
           statusText={compiler.statusText}
