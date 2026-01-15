@@ -267,5 +267,5 @@ MIT
 ---
 
 <p align="center">
-  <b>Made with love under Vesuvius</b>
+  <b>Made with love and coffee</b>
 </p>
