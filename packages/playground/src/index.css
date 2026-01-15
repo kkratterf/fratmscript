@@ -10,39 +10,39 @@
 
 :root {
   /* Dark theme as default (playground style) */
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.18 0.01 260);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.18 0.01 260);
-  --popover-foreground: oklch(0.985 0 0);
+  --background: var(--color-white);
+  --foreground: var(--color-neutral-800);
+  --card: var(--color-white);
+  --card-foreground: var(--color-neutral-800);
+  --popover: var(--color-white);
+  --popover-foreground: var(--color-neutral-800);
 
-  /* Primary - FratmScript red accent */
-  --primary: oklch(0.65 0.22 15);
-  --primary-foreground: oklch(0.985 0 0);
+  /* Primary - COSS default (neutral) */
+  --primary: var(--color-neutral-800);
+  --primary-foreground: var(--color-neutral-50);
 
-  --secondary: oklch(0.22 0.015 260);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.25 0.015 260);
-  --muted-foreground: oklch(0.65 0.01 260);
-  --accent: oklch(0.25 0.015 260);
-  --accent-foreground: oklch(0.985 0 0);
+  --secondary: --alpha(var(--color-black) / 4%);
+  --secondary-foreground: var(--color-neutral-800);
+  --muted: --alpha(var(--color-black) / 4%);
+  --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-black));
+  --accent: --alpha(var(--color-black) / 4%);
+  --accent-foreground: var(--color-neutral-800);
 
   /* Destructive */
-  --destructive: oklch(0.65 0.22 25);
-  --destructive-foreground: oklch(0.45 0.16 25);
+  --destructive: var(--color-red-500);
+  --destructive-foreground: var(--color-red-700);
 
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.65 0.22 15);
+  --border: --alpha(var(--color-black) / 8%);
+  --input: --alpha(var(--color-black) / 10%);
+  --ring: var(--color-neutral-400);
 
   /* COSS UI semantic tokens */
-  --info: oklch(0.65 0.18 240);
-  --info-foreground: oklch(0.55 0.15 240);
-  --success: oklch(0.72 0.19 155);
-  --success-foreground: oklch(0.55 0.16 155);
-  --warning: oklch(0.8 0.16 85);
-  --warning-foreground: oklch(0.65 0.14 85);
+  --info: var(--color-blue-500);
+  --info-foreground: var(--color-blue-700);
+  --success: var(--color-emerald-500);
+  --success-foreground: var(--color-emerald-700);
+  --warning: var(--color-amber-500);
+  --warning-foreground: var(--color-amber-700);
 
   /* Radius - COSS default */
   --radius: 0.625rem;
@@ -65,34 +65,6 @@
   --sidebar-ring: oklch(0.65 0.22 15);
 }
 
-/* Light theme (if user adds .light class) */
-.light {
-  --background: oklch(0.985 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.55 0.22 15);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.96 0 0);
-  --secondary-foreground: oklch(0.145 0 0);
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.45 0 0);
-  --accent: oklch(0.96 0 0);
-  --accent-foreground: oklch(0.145 0 0);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.55 0.18 25);
-  --border: oklch(0.9 0 0);
-  --input: oklch(0.9 0 0);
-  --ring: oklch(0.55 0.22 15);
-  --info: oklch(0.55 0.18 240);
-  --info-foreground: oklch(0.45 0.15 240);
-  --success: oklch(0.55 0.19 155);
-  --success-foreground: oklch(0.35 0.14 155);
-  --warning: oklch(0.7 0.16 85);
-  --warning-foreground: oklch(0.45 0.12 85);
-}
 
 /* Theme inline - map CSS variables to Tailwind colors */
 @theme inline {
@@ -183,4 +155,28 @@
 
 .dark {
   --destructive-foreground: var(--color-red-400);
+  --accent: --alpha(var(--color-white) / 4%);
+  --accent-foreground: var(--color-neutral-100);
+  --background: color-mix(in srgb, var(--color-neutral-950) 95%, var(--color-white));
+  --border: --alpha(var(--color-white) / 6%);
+  --card: color-mix(in srgb, var(--background) 98%, var(--color-white));
+  --card-foreground: var(--color-neutral-100);
+  --destructive: color-mix(in srgb, var(--color-red-500) 90%, var(--color-white));
+  --foreground: var(--color-neutral-100);
+  --info: var(--color-blue-500);
+  --info-foreground: var(--color-blue-400);
+  --input: --alpha(var(--color-white) / 8%);
+  --muted: --alpha(var(--color-white) / 4%);
+  --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-white));
+  --popover: color-mix(in srgb, var(--background) 98%, var(--color-white));
+  --popover-foreground: var(--color-neutral-100);
+  --primary: var(--color-neutral-100);
+  --primary-foreground: var(--color-neutral-800);
+  --ring: var(--color-neutral-500);
+  --secondary: --alpha(var(--color-white) / 4%);
+  --secondary-foreground: var(--color-neutral-100);
+  --success: var(--color-emerald-500);
+  --success-foreground: var(--color-emerald-400);
+  --warning: var(--color-amber-500);
+  --warning-foreground: var(--color-amber-400);
 }

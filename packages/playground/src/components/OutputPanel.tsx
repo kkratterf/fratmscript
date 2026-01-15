@@ -53,35 +53,35 @@ export function OutputPanel({ jsOutput, consoleLogs, error }: OutputPanelProps) 
   return (
     <div className="flex flex-col h-full">
       {/* JavaScript Output */}
-      <section className="p-4 border-b border-border">
-        <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-success" />
+      <section className="p-4 border-border border-b">
+        <h3 className="flex items-center gap-2 mb-3 text-muted-foreground text-xs uppercase tracking-wider">
+          <span className="bg-success rounded-full w-2 h-2" />
           Generated JavaScript
         </h3>
-        <pre className="font-mono text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap break-words bg-card/50 rounded-md p-3 border border-border">
+        <pre className="bg-card/50 p-3 border border-border rounded-md font-mono text-foreground/90 text-sm break-words leading-relaxed whitespace-pre-wrap">
           {jsOutput || <span className="text-muted-foreground/50">// Run code to see output</span>}
         </pre>
       </section>
 
       {/* Console Output - Chrome DevTools style */}
-      <section className="p-4 border-b border-border flex-1">
-        <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-info" />
+      <section className="flex-1 p-4 border-border">
+        <h3 className="flex items-center gap-2 mb-3 text-muted-foreground text-xs uppercase tracking-wider">
+          <span className="bg-info rounded-full w-2 h-2" />
           Console
         </h3>
-        <div className="font-mono text-sm bg-card/50 rounded-md border border-border overflow-hidden">
+        <div className="bg-card/50 border border-border rounded-md overflow-hidden font-mono text-sm">
           {consoleLogs.length > 0 ? (
             consoleLogs.map((log, i) => (
               <div
                 key={i}
                 className={cn(
-                  'flex items-start gap-2 px-3 py-1.5 border-b border-border/50 last:border-0',
+                  'flex items-start gap-2 px-3 py-1.5 border-border/50 last:border-0 border-b',
                   log.type === 'warn' && 'bg-warning/5',
                   log.type === 'error' && 'bg-destructive/5'
                 )}
               >
                 {/* Log type icon */}
-                <span className="shrink-0 mt-0.5">
+                <span className="mt-0.5 shrink-0">
                   {log.type === 'warn' && <TriangleAlert className="w-3.5 h-3.5 text-warning" />}
                   {log.type === 'error' && <CircleAlert className="w-3.5 h-3.5 text-destructive" />}
                   {log.type === 'log' && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
@@ -112,29 +112,29 @@ export function OutputPanel({ jsOutput, consoleLogs, error }: OutputPanelProps) 
 
       {/* Error Output */}
       {error && !error.success && (
-        <section className="p-4">
-          <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+        <section className="p-4 border-border border-t">
+          <h3 className="flex items-center gap-2 mb-3 text-muted-foreground text-xs uppercase tracking-wider">
+            <span className="bg-destructive rounded-full w-2 h-2 animate-pulse" />
             Compilation Error
           </h3>
           <div className="bg-destructive/10 border border-destructive/50 rounded-md overflow-hidden">
-            <div className="px-4 py-3 flex items-start gap-3">
-              <CircleAlert className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+            <div className="flex items-start gap-3 px-4 py-3">
+              <CircleAlert className="mt-0.5 w-5 h-5 text-destructive shrink-0" />
               <div className="flex-1">
                 <div className="font-semibold text-destructive">
                   {error.error}
                 </div>
                 {error.line && (
-                  <div className="text-sm text-muted-foreground mt-1">
+                  <div className="mt-1 text-muted-foreground text-sm">
                     at line {error.line}, column {error.column || 1}
                   </div>
                 )}
               </div>
             </div>
             {error.suggestion && (
-              <div className="px-4 py-3 border-t border-destructive/20 bg-warning/5">
+              <div className="bg-warning/5 px-4 py-3 border-destructive/20 border-t">
                 <div className="flex items-start gap-2 text-sm">
-                  <TriangleAlert className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+                  <TriangleAlert className="mt-0.5 w-4 h-4 text-warning shrink-0" />
                   <span className="text-warning">{error.suggestion}</span>
                 </div>
               </div>

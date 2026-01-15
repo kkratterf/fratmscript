@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
-import { EditorState } from '@codemirror/state'
+import { EditorState, Compartment } from '@codemirror/state'
 import { EditorView, keymap, highlightSpecialChars, drawSelection, highlightActiveLine, lineNumbers } from '@codemirror/view'
 import { defaultKeymap, indentWithTab } from '@codemirror/commands'
 import { HighlightStyle, syntaxHighlighting, StreamLanguage } from '@codemirror/language'
 import { tags } from '@lezer/highlight'
+import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 
 // FratmScript language definition for StreamLanguage
@@ -53,30 +54,49 @@ const fratmScriptLanguage = StreamLanguage.define({
   },
 })
 
-// Custom theme colors matching COSS UI dark theme
-const fratmScriptHighlighting = HighlightStyle.define([
-  { tag: tags.keyword, color: '#f472b6' }, // pink for keywords
-  { tag: tags.atom, color: '#c084fc' }, // purple for booleans/null
-  { tag: tags.number, color: '#fbbf24' }, // amber for numbers
-  { tag: tags.string, color: '#4ade80' }, // green for strings
-  { tag: tags.comment, color: '#6b7280', fontStyle: 'italic' }, // gray italic for comments
-  { tag: tags.variableName, color: '#e2e8f0' }, // light gray for variables
-  { tag: tags.definition(tags.variableName), color: '#60a5fa' }, // blue for definitions
-  { tag: tags.operator, color: '#94a3b8' }, // slate for operators
-  { tag: tags.punctuation, color: '#64748b' }, // darker slate for punctuation
-  { tag: tags.function(tags.variableName), color: '#60a5fa' }, // blue for functions
-  { tag: tags.propertyName, color: '#38bdf8' }, // cyan for properties
-  { tag: tags.typeName, color: '#c084fc' }, // purple for types
-  { tag: tags.className, color: '#fbbf24' }, // amber for class names
-  { tag: tags.meta, color: '#f472b6' }, // pink for meta
-  { tag: tags.name, color: '#e2e8f0' }, // default
+// Dark theme colors using COSS palette
+const darkHighlighting = HighlightStyle.define([
+  { tag: tags.keyword, color: '#a78bfa' }, // purple-400
+  { tag: tags.atom, color: '#60a5fa' }, // blue-400
+  { tag: tags.number, color: '#fbbf24' }, // amber-400
+  { tag: tags.string, color: '#34d399' }, // emerald-400
+  { tag: tags.comment, color: '#6b7280', fontStyle: 'italic' }, // neutral-500
+  { tag: tags.variableName, color: '#e5e7eb' }, // neutral-200
+  { tag: tags.definition(tags.variableName), color: '#60a5fa' }, // blue-400
+  { tag: tags.operator, color: '#22d3ee' }, // cyan-400
+  { tag: tags.punctuation, color: '#9ca3af' }, // neutral-400
+  { tag: tags.function(tags.variableName), color: '#60a5fa' }, // blue-400
+  { tag: tags.propertyName, color: '#f87171' }, // red-400
+  { tag: tags.typeName, color: '#fbbf24' }, // amber-400
+  { tag: tags.className, color: '#fbbf24' }, // amber-400
+  { tag: tags.meta, color: '#a78bfa' }, // purple-400
+  { tag: tags.name, color: '#e5e7eb' }, // neutral-200
 ])
 
-// Dark theme for CodeMirror
+// Light theme colors using COSS palette
+const lightHighlighting = HighlightStyle.define([
+  { tag: tags.keyword, color: '#7c3aed' }, // purple-600
+  { tag: tags.atom, color: '#2563eb' }, // blue-600
+  { tag: tags.number, color: '#d97706' }, // amber-600
+  { tag: tags.string, color: '#059669' }, // emerald-600
+  { tag: tags.comment, color: '#6b7280', fontStyle: 'italic' }, // neutral-500
+  { tag: tags.variableName, color: '#374151' }, // neutral-700
+  { tag: tags.definition(tags.variableName), color: '#2563eb' }, // blue-600
+  { tag: tags.operator, color: '#0891b2' }, // cyan-600
+  { tag: tags.punctuation, color: '#6b7280' }, // neutral-500
+  { tag: tags.function(tags.variableName), color: '#2563eb' }, // blue-600
+  { tag: tags.propertyName, color: '#dc2626' }, // red-600
+  { tag: tags.typeName, color: '#d97706' }, // amber-600
+  { tag: tags.className, color: '#d97706' }, // amber-600
+  { tag: tags.meta, color: '#7c3aed' }, // purple-600
+  { tag: tags.name, color: '#374151' }, // neutral-700
+])
+
+// Dark theme for CodeMirror using COSS palette
 const darkTheme = EditorView.theme({
   '&': {
     backgroundColor: 'transparent',
-    color: '#e2e8f0',
+    color: '#e5e7eb', // neutral-200
     height: '100%',
   },
   '.cm-content': {
@@ -84,37 +104,81 @@ const darkTheme = EditorView.theme({
     fontSize: '14px',
     lineHeight: '1.6',
     padding: '16px',
-    caretColor: '#f472b6',
+    caretColor: '#ef4444', // red-500 (primary)
   },
   '.cm-cursor': {
-    borderLeftColor: '#f472b6',
+    borderLeftColor: '#ef4444', // red-500
     borderLeftWidth: '2px',
   },
   '.cm-activeLine': {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
   },
   '.cm-selectionBackground, ::selection': {
-    backgroundColor: 'rgba(244, 114, 182, 0.2) !important',
+    backgroundColor: 'rgba(239, 68, 68, 0.2) !important', // red-500/20
   },
   '.cm-focused .cm-selectionBackground': {
-    backgroundColor: 'rgba(244, 114, 182, 0.3) !important',
+    backgroundColor: 'rgba(239, 68, 68, 0.3) !important', // red-500/30
   },
   '.cm-gutters': {
     backgroundColor: 'transparent',
-    borderRight: '1px solid rgba(255, 255, 255, 0.1)',
-    color: '#64748b',
+    borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+    color: '#6b7280', // neutral-500
   },
   '.cm-lineNumbers .cm-gutterElement': {
     padding: '0 12px 0 8px',
     minWidth: '40px',
   },
   '.cm-activeLineGutter': {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
   },
   '.cm-scroller': {
     overflow: 'auto',
   },
 }, { dark: true })
+
+// Light theme for CodeMirror using COSS palette
+const lightTheme = EditorView.theme({
+  '&': {
+    backgroundColor: 'transparent',
+    color: '#374151', // neutral-700
+    height: '100%',
+  },
+  '.cm-content': {
+    fontFamily: '"Fira Code", "SF Mono", "Monaco", "Inconsolata", monospace',
+    fontSize: '14px',
+    lineHeight: '1.6',
+    padding: '16px',
+    caretColor: '#dc2626', // red-600 (primary)
+  },
+  '.cm-cursor': {
+    borderLeftColor: '#dc2626', // red-600
+    borderLeftWidth: '2px',
+  },
+  '.cm-activeLine': {
+    backgroundColor: 'rgba(0, 0, 0, 0.03)',
+  },
+  '.cm-selectionBackground, ::selection': {
+    backgroundColor: 'rgba(220, 38, 38, 0.15) !important', // red-600/15
+  },
+  '.cm-focused .cm-selectionBackground': {
+    backgroundColor: 'rgba(220, 38, 38, 0.25) !important', // red-600/25
+  },
+  '.cm-gutters': {
+    backgroundColor: 'transparent',
+    borderRight: '1px solid rgba(0, 0, 0, 0.08)',
+    color: '#9ca3af', // neutral-400
+  },
+  '.cm-lineNumbers .cm-gutterElement': {
+    padding: '0 12px 0 8px',
+    minWidth: '40px',
+  },
+  '.cm-activeLineGutter': {
+    backgroundColor: 'rgba(0, 0, 0, 0.03)',
+  },
+  '.cm-scroller': {
+    overflow: 'auto',
+  },
+}, { dark: false })
 
 interface EditorProps {
   value: string
@@ -123,9 +187,17 @@ interface EditorProps {
   className?: string
 }
 
+// Compartments for dynamic theme switching
+const themeCompartment = new Compartment()
+const highlightCompartment = new Compartment()
+
 export function Editor({ value, onChange, onRun, className }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
+  const { resolvedTheme } = useTheme()
+
+  // Determine if dark mode
+  const isDark = resolvedTheme === 'dark'
 
   // Create run keybinding
   const runKeymap = keymap.of([{
@@ -150,8 +222,8 @@ export function Editor({ value, onChange, onRun, className }: EditorProps) {
         keymap.of([...defaultKeymap, indentWithTab]),
         runKeymap,
         fratmScriptLanguage,
-        syntaxHighlighting(fratmScriptHighlighting),
-        darkTheme,
+        highlightCompartment.of(syntaxHighlighting(isDark ? darkHighlighting : lightHighlighting)),
+        themeCompartment.of(isDark ? darkTheme : lightTheme),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             onChange(update.state.doc.toString())
@@ -171,6 +243,18 @@ export function Editor({ value, onChange, onRun, className }: EditorProps) {
       view.destroy()
     }
   }, []) // Only run once on mount
+
+  // Update theme when it changes
+  useEffect(() => {
+    if (viewRef.current) {
+      viewRef.current.dispatch({
+        effects: [
+          themeCompartment.reconfigure(isDark ? darkTheme : lightTheme),
+          highlightCompartment.reconfigure(syntaxHighlighting(isDark ? darkHighlighting : lightHighlighting)),
+        ],
+      })
+    }
+  }, [isDark])
 
   // Update editor content when value changes externally (e.g., loading examples)
   useEffect(() => {
