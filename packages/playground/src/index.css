@@ -1,38 +1,106 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 13%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 13%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 349 77% 62%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62% 72%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 22%;
-    --input: 217 33% 22%;
-    --ring: 349 77% 62%;
-    --radius: 0.5rem;
-  }
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* Border radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* Colors - mapped to CSS variables */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Additional COSS UI tokens */
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  /* Font family */
+  --font-mono: "Fira Code", "SF Mono", "Monaco", "Inconsolata", monospace;
+
+  /* Animation */
+  --animate-skeleton: skeleton 2s ease-in-out infinite;
+  --animate-spin: spin 1s linear infinite;
+  --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+@keyframes skeleton {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Theme - Dark by default (playground style) */
+:root {
+  --background: oklch(0.145 0.02 260);
+  --foreground: oklch(0.97 0 0);
+  --card: oklch(0.17 0.02 260);
+  --card-foreground: oklch(0.97 0 0);
+  --popover: oklch(0.17 0.02 260);
+  --popover-foreground: oklch(0.97 0 0);
+  --primary: oklch(0.62 0.22 12);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.21 0.025 260);
+  --secondary-foreground: oklch(0.97 0 0);
+  --muted: oklch(0.21 0.025 260);
+  --muted-foreground: oklch(0.65 0.015 260);
+  --accent: oklch(0.21 0.025 260);
+  --accent-foreground: oklch(0.97 0 0);
+  --destructive: oklch(0.62 0.2 25);
+  --destructive-foreground: oklch(0.97 0 0);
+  --border: oklch(0.27 0.025 260);
+  --input: oklch(0.27 0.025 260);
+  --ring: oklch(0.62 0.22 12);
+
+  /* Additional COSS UI tokens */
+  --info: oklch(0.65 0.15 240);
+  --info-foreground: oklch(0.98 0 0);
+  --success: oklch(0.72 0.19 160);
+  --success-foreground: oklch(0.145 0.02 160);
+  --warning: oklch(0.8 0.16 85);
+  --warning-foreground: oklch(0.145 0.02 85);
+}
+
+/* Base layer */
 @layer base {
   * {
-    @apply border-border;
+    border-color: var(--border);
   }
+
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--background);
+    color: var(--foreground);
     font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   }
 }
@@ -44,14 +112,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--background));
+  background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted));
+  background: var(--muted);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground));
+  background: var(--muted-foreground);
 }

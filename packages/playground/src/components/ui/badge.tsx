@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
@@ -7,12 +9,13 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary/20 text-primary",
-        secondary: "bg-secondary text-secondary-foreground",
-        outline: "border border-input bg-background",
-        success: "bg-emerald-500/20 text-emerald-400",
-        warning: "bg-amber-500/20 text-amber-400",
-        destructive: "bg-destructive/20 text-destructive",
+        default: "bg-primary/15 text-primary",
+        secondary: "bg-secondary text-secondary-foreground border border-border",
+        outline: "border border-input bg-transparent text-foreground",
+        info: "bg-info/15 text-info",
+        success: "bg-success/15 text-success",
+        warning: "bg-warning/15 text-warning",
+        destructive: "bg-destructive/15 text-destructive",
       },
     },
     defaultVariants: {
@@ -22,12 +25,12 @@ const badgeVariants = cva(
 )
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, ...props }: BadgeProps) {
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <span className={cn(badgeVariants({ variant }), className)} {...props} />
   )
 }
 

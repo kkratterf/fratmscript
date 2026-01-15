@@ -4,7 +4,7 @@ import { Editor } from '@/components/Editor'
 import { OutputPanel } from '@/components/OutputPanel'
 import { StatusBar } from '@/components/StatusBar'
 import { LoadingOverlay } from '@/components/LoadingOverlay'
-import { Select } from '@/components/ui/select'
+import { NativeSelect } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { useCompiler } from '@/hooks/useCompiler'
 import { examples, defaultCode } from '@/lib/examples'
@@ -75,7 +75,7 @@ function App() {
           </div>
           <div className="px-4 py-2 bg-black/20 flex items-center gap-3">
             <label className="text-xs text-muted-foreground">Examples:</label>
-            <Select onChange={handleExampleChange} className="w-48">
+            <NativeSelect onChange={handleExampleChange} className="w-48">
               <option value="">-- Choose an example --</option>
               <option value="hello">Hello World</option>
               <option value="fibonacci">Fibonacci</option>
@@ -83,7 +83,7 @@ function App() {
               <option value="async">Async/Await</option>
               <option value="operatori">Logical Operators</option>
               <option value="array">Arrays and Objects</option>
-            </Select>
+            </NativeSelect>
           </div>
         </div>
 
