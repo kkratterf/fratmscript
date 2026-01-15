@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -286,7 +286,7 @@
   <!-- Loading overlay -->
   <div id="loadingOverlay" class="loading-overlay">
     <div class="spinner"></div>
-    <p>Caricamento FratmScript...</p>
+    <p>Loading FratmScript...</p>
   </div>
 
   <header>
@@ -295,11 +295,11 @@
       <p>JavaScript, ma comme si deve</p>
     </div>
     <div class="header-actions">
-      <span class="shortcuts-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> per eseguire</span>
+      <span class="shortcuts-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to run</span>
       <button id="runBtn" class="btn" onclick="runCode()">
-        <span>Esegui</span>
+        <span>Run</span>
       </button>
-      <button class="btn btn-secondary" onclick="shareCode()">Condividi</button>
+      <button class="btn btn-secondary" onclick="shareCode()">Share</button>
     </div>
   </header>
 
@@ -311,7 +311,7 @@
         <span class="badge" id="versionBadge">v0.1.0</span>
       </div>
       <div class="editor-wrapper">
-        <textarea id="editor" spellcheck="false" placeholder="Scrivi il tuo codice FratmScript...">// Prova FratmScript!
+        <textarea id="editor" spellcheck="false" placeholder="Write your FratmScript code...">// Try FratmScript!
 
 chist è nome = "Gennaro"
 
@@ -327,15 +327,15 @@ stamm a dì(saluta("Ciro"))
 stamm a dì(saluta(nisciun))</textarea>
       </div>
       <div class="examples-bar">
-        <label>Esempi:</label>
+        <label>Examples:</label>
         <select id="exampleSelect" onchange="loadExample(this.value)">
-          <option value="">-- Scegli un esempio --</option>
+          <option value="">-- Choose an example --</option>
           <option value="hello">Hello World</option>
           <option value="fibonacci">Fibonacci</option>
-          <option value="classe">Classe Pizzaiolo</option>
+          <option value="classe">Pizzaiolo Class</option>
           <option value="async">Async/Await</option>
-          <option value="operatori">Operatori Logici</option>
-          <option value="array">Array e Oggetti</option>
+          <option value="operatori">Logical Operators</option>
+          <option value="array">Arrays and Objects</option>
         </select>
       </div>
     </div>
@@ -346,15 +346,15 @@ stamm a dì(saluta(nisciun))</textarea>
         <span>Output</span>
       </div>
       <div class="output-section">
-        <h3>JavaScript Generato</h3>
-        <pre id="jsOutput" class="js-output">// Premi "Esegui" per compilare</pre>
+        <h3>Generated JavaScript</h3>
+        <pre id="jsOutput" class="js-output">// Press "Run" to compile</pre>
       </div>
       <div class="output-section">
         <h3>Console</h3>
         <pre id="consoleOutput" class="console-output"></pre>
       </div>
       <div id="errorSection" class="output-section" style="display: none;">
-        <h3>Errore</h3>
+        <h3>Error</h3>
         <div id="errorOutput"></div>
       </div>
     </div>
@@ -363,7 +363,7 @@ stamm a dì(saluta(nisciun))</textarea>
   <div class="status-bar">
     <div class="status-indicator">
       <div id="statusDot" class="status-dot"></div>
-      <span id="statusText">Pronto</span>
+      <span id="statusText">Ready</span>
     </div>
     <span id="compileTime"></span>
   </div>
@@ -383,13 +383,13 @@ stamm a dì(saluta(nisciun))</textarea>
         isWasmLoaded = true;
         document.getElementById('loadingOverlay').classList.add('hidden');
         document.getElementById('versionBadge').textContent = 'v' + module.version();
-        setStatus('ready', 'WASM caricato');
+        setStatus('ready', 'WASM loaded');
         return true;
       } catch (e) {
         console.warn('WASM not available, using fallback:', e);
         // Fallback mode without WASM
         document.getElementById('loadingOverlay').classList.add('hidden');
-        setStatus('ready', 'Modalita demo (WASM non disponibile)');
+        setStatus('ready', 'Demo mode (WASM not available)');
         return false;
       }
     }
@@ -419,7 +419,7 @@ stamm a dì(saluta(nisciun))</textarea>
       consoleOutput.innerHTML = '';
       errorSection.style.display = 'none';
 
-      setStatus('loading', 'Compilazione in corso...');
+      setStatus('loading', 'Compiling...');
       const startTime = performance.now();
 
       if (isWasmLoaded && wasmModule) {
@@ -427,29 +427,29 @@ stamm a dì(saluta(nisciun))</textarea>
         try {
           const result = wasmModule.compile(source, false);
           const elapsed = (performance.now() - startTime).toFixed(1);
-          compileTime.textContent = `Compilato in ${elapsed}ms`;
+          compileTime.textContent = `Compiled in ${elapsed}ms`;
 
           if (result.success) {
             jsOutput.textContent = result.code;
-            setStatus('ready', 'Compilazione riuscita');
+            setStatus('ready', 'Compilation successful');
 
             // Execute the generated code
             executeCode(result.code, consoleOutput);
           } else {
-            jsOutput.textContent = '// Errore di compilazione';
-            setStatus('error', 'Errore di compilazione');
+            jsOutput.textContent = '// Compilation error';
+            setStatus('error', 'Compilation error');
 
             errorSection.style.display = 'block';
             errorOutput.innerHTML = `
               <div class="error-box">
                 <div class="error-message">${escapeHtml(result.error)}</div>
-                ${result.line ? `<div class="error-location">Riga ${result.line}, Colonna ${result.column || 1}</div>` : ''}
+                ${result.line ? `<div class="error-location">Line ${result.line}, Column ${result.column || 1}</div>` : ''}
                 ${result.suggestion ? `<div class="error-suggestion">${escapeHtml(result.suggestion)}</div>` : ''}
               </div>
             `;
           }
         } catch (e) {
-          setStatus('error', 'Errore interno');
+          setStatus('error', 'Internal error');
           errorSection.style.display = 'block';
           errorOutput.innerHTML = `<div class="error-box"><div class="error-message">${escapeHtml(e.message)}</div></div>`;
         }
@@ -458,12 +458,12 @@ stamm a dì(saluta(nisciun))</textarea>
         try {
           const js = demoTranspile(source);
           jsOutput.textContent = js;
-          setStatus('ready', 'Demo - compilato');
-          compileTime.textContent = 'Modalita demo';
+          setStatus('ready', 'Demo - compiled');
+          compileTime.textContent = 'Demo mode';
           executeCode(js, consoleOutput);
         } catch (e) {
-          setStatus('error', 'Errore');
-          jsOutput.textContent = '// Errore: ' + e.message;
+          setStatus('error', 'Error');
+          jsOutput.textContent = '// Error: ' + e.message;
         }
       }
     };
@@ -514,9 +514,9 @@ stamm a dì(saluta(nisciun))</textarea>
           const className = log.type === 'warn' ? 'console-warn' :
                            log.type === 'error' ? 'console-error' : '';
           return `<span class="${className}">${escapeHtml(text)}</span>`;
-        }).join('\n') || '<span style="color: #666;">// Nessun output</span>';
+        }).join('\n') || '<span style="color: #666;">// No output</span>';
       } catch (e) {
-        outputElement.innerHTML = `<span class="console-error">Errore runtime: ${escapeHtml(e.message)}</span>`;
+        outputElement.innerHTML = `<span class="console-error">Runtime error: ${escapeHtml(e.message)}</span>`;
       }
     }
 
@@ -532,10 +532,10 @@ stamm a dì(saluta(nisciun))</textarea>
 chist è messaggio = "Ue, comme staje?"
 stamm a dì(messaggio)
 
-// Variabili
+// Variables
 tien contatore = 0
 contatore = contatore + 1
-stamm a dì("Contatore: " + contatore)`,
+stamm a dì("Counter: " + contatore)`,
 
       fibonacci: `// Fibonacci in FratmScript
 facc fibonacci(n) {
@@ -545,12 +545,12 @@ facc fibonacci(n) {
     piglie fibonacci(n - 1) + fibonacci(n - 2)
 }
 
-stamm a dì("Sequenza di Fibonacci:")
+stamm a dì("Fibonacci sequence:")
 pe (tien i = 0; i < 10; i = i + 1) {
     stamm a dì("fib(" + i + ") = " + fibonacci(i))
 }`,
 
-      classe: `// Classi in FratmScript
+      classe: `// Classes in FratmScript
 na famiglie Pizzaiolo {
     facc costruttore(nome, specialita) {
         stu cos.nome = nome
@@ -560,11 +560,11 @@ na famiglie Pizzaiolo {
 
     facc faiPizza(tipo) {
         stu cos.pizzeFatte = stu cos.pizzeFatte + 1
-        piglie stu cos.nome + " ha fatto una " + tipo + "!"
+        piglie stu cos.nome + " made a " + tipo + "!"
     }
 
     facc presentati() {
-        piglie "Sono " + stu cos.nome + ", specializzato in " + stu cos.specialita
+        piglie "I am " + stu cos.nome + ", specialized in " + stu cos.specialita
     }
 }
 
@@ -572,13 +572,13 @@ chist è gennaro = nu bell Pizzaiolo("Gennaro", "Margherita DOC")
 stamm a dì(gennaro.presentati())
 stamm a dì(gennaro.faiPizza("Marinara"))
 stamm a dì(gennaro.faiPizza("Diavola"))
-stamm a dì("Pizze fatte: " + gennaro.pizzeFatte)`,
+stamm a dì("Pizzas made: " + gennaro.pizzeFatte)`,
 
       async: `// Async/Await in FratmScript
 mo vir facc caricaDati() {
-    stamm a dì("Caricamento...")
-    // Simula un delay
-    piglie "Dati caricati!"
+    stamm a dì("Loading...")
+    // Simulates a delay
+    piglie "Data loaded!"
 }
 
 mo vir facc main() {
@@ -586,40 +586,40 @@ mo vir facc main() {
     stamm a dì(risultato)
 }
 
-// Nota: in questo playground le Promise sono simulate
-stamm a dì("Demo async (simulato)")`,
+// Note: in this playground Promises are simulated
+stamm a dì("Async demo (simulated)")`,
 
-      operatori: `// Operatori Logici in FratmScript
+      operatori: `// Logical Operators in FratmScript
 chist è a = overo
 chist è b = sfòls
 
-// AND: "e" oppure "pure"
+// AND: "e" or "pure"
 stamm a dì("overo e sfols = " + (a e b))
 
 // OR: "o"
 stamm a dì("overo o sfols = " + (a o b))
 
-// NOT: "no", "!", oppure "manco"
+// NOT: "no", "!", or "manco"
 stamm a dì("no overo = " + (no a))
 stamm a dì("!sfols = " + (!b))
 
-// Combinazioni
+// Combinations
 chist è x = 5
 chist è y = 10
 si (x < y e y < 20) {
-    stamm a dì("x e minore di y, e y e minore di 20")
+    stamm a dì("x is less than y, and y is less than 20")
 }`,
 
-      array: `// Array e Oggetti in FratmScript
+      array: `// Arrays and Objects in FratmScript
 
 // Array
 chist è pizze = ["Margherita", "Marinara", "Diavola", "Capricciosa"]
-stamm a dì("Menu pizze:")
+stamm a dì("Pizza menu:")
 pe (tien i = 0; i < 4; i = i + 1) {
     stamm a dì("  " + (i + 1) + ". " + pizze[i])
 }
 
-// Oggetto
+// Object
 chist è ordine = {
     cliente: "Mario",
     pizza: "Margherita",
@@ -628,11 +628,11 @@ chist è ordine = {
 }
 
 stamm a dì("")
-stamm a dì("Ordine:")
-stamm a dì("  Cliente: " + ordine.cliente)
+stamm a dì("Order:")
+stamm a dì("  Customer: " + ordine.cliente)
 stamm a dì("  Pizza: " + ordine.pizza)
-stamm a dì("  Quantita: " + ordine.quantita)
-stamm a dì("  Consegna: " + (ordine.consegna ? "Si" : "No"))`
+stamm a dì("  Quantity: " + ordine.quantita)
+stamm a dì("  Delivery: " + (ordine.consegna ? "Yes" : "No"))`
     };
 
     window.loadExample = function(name) {
@@ -649,9 +649,9 @@ stamm a dì("  Consegna: " + (ordine.consegna ? "Si" : "No"))`
       const url = window.location.origin + window.location.pathname + '?code=' + encoded;
 
       navigator.clipboard.writeText(url).then(() => {
-        alert('Link copiato negli appunti!');
+        alert('Link copied to clipboard!');
       }).catch(() => {
-        prompt('Copia questo link:', url);
+        prompt('Copy this link:', url);
       });
     };
 

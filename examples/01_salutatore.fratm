@@ -1,6 +1,6 @@
 // ============================================
-// Esempio 1: Salutatore Napoletano
-// Il classico Hello World, ma avec flair
+// Example 1: Neapolitan Greeter
+// The classic Hello World, but with flair
 // ============================================
 
 chist è messaggio = "Uè, comme staje?"
@@ -12,7 +12,7 @@ facc saluta(nome) {
     piglie messaggio + " " + nome + "!"
 }
 
-// Salutiamo un po' di gente
+// Let's greet some people
 stamm a dì(saluta("Gennaro"))
 stamm a dì(saluta("Ciro"))
 stamm a dì(saluta("Totò"))

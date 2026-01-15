@@ -1,46 +1,46 @@
 // ============================================
-// Esempio 10: Nuove Feature FratmScript
-// Operatori, console avanzata, delete, debugger
+// Example 10: New FratmScript Features
+// Operators, advanced console, delete, debugger
 // ============================================
 
-// === NUOVA SINTASSI FOR LOOP ===
-// Ora puoi usare sia "pe ogni" che solo "pe"
-stamm a dì("=== For Loop Semplificato ===")
+// === NEW FOR LOOP SYNTAX ===
+// Now you can use either "pe ogni" or just "pe"
+stamm a dì("=== Simplified For Loop ===")
 pe (tien i = 1; i <= 5; i = i + 1) {
-    stamm a dì("Iterazione " + i)
+    stamm a dì("Iteration " + i)
 }
 
-// === NUOVI OPERATORI LOGICI ===
-stamm a dì("\n=== Operatori Logici ===")
+// === NEW LOGICAL OPERATORS ===
+stamm a dì("\n=== Logical Operators ===")
 chist è valore1 = overo
 chist è valore2 = sfòls
 
-// "pure" come alias di "e" (AND)
+// "pure" as alias for "e" (AND)
 si (valore1 pure valore1) {
-    stamm a dì("pure funziona come AND!")
+    stamm a dì("pure works as AND!")
 }
 
-// "manco" come alias di "no" (NOT)
+// "manco" as alias for "no" (NOT)
 si (manco valore2) {
-    stamm a dì("manco funziona come NOT!")
+    stamm a dì("manco works as NOT!")
 }
 
-// ! funziona direttamente
+// ! works directly
 si (!valore2) {
-    stamm a dì("! funziona direttamente!")
+    stamm a dì("! works directly!")
 }
 
-// === CONSOLE AVANZATA ===
-stamm a dì("\n=== Console Avanzata ===")
+// === ADVANCED CONSOLE ===
+stamm a dì("\n=== Advanced Console ===")
 
-// console.log standard
-stamm a dì("Questo e un log normale")
+// Standard console.log
+stamm a dì("This is a normal log")
 
-// console.warn - avvisi
-avvis a dì("Questo e un avviso!")
+// console.warn - warnings
+avvis a dì("This is a warning!")
 
-// console.error - errori
-scrive a dì("Questo e un errore!")
+// console.error - errors
+scrive a dì("This is an error!")
 
 // === DELETE (leva) ===
 stamm a dì("\n=== Delete (leva) ===")
@@ -49,35 +49,35 @@ chist è oggetto = {
     eta: 35,
     citta: "Napoli"
 }
-stamm a dì("Prima: " + oggetto.citta)
+stamm a dì("Before: " + oggetto.citta)
 leva oggetto.citta
-stamm a dì("Dopo leva: " + oggetto.citta)
+stamm a dì("After leva: " + oggetto.citta)
 
 // === DEBUGGER (fermete) ===
 stamm a dì("\n=== Debugger ===")
-// Decommentare la riga seguente per attivare il debugger
+// Uncomment the following line to activate the debugger
 // fermete
-stamm a dì("Il debugger si attiva con 'fermete'")
+stamm a dì("The debugger is activated with 'fermete'")
 
-// === COMBINAZIONI AVANZATE ===
-stamm a dì("\n=== Combinazioni ===")
+// === ADVANCED COMBINATIONS ===
+stamm a dì("\n=== Combinations ===")
 chist è numeri = [1, 2, 3, 4, 5]
 tien somma = 0
 
 pe (tien idx = 0; idx < 5; idx = idx + 1) {
     si (manco (numeri[idx] % 2 == 0)) {
-        // Solo numeri dispari
+        // Only odd numbers
         somma = somma + numeri[idx]
     }
 }
-stamm a dì("Somma dei dispari: " + somma)
+stamm a dì("Sum of odd numbers: " + somma)
 
-// === RIEPILOGO SINTASSI ===
-stamm a dì("\n=== Riepilogo Nuova Sintassi ===")
-stamm a dì("pe (...)        -> for loop (ogni opzionale)")
-stamm a dì("pure            -> AND (alias di 'e')")
-stamm a dì("manco           -> NOT (alias di 'no')")
-stamm a dì("!               -> NOT diretto")
+// === SYNTAX SUMMARY ===
+stamm a dì("\n=== New Syntax Summary ===")
+stamm a dì("pe (...)        -> for loop (ogni optional)")
+stamm a dì("pure            -> AND (alias for 'e')")
+stamm a dì("manco           -> NOT (alias for 'no')")
+stamm a dì("!               -> direct NOT")
 stamm a dì("avvis a di(...) -> console.warn")
 stamm a dì("scrive a di(...)-> console.error")
 stamm a dì("leva x.y        -> delete x.y")

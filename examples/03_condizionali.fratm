@@ -1,42 +1,42 @@
 // ============================================
-// Esempio 3: Condizionali
+// Example 3: Conditionals
 // si / sinnò (if / else)
 // ============================================
 
 facc giudicaPizza(voto) {
     si (voto >= 9) {
-        piglie "🌟 Eccezionale! Comme 'a vera pizza napoletana!"
+        piglie "🌟 Exceptional! Like true Neapolitan pizza!"
     } sinnò si (voto >= 7) {
-        piglie "👍 Buona! Ma ce sta margine de miglioramento"
+        piglie "👍 Good! But there's room for improvement"
     } sinnò si (voto >= 5) {
-        piglie "😐 Passabile... ma nun è pizza vera"
+        piglie "😐 Passable... but it's not real pizza"
     } sinnò {
-        piglie "🚫 Mamma mia! Chesta nun è pizza!"
+        piglie "🚫 Mamma mia! This is not pizza!"
     }
 }
 
-// Testiamo
-stamm a dì("Voto 10: " + giudicaPizza(10))
-stamm a dì("Voto 8: " + giudicaPizza(8))
-stamm a dì("Voto 5: " + giudicaPizza(5))
-stamm a dì("Voto 2: " + giudicaPizza(2))
+// Testing
+stamm a dì("Score 10: " + giudicaPizza(10))
+stamm a dì("Score 8: " + giudicaPizza(8))
+stamm a dì("Score 5: " + giudicaPizza(5))
+stamm a dì("Score 2: " + giudicaPizza(2))
 
-// Operatore ternario
+// Ternary operator
 facc èMaggiorenne(età) {
-    piglie età >= 18 ? "Maggiorenne" : "Minorenne"
+    piglie età >= 18 ? "Adult" : "Minor"
 }
 
-stamm a dì("25 anni: " + èMaggiorenne(25))
-stamm a dì("15 anni: " + èMaggiorenne(15))
+stamm a dì("25 years: " + èMaggiorenne(25))
+stamm a dì("15 years: " + èMaggiorenne(15))
 
-// Operatori logici: e (and), o (or), no (not)
+// Logical operators: e (and), o (or), no (not)
 facc puòGuidare(età, haPatente) {
     si (età >= 18 e haPatente) {
-        piglie "Può guidare! 🚗"
+        piglie "Can drive! 🚗"
     } sinnò si (età >= 18 e no haPatente) {
-        piglie "Maggiorenne ma senza patente"
+        piglie "Adult but no license"
     } sinnò {
-        piglie "Troppo giovane"
+        piglie "Too young"
     }
 }
 
@@ -44,10 +44,10 @@ stamm a dì(puòGuidare(25, overo))
 stamm a dì(puòGuidare(25, sfòls))
 stamm a dì(puòGuidare(16, sfòls))
 
-// Or logico
+// Logical OR
 facc isWeekend(giorno) {
-    piglie giorno == "sabato" o giorno == "domenica"
+    piglie giorno == "saturday" o giorno == "sunday"
 }
 
-stamm a dì("Lunedì è weekend? " + isWeekend("lunedì"))
-stamm a dì("Sabato è weekend? " + isWeekend("sabato"))
+stamm a dì("Monday is weekend? " + isWeekend("monday"))
+stamm a dì("Saturday is weekend? " + isWeekend("saturday"))

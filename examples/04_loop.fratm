@@ -1,52 +1,52 @@
 // ============================================
-// Esempio 4: Loop
-// mentre che (while), pe ogni (for)
+// Example 4: Loops
+// mentre che (while), pe (for)
 // ============================================
 
 // While loop - mentre che
-stamm a dì("=== Countdown Napoletano ===")
+stamm a dì("=== Neapolitan Countdown ===")
 tien countdown = 5
 mentre che (countdown > 0) {
     stamm a dì(countdown + "...")
     countdown = countdown - 1
 }
-stamm a dì("🎆 Buon Anno!")
+stamm a dì("🎆 Happy New Year!")
 
-// For loop - pe ogni
-stamm a dì("\n=== Tabellina del 7 ===")
-pe ogni (tien i = 1; i <= 10; i = i + 1) {
+// For loop - pe (ogni is optional)
+stamm a dì("\n=== Multiplication Table of 7 ===")
+pe (tien i = 1; i <= 10; i = i + 1) {
     stamm a dì("7 x " + i + " = " + (7 * i))
 }
 
 // Break - rompe
-stamm a dì("\n=== Trova il numero (rompe) ===")
-pe ogni (tien n = 1; n <= 100; n = n + 1) {
+stamm a dì("\n=== Find the number (break) ===")
+pe (tien n = 1; n <= 100; n = n + 1) {
     si (n == 42) {
-        stamm a dì("Trovato! Il numero è " + n)
+        stamm a dì("Found it! The number is " + n)
         rompe
     }
 }
 
 // Continue - salta
-stamm a dì("\n=== Numeri dispari (salta) ===")
-pe ogni (tien j = 1; j <= 10; j = j + 1) {
+stamm a dì("\n=== Odd numbers (continue) ===")
+pe (tien j = 1; j <= 10; j = j + 1) {
     si (j % 2 == 0) {
-        salta  // Salta i numeri pari
+        salta  // Skip even numbers
     }
     stamm a dì(j)
 }
 
 // Nested loops
-stamm a dì("\n=== Pattern (loop annidati) ===")
-pe ogni (tien riga = 1; riga <= 5; riga = riga + 1) {
+stamm a dì("\n=== Pattern (nested loops) ===")
+pe (tien riga = 1; riga <= 5; riga = riga + 1) {
     tien stelle = ""
-    pe ogni (tien col = 1; col <= riga; col = col + 1) {
+    pe (tien col = 1; col <= riga; col = col + 1) {
         stelle = stelle + "⭐"
     }
     stamm a dì(stelle)
 }
 
-// Fibonacci con while
+// Fibonacci with while
 stamm a dì("\n=== Fibonacci ===")
 tien fib1 = 0
 tien fib2 = 1

@@ -1,9 +1,9 @@
 // ============================================
-// Esempio 6: Funzioni Avanzate
-// Arrow functions, ricorsione, closures
+// Example 6: Advanced Functions
+// Arrow functions, recursion, closures
 // ============================================
 
-// Funzione normale
+// Normal function
 facc somma(a, b) {
     piglie a + b
 }
@@ -11,22 +11,22 @@ facc somma(a, b) {
 // Arrow function
 chist è moltiplica = (a) => a * 2
 
-stamm a dì("=== Funzioni Base ===")
+stamm a dì("=== Basic Functions ===")
 stamm a dì("somma(3, 4) = " + somma(3, 4))
 stamm a dì("moltiplica(5) = " + moltiplica(5))
 
-// Funzione con più parametri
+// Function with multiple parameters
 facc calcolaTotale(prezzo, quantità, sconto) {
     chist è subtotale = prezzo * quantità
     chist è scontoApplicato = subtotale * (sconto / 100)
     piglie subtotale - scontoApplicato
 }
 
-stamm a dì("\n=== Calcolo Totale ===")
-stamm a dì("Prezzo: €10, Quantità: 5, Sconto: 15%")
-stamm a dì("Totale: €" + calcolaTotale(10, 5, 15))
+stamm a dì("\n=== Calculate Total ===")
+stamm a dì("Price: €10, Quantity: 5, Discount: 15%")
+stamm a dì("Total: €" + calcolaTotale(10, 5, 15))
 
-// Funzione ricorsiva - Fattoriale
+// Recursive function - Factorial
 facc fattoriale(n) {
     si (n <= 1) {
         piglie 1
@@ -34,11 +34,11 @@ facc fattoriale(n) {
     piglie n * fattoriale(n - 1)
 }
 
-stamm a dì("\n=== Fattoriale (Ricorsione) ===")
+stamm a dì("\n=== Factorial (Recursion) ===")
 stamm a dì("5! = " + fattoriale(5))
 stamm a dì("7! = " + fattoriale(7))
 
-// Funzione ricorsiva - Fibonacci
+// Recursive function - Fibonacci
 facc fibonacci(n) {
     si (n <= 1) {
         piglie n
@@ -46,12 +46,12 @@ facc fibonacci(n) {
     piglie fibonacci(n - 1) + fibonacci(n - 2)
 }
 
-stamm a dì("\n=== Fibonacci (Ricorsione) ===")
-pe ogni (tien i = 0; i < 10; i = i + 1) {
+stamm a dì("\n=== Fibonacci (Recursion) ===")
+pe (tien i = 0; i < 10; i = i + 1) {
     stamm a dì("fib(" + i + ") = " + fibonacci(i))
 }
 
-// Funzione che ritorna funzione (Higher Order)
+// Function returning function (Higher Order)
 facc creaMultiplicatore(fattore) {
     piglie (x) => x * fattore
 }
@@ -63,22 +63,22 @@ stamm a dì("\n=== Higher Order Functions ===")
 stamm a dì("raddoppia(5) = " + raddoppia(5))
 stamm a dì("triplica(5) = " + triplica(5))
 
-// Funzione con valori default (simulato)
+// Function with default values (simulated)
 facc salutaConStile(nome, stile) {
     si (stile == boh) {
-        stile = "normale"
+        stile = "normal"
     }
-    
-    si (stile == "formale") {
-        piglie "Buongiorno, Signor " + nome
+
+    si (stile == "formal") {
+        piglie "Good day, Mr. " + nome
     } sinnò si (stile == "napoletano") {
         piglie "Uè " + nome + ", comm staje?!"
     } sinnò {
-        piglie "Ciao " + nome
+        piglie "Hello " + nome
     }
 }
 
-stamm a dì("\n=== Saluti con Stile ===")
-stamm a dì(salutaConStile("Mario", "formale"))
+stamm a dì("\n=== Greetings with Style ===")
+stamm a dì(salutaConStile("Mario", "formal"))
 stamm a dì(salutaConStile("Gennaro", "napoletano"))
 stamm a dì(salutaConStile("Luigi", boh))

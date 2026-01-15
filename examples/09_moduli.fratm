@@ -1,13 +1,13 @@
 // ============================================
-// Esempio 9: Moduli (Import/Export)
+// Example 9: Modules (Import/Export)
 // chiamm (import), mann for (export)
 // ============================================
 
-// Come importare
+// How to import
 chiamm { useState, useEffect } da "react"
 chiamm { Router, Route } da "react-router"
 
-// Come esportare una funzione
+// How to export a function
 mann for facc calcolaIVA(prezzo) {
     piglie prezzo * 1.22
 }

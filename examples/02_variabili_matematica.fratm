@@ -1,36 +1,36 @@
 // ============================================
-// Esempio 2: Variabili e Matematica
-// Costanti, variabili, e operazioni
+// Example 2: Variables and Math
+// Constants, variables, and operations
 // ============================================
 
-// Costanti (immutabili)
+// Constants (immutable)
 chist è PI = 3.14159
 chist è nome = "Pizzeria Da Michele"
 chist è anno_fondazione = 1870
 
-// Variabili (mutabili)
+// Variables (mutable)
 tien prezzo_margherita = 5
 tien prezzo_marinara = 4
 
-// Operazioni matematiche
+// Math operations
 chist è totale = prezzo_margherita + prezzo_marinara
 chist è media = totale / 2
 chist è sconto = totale * 0.10
 chist è prezzo_finale = totale - sconto
 
-stamm a dì("🍕 " + nome + " (dal " + anno_fondazione + ")")
+stamm a dì("🍕 " + nome + " (since " + anno_fondazione + ")")
 stamm a dì("Margherita: €" + prezzo_margherita)
 stamm a dì("Marinara: €" + prezzo_marinara)
-stamm a dì("Totale: €" + totale)
-stamm a dì("Sconto 10%: €" + sconto)
-stamm a dì("Prezzo finale: €" + prezzo_finale)
+stamm a dì("Total: €" + totale)
+stamm a dì("10% Discount: €" + sconto)
+stamm a dì("Final price: €" + prezzo_finale)
 
-// Potenze
+// Exponents
 chist è quadrato = 5 ** 2
 chist è cubo = 3 ** 3
 stamm a dì("5² = " + quadrato)
 stamm a dì("3³ = " + cubo)
 
-// Modulo (resto della divisione)
+// Modulo (remainder)
 chist è resto = 17 % 5
 stamm a dì("17 % 5 = " + resto)

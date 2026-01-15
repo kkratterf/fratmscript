@@ -1,11 +1,11 @@
 // ============================================
-// Esempio 7: Async/Await e Try/Catch
+// Example 7: Async/Await and Try/Catch
 // mo vir (async), aspett (await), pruvamm/schiatta
 // ============================================
 
-// Funzione async
+// Async function
 mo vir facc caricaDati(url) {
-    stamm a dì("Caricando da: " + url)
+    stamm a dì("Loading from: " + url)
     chist è risposta = aspett fetch(url)
     chist è dati = aspett risposta.json()
     piglie dati
@@ -15,27 +15,27 @@ mo vir facc caricaDati(url) {
 facc dividi(a, b) {
     pruvamm {
         si (b == 0) {
-            iett nu bell Error("Nun se pò dividere pe zero!")
+            iett nu bell Error("Cannot divide by zero!")
         }
         piglie a / b
     } e si schiatta (errore) {
-        stamm a dì("Errore: " + errore.message)
+        stamm a dì("Error: " + errore.message)
         piglie nisciun
     }
 }
 
-stamm a dì("=== Divisione Sicura ===")
+stamm a dì("=== Safe Division ===")
 stamm a dì("10 / 2 = " + dividi(10, 2))
 stamm a dì("10 / 0 = " + dividi(10, 0))
 
-// Esempio completo async con error handling
+// Complete async example with error handling
 mo vir facc fetchUtente(id) {
     pruvamm {
         chist è url = "https://api.example.com/users/" + id
         chist è dati = aspett caricaDati(url)
         piglie dati
     } e si schiatta (err) {
-        stamm a dì("Impossibile caricare utente: " + err.message)
+        stamm a dì("Unable to load user: " + err.message)
         piglie nisciun
     }
 }
