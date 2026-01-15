@@ -3,7 +3,7 @@ resolver = "2"
 members = [
     "crates/fratm-core",
     "crates/fratm-cli",
-    # "crates/fratm-wasm",  # Requires wasm-pack to build
+    "crates/fratm-wasm",
 ]
 
 [workspace.package]
