@@ -3,7 +3,7 @@ name: Deploy Playground
 on:
   push:
     branches: [main]
-  workflow_dispatch: # Permette deploy manuale
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -30,7 +30,27 @@ jobs:
       - name: Build WASM
         run: |
           cd crates/fratm-wasm
-          wasm-pack build --target web --out-dir ../../packages/playground/pkg
+          wasm-pack build --target web --out-dir ../../packages/playground/public/pkg
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: |
+          cd packages/playground
+          pnpm install
+
+      - name: Build playground
+        run: |
+          cd packages/playground
+          pnpm build
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -38,7 +58,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./packages/playground
+          path: ./packages/playground/dist
 
   deploy:
     environment:

@@ -2,31 +2,40 @@
 
 Interactive web editor to try FratmScript directly in the browser.
 
-## How to Use
+Built with **Vite + React + TypeScript + Tailwind CSS v3 + shadcn/ui**.
 
-### Without Build (Demo Mode)
+## Development
 
-Simply open `index.html` in the browser. The playground will work in demo mode with a simplified regex-based transpiler.
+### Prerequisites
 
-### With WASM (Full Mode)
+- Node.js 20+
+- pnpm
+- Rust + wasm-pack (for WASM compilation)
 
-To use the full compiler:
+### Setup
 
 ```bash
-# 1. Install wasm-pack (if not already installed)
-cargo install wasm-pack
+# Install dependencies
+pnpm install
 
-# 2. Build the WASM module
+# Build WASM module (from project root)
 cd crates/fratm-wasm
-wasm-pack build --target web --out-dir ../../packages/playground/pkg
+wasm-pack build --target web --out-dir ../../packages/playground/public/pkg
 
-# 3. Start a local server (required for ES modules)
-cd ../../packages/playground
-python3 -m http.server 8080
-# or: npx serve .
-
-# 4. Open http://localhost:8080 in the browser
+# Start development server
+cd packages/playground
+pnpm dev
 ```
+
+The playground will be available at `http://localhost:5173`.
+
+### Build for Production
+
+```bash
+pnpm build
+```
+
+Output will be in the `dist/` folder.
 
 ## Features
 
@@ -52,3 +61,12 @@ python3 -m http.server 8080
 4. **Async/Await** - asynchronous functions
 5. **Logical Operators** - e, o, no, pure, manco
 6. **Arrays and Objects** - data structures
+
+## Tech Stack
+
+- **Vite** - Fast build tool
+- **React 18** - UI library
+- **TypeScript** - Type safety
+- **Tailwind CSS v3** - Utility-first CSS
+- **shadcn/ui** - Component library
+- **Lucide React** - Icons
