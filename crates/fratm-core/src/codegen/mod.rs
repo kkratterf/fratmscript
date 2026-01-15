@@ -205,10 +205,12 @@ impl CodeGen {
                 self.emit(" {\n");
                 self.indent += 1;
                 for method in methods {
-                    if let Statement::FunctionDecl { name, params, body, is_async, .. } = method {
+                    if let Statement::FunctionDecl { name: method_name, params, body, is_async, .. } = method {
                         self.write_indent();
                         if *is_async { self.emit("async "); }
-                        self.emit(name);
+                        // Translate "costruttore" to JavaScript "constructor"
+                        let js_method_name = if method_name == "costruttore" { "constructor" } else { method_name };
+                        self.emit(js_method_name);
                         self.emit("(");
                         self.emit(&params.join(", "));
                         self.emit(") {\n");
