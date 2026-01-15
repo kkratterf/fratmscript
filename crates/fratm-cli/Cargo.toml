@@ -1,0 +1,16 @@
+[package]
+name = "fratm-cli"
+description = "CLI for FratmScript compiler"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+fratm-core = { path = "../fratm-core" }
+clap = { version = "4.4", features = ["derive"] }
+colored = "2.1"
+serde_json = "1.0"
+
+[[bin]]
+name = "fratm"
+path = "src/main.rs"

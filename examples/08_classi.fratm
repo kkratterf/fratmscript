@@ -1,0 +1,28 @@
+// ============================================
+// Esempio 8: Classi
+// na famiglie (class), stu cos (this)
+// ============================================
+
+na famiglie Pizzaiolo {
+    facc costruttore(nome, specialità) {
+        stu cos.nome = nome
+        stu cos.specialità = specialità
+        stu cos.pizzeFatte = 0
+    }
+    
+    facc faiPizza(tipo) {
+        stu cos.pizzeFatte = stu cos.pizzeFatte + 1
+        piglie stu cos.nome + " ha fatto una " + tipo + "!"
+    }
+    
+    facc presentati() {
+        piglie "Sono " + stu cos.nome + ", specialità: " + stu cos.specialità
+    }
+}
+
+chist è gennaro = nu bell Pizzaiolo("Gennaro", "Margherita DOC")
+
+stamm a dì(gennaro.presentati())
+stamm a dì(gennaro.faiPizza("Marinara"))
+stamm a dì(gennaro.faiPizza("Diavola"))
+stamm a dì("Pizze fatte: " + gennaro.pizzeFatte)

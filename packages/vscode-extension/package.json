@@ -1,0 +1,22 @@
+{
+  "name": "fratmscript-vscode",
+  "displayName": "FratmScript",
+  "description": "🤌 Syntax highlighting for FratmScript - JavaScript in Napoletano",
+  "version": "0.1.0",
+  "publisher": "fratmscript",
+  "engines": { "vscode": "^1.74.0" },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [{
+      "id": "fratmscript",
+      "aliases": ["FratmScript", "fratm"],
+      "extensions": [".fratm"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "fratmscript",
+      "scopeName": "source.fratm",
+      "path": "./syntaxes/fratmscript.tmLanguage.json"
+    }]
+  }
+}

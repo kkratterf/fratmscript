@@ -1,0 +1,71 @@
+// ============================================
+// Esempio 5: Array e Oggetti
+// Strutture dati in FratmScript
+// ============================================
+
+// Array
+chist è pizze = ["Margherita", "Marinara", "Diavola", "Quattro Formaggi", "Capricciosa"]
+
+stamm a dì("=== Menu Pizze ===")
+pe ogni (tien i = 0; i < 5; i = i + 1) {
+    stamm a dì((i + 1) + ". " + pizze[i])
+}
+
+// Array di numeri
+chist è voti = [8, 9, 7, 10, 6, 9]
+
+facc calcolaMedia(arr) {
+    tien somma = 0
+    pe ogni (tien i = 0; i < 6; i = i + 1) {
+        somma = somma + arr[i]
+    }
+    piglie somma / 6
+}
+
+stamm a dì("\n=== Media Voti ===")
+stamm a dì("Voti: " + voti[0] + ", " + voti[1] + ", " + voti[2] + ", " + voti[3] + ", " + voti[4] + ", " + voti[5])
+stamm a dì("Media: " + calcolaMedia(voti))
+
+// Oggetti
+chist è persona = {
+    nome: "Gennaro",
+    cognome: "Esposito",
+    età: 35,
+    città: "Napoli"
+}
+
+stamm a dì("\n=== Persona ===")
+stamm a dì("Nome: " + persona.nome + " " + persona.cognome)
+stamm a dì("Età: " + persona.età)
+stamm a dì("Città: " + persona.città)
+
+// Oggetto più complesso
+chist è ristorante = {
+    nome: "Trattoria da Nonna",
+    indirizzo: "Via Toledo 123",
+    stelleMichelin: 0,
+    specialità: "Ragù napoletano"
+}
+
+stamm a dì("\n=== Ristorante ===")
+stamm a dì("🍝 " + ristorante.nome)
+stamm a dì("📍 " + ristorante.indirizzo)
+stamm a dì("⭐ Stelle Michelin: " + ristorante.stelleMichelin)
+stamm a dì("👨‍🍳 Specialità: " + ristorante.specialità)
+
+// Accesso dinamico con parentesi quadre
+chist è chiave = "nome"
+stamm a dì("\n=== Accesso Dinamico ===")
+stamm a dì("Valore di '" + chiave + "': " + ristorante[chiave])
+
+// Array di oggetti
+chist è squadra = [
+    { nome: "Diego", ruolo: "Attaccante", numero: 10 },
+    { nome: "Ciro", ruolo: "Centrocampista", numero: 8 },
+    { nome: "Paolo", ruolo: "Difensore", numero: 3 }
+]
+
+stamm a dì("\n=== Squadra ===")
+stamm a dì(squadra[0].nome + " - " + squadra[0].ruolo + " (#" + squadra[0].numero + ")")
+stamm a dì(squadra[1].nome + " - " + squadra[1].ruolo + " (#" + squadra[1].numero + ")")
+stamm a dì(squadra[2].nome + " - " + squadra[2].ruolo + " (#" + squadra[2].numero + ")")

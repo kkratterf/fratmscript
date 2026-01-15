@@ -1,0 +1,19 @@
+// ============================================
+// Esempio 1: Salutatore Napoletano
+// Il classico Hello World, ma avec flair
+// ============================================
+
+chist è messaggio = "Uè, comme staje?"
+
+facc saluta(nome) {
+    si (nome == nisciun) {
+        piglie "E chi si tu?"
+    }
+    piglie messaggio + " " + nome + "!"
+}
+
+// Salutiamo un po' di gente
+stamm a dì(saluta("Gennaro"))
+stamm a dì(saluta("Ciro"))
+stamm a dì(saluta("Totò"))
+stamm a dì(saluta(nisciun))

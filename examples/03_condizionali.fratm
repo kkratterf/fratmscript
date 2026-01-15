@@ -1,0 +1,53 @@
+// ============================================
+// Esempio 3: Condizionali
+// si / sinnò (if / else)
+// ============================================
+
+facc giudicaPizza(voto) {
+    si (voto >= 9) {
+        piglie "🌟 Eccezionale! Comme 'a vera pizza napoletana!"
+    } sinnò si (voto >= 7) {
+        piglie "👍 Buona! Ma ce sta margine de miglioramento"
+    } sinnò si (voto >= 5) {
+        piglie "😐 Passabile... ma nun è pizza vera"
+    } sinnò {
+        piglie "🚫 Mamma mia! Chesta nun è pizza!"
+    }
+}
+
+// Testiamo
+stamm a dì("Voto 10: " + giudicaPizza(10))
+stamm a dì("Voto 8: " + giudicaPizza(8))
+stamm a dì("Voto 5: " + giudicaPizza(5))
+stamm a dì("Voto 2: " + giudicaPizza(2))
+
+// Operatore ternario
+facc èMaggiorenne(età) {
+    piglie età >= 18 ? "Maggiorenne" : "Minorenne"
+}
+
+stamm a dì("25 anni: " + èMaggiorenne(25))
+stamm a dì("15 anni: " + èMaggiorenne(15))
+
+// Operatori logici: e (and), o (or), no (not)
+facc puòGuidare(età, haPatente) {
+    si (età >= 18 e haPatente) {
+        piglie "Può guidare! 🚗"
+    } sinnò si (età >= 18 e no haPatente) {
+        piglie "Maggiorenne ma senza patente"
+    } sinnò {
+        piglie "Troppo giovane"
+    }
+}
+
+stamm a dì(puòGuidare(25, overo))
+stamm a dì(puòGuidare(25, sfòls))
+stamm a dì(puòGuidare(16, sfòls))
+
+// Or logico
+facc isWeekend(giorno) {
+    piglie giorno == "sabato" o giorno == "domenica"
+}
+
+stamm a dì("Lunedì è weekend? " + isWeekend("lunedì"))
+stamm a dì("Sabato è weekend? " + isWeekend("sabato"))

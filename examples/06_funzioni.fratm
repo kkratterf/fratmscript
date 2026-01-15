@@ -1,0 +1,84 @@
+// ============================================
+// Esempio 6: Funzioni Avanzate
+// Arrow functions, ricorsione, closures
+// ============================================
+
+// Funzione normale
+facc somma(a, b) {
+    piglie a + b
+}
+
+// Arrow function
+chist è moltiplica = (a) => a * 2
+
+stamm a dì("=== Funzioni Base ===")
+stamm a dì("somma(3, 4) = " + somma(3, 4))
+stamm a dì("moltiplica(5) = " + moltiplica(5))
+
+// Funzione con più parametri
+facc calcolaTotale(prezzo, quantità, sconto) {
+    chist è subtotale = prezzo * quantità
+    chist è scontoApplicato = subtotale * (sconto / 100)
+    piglie subtotale - scontoApplicato
+}
+
+stamm a dì("\n=== Calcolo Totale ===")
+stamm a dì("Prezzo: €10, Quantità: 5, Sconto: 15%")
+stamm a dì("Totale: €" + calcolaTotale(10, 5, 15))
+
+// Funzione ricorsiva - Fattoriale
+facc fattoriale(n) {
+    si (n <= 1) {
+        piglie 1
+    }
+    piglie n * fattoriale(n - 1)
+}
+
+stamm a dì("\n=== Fattoriale (Ricorsione) ===")
+stamm a dì("5! = " + fattoriale(5))
+stamm a dì("7! = " + fattoriale(7))
+
+// Funzione ricorsiva - Fibonacci
+facc fibonacci(n) {
+    si (n <= 1) {
+        piglie n
+    }
+    piglie fibonacci(n - 1) + fibonacci(n - 2)
+}
+
+stamm a dì("\n=== Fibonacci (Ricorsione) ===")
+pe ogni (tien i = 0; i < 10; i = i + 1) {
+    stamm a dì("fib(" + i + ") = " + fibonacci(i))
+}
+
+// Funzione che ritorna funzione (Higher Order)
+facc creaMultiplicatore(fattore) {
+    piglie (x) => x * fattore
+}
+
+chist è raddoppia = creaMultiplicatore(2)
+chist è triplica = creaMultiplicatore(3)
+
+stamm a dì("\n=== Higher Order Functions ===")
+stamm a dì("raddoppia(5) = " + raddoppia(5))
+stamm a dì("triplica(5) = " + triplica(5))
+
+// Funzione con valori default (simulato)
+facc salutaConStile(nome, stile) {
+    si (stile == boh) {
+        stile = "normale"
+    }
+    
+    si (stile == "formale") {
+        piglie "Buongiorno, Signor " + nome
+    } sinnò si (stile == "napoletano") {
+        piglie "Uè " + nome + ", comm staje?!"
+    } sinnò {
+        piglie "Ciao " + nome
+    }
+}
+
+stamm a dì("\n=== Saluti con Stile ===")
+stamm a dì(salutaConStile("Mario", "formale"))
+stamm a dì(salutaConStile("Gennaro", "napoletano"))
+stamm a dì(salutaConStile("Luigi", boh))

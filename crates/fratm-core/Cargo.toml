@@ -1,0 +1,14 @@
+[package]
+name = "fratm-core"
+description = "Core compiler for FratmScript - Lexer, Parser, CodeGen"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+pretty_assertions = "1.4"

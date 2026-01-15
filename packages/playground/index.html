@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FratmScript Playground</title>
+  <style>
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-accent: #0f3460;
+      --text-primary: #eee;
+      --text-secondary: #aaa;
+      --accent-red: #e94560;
+      --accent-green: #4ecca3;
+      --accent-yellow: #ffd93d;
+      --accent-blue: #3498db;
+      --error-red: #ff6b6b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, var(--accent-red) 0%, var(--bg-accent) 100%);
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .logo { display: flex; align-items: center; gap: 0.75rem; }
+    .logo h1 { font-size: 1.5rem; font-weight: 700; }
+    .logo p { opacity: 0.85; font-size: 0.9rem; }
+
+    .header-actions { display: flex; gap: 0.75rem; align-items: center; }
+
+    /* Buttons */
+    .btn {
+      background: var(--accent-red);
+      color: white;
+      border: none;
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(233, 69, 96, 0.3); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .btn-secondary { background: var(--bg-accent); }
+    .btn-secondary:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+
+    /* Main container */
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      flex: 1;
+      min-height: 0;
+    }
+
+    @media (max-width: 900px) {
+      .container { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+    }
+
+    /* Panels */
+    .panel {
+      background: var(--bg-secondary);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--bg-accent);
+      min-height: 0;
+    }
+
+    .panel:last-child { border-right: none; }
+
+    .panel-header {
+      padding: 0.6rem 1rem;
+      background: var(--bg-accent);
+      font-weight: 600;
+      font-size: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .panel-header .badge {
+      background: rgba(255,255,255,0.1);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    /* Editor */
+    .editor-wrapper {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+    }
+
+    #editor {
+      width: 100%;
+      height: 100%;
+      padding: 1rem;
+      font-family: 'Fira Code', 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      border: none;
+      resize: none;
+      background: transparent;
+      color: var(--text-primary);
+      tab-size: 2;
+    }
+    #editor:focus { outline: none; }
+
+    /* Examples bar */
+    .examples-bar {
+      padding: 0.5rem 1rem;
+      background: rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .examples-bar label { font-size: 0.8rem; color: var(--text-secondary); }
+
+    .examples-bar select {
+      background: var(--bg-accent);
+      color: var(--text-primary);
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    /* Output panel */
+    .output-panel { overflow: auto; }
+
+    .output-section {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--bg-accent);
+    }
+    .output-section:last-child { border-bottom: none; }
+
+    .output-section h3 {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .output-section pre {
+      font-family: 'Fira Code', 'SF Mono', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .js-output { color: var(--accent-green); }
+    .console-output { color: var(--accent-yellow); }
+    .console-warn { color: #f39c12; }
+    .console-error { color: var(--error-red); }
+    .error-output { color: var(--error-red); }
+
+    /* Error display */
+    .error-box {
+      background: rgba(255, 107, 107, 0.1);
+      border: 1px solid var(--error-red);
+      border-radius: 6px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .error-box .error-message { font-weight: 600; margin-bottom: 0.3rem; }
+    .error-box .error-location { font-size: 0.85rem; color: var(--text-secondary); }
+    .error-box .error-suggestion {
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      color: var(--accent-yellow);
+      font-size: 0.85rem;
+    }
+
+    /* Status indicator */
+    .status-bar {
+      padding: 0.4rem 1rem;
+      background: rgba(0,0,0,0.3);
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+    }
+
+    .status-dot.loading {
+      background: var(--accent-yellow);
+      animation: pulse 1s infinite;
+    }
+
+    .status-dot.error { background: var(--error-red); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 26, 46, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      z-index: 100;
+    }
+
+    .loading-overlay.hidden { display: none; }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--bg-accent);
+      border-top-color: var(--accent-red);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Keyboard shortcuts hint */
+    .shortcuts-hint {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .shortcuts-hint kbd {
+      background: var(--bg-accent);
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Caricamento FratmScript...</p>
+  </div>
+
+  <header>
+    <div class="logo">
+      <h1>FratmScript</h1>
+      <p>JavaScript, ma comme si deve</p>
+    </div>
+    <div class="header-actions">
+      <span class="shortcuts-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> per eseguire</span>
+      <button id="runBtn" class="btn" onclick="runCode()">
+        <span>Esegui</span>
+      </button>
+      <button class="btn btn-secondary" onclick="shareCode()">Condividi</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Editor Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>FratmScript</span>
+        <span class="badge" id="versionBadge">v0.1.0</span>
+      </div>
+      <div class="editor-wrapper">
+        <textarea id="editor" spellcheck="false" placeholder="Scrivi il tuo codice FratmScript...">// Prova FratmScript!
+
+chist è nome = "Gennaro"
+
+facc saluta(chi) {
+    si (chi == nisciun) {
+        piglie "E chi si tu?"
+    }
+    piglie "Ue " + chi + ", comme staje?"
+}
+
+stamm a dì(saluta(nome))
+stamm a dì(saluta("Ciro"))
+stamm a dì(saluta(nisciun))</textarea>
+      </div>
+      <div class="examples-bar">
+        <label>Esempi:</label>
+        <select id="exampleSelect" onchange="loadExample(this.value)">
+          <option value="">-- Scegli un esempio --</option>
+          <option value="hello">Hello World</option>
+          <option value="fibonacci">Fibonacci</option>
+          <option value="classe">Classe Pizzaiolo</option>
+          <option value="async">Async/Await</option>
+          <option value="operatori">Operatori Logici</option>
+          <option value="array">Array e Oggetti</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Output Panel -->
+    <div class="panel output-panel">
+      <div class="panel-header">
+        <span>Output</span>
+      </div>
+      <div class="output-section">
+        <h3>JavaScript Generato</h3>
+        <pre id="jsOutput" class="js-output">// Premi "Esegui" per compilare</pre>
+      </div>
+      <div class="output-section">
+        <h3>Console</h3>
+        <pre id="consoleOutput" class="console-output"></pre>
+      </div>
+      <div id="errorSection" class="output-section" style="display: none;">
+        <h3>Errore</h3>
+        <div id="errorOutput"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-indicator">
+      <div id="statusDot" class="status-dot"></div>
+      <span id="statusText">Pronto</span>
+    </div>
+    <span id="compileTime"></span>
+  </div>
+
+  <script type="module">
+    // === WASM Module Loading ===
+    let wasmModule = null;
+    let isWasmLoaded = false;
+
+    async function loadWasm() {
+      try {
+        // Try to load WASM module
+        const wasmPath = './pkg/fratm_wasm.js';
+        const module = await import(wasmPath);
+        await module.default();
+        wasmModule = module;
+        isWasmLoaded = true;
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        document.getElementById('versionBadge').textContent = 'v' + module.version();
+        setStatus('ready', 'WASM caricato');
+        return true;
+      } catch (e) {
+        console.warn('WASM not available, using fallback:', e);
+        // Fallback mode without WASM
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        setStatus('ready', 'Modalita demo (WASM non disponibile)');
+        return false;
+      }
+    }
+
+    // === Status Management ===
+    function setStatus(type, text) {
+      const dot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+
+      dot.className = 'status-dot';
+      if (type === 'loading') dot.classList.add('loading');
+      if (type === 'error') dot.classList.add('error');
+
+      statusText.textContent = text;
+    }
+
+    // === Compilation ===
+    window.runCode = function() {
+      const source = document.getElementById('editor').value;
+      const jsOutput = document.getElementById('jsOutput');
+      const consoleOutput = document.getElementById('consoleOutput');
+      const errorSection = document.getElementById('errorSection');
+      const errorOutput = document.getElementById('errorOutput');
+      const compileTime = document.getElementById('compileTime');
+
+      // Reset outputs
+      consoleOutput.innerHTML = '';
+      errorSection.style.display = 'none';
+
+      setStatus('loading', 'Compilazione in corso...');
+      const startTime = performance.now();
+
+      if (isWasmLoaded && wasmModule) {
+        // Use real WASM compiler
+        try {
+          const result = wasmModule.compile(source, false);
+          const elapsed = (performance.now() - startTime).toFixed(1);
+          compileTime.textContent = `Compilato in ${elapsed}ms`;
+
+          if (result.success) {
+            jsOutput.textContent = result.code;
+            setStatus('ready', 'Compilazione riuscita');
+
+            // Execute the generated code
+            executeCode(result.code, consoleOutput);
+          } else {
+            jsOutput.textContent = '// Errore di compilazione';
+            setStatus('error', 'Errore di compilazione');
+
+            errorSection.style.display = 'block';
+            errorOutput.innerHTML = `
+              <div class="error-box">
+                <div class="error-message">${escapeHtml(result.error)}</div>
+                ${result.line ? `<div class="error-location">Riga ${result.line}, Colonna ${result.column || 1}</div>` : ''}
+                ${result.suggestion ? `<div class="error-suggestion">${escapeHtml(result.suggestion)}</div>` : ''}
+              </div>
+            `;
+          }
+        } catch (e) {
+          setStatus('error', 'Errore interno');
+          errorSection.style.display = 'block';
+          errorOutput.innerHTML = `<div class="error-box"><div class="error-message">${escapeHtml(e.message)}</div></div>`;
+        }
+      } else {
+        // Demo mode - simple regex-based transpilation for basic demos
+        try {
+          const js = demoTranspile(source);
+          jsOutput.textContent = js;
+          setStatus('ready', 'Demo - compilato');
+          compileTime.textContent = 'Modalita demo';
+          executeCode(js, consoleOutput);
+        } catch (e) {
+          setStatus('error', 'Errore');
+          jsOutput.textContent = '// Errore: ' + e.message;
+        }
+      }
+    };
+
+    // Simple demo transpiler (when WASM is not available)
+    function demoTranspile(source) {
+      return source
+        .replace(/chist è (\w+) = /g, 'const $1 = ')
+        .replace(/tien (\w+) = /g, 'let $1 = ')
+        .replace(/facc (\w+)\(/g, 'function $1(')
+        .replace(/piglie /g, 'return ')
+        .replace(/si \(/g, 'if (')
+        .replace(/sinnò/g, 'else')
+        .replace(/mentre che \(/g, 'while (')
+        .replace(/pe \(/g, 'for (')
+        .replace(/stamm a dì\(/g, 'console.log(')
+        .replace(/overo/g, 'true')
+        .replace(/sfòls/g, 'false')
+        .replace(/nisciun/g, 'null')
+        .replace(/boh/g, 'undefined')
+        .replace(/ e /g, ' && ')
+        .replace(/ o /g, ' || ')
+        .replace(/no /g, '!');
+    }
+
+    // Execute generated JavaScript and capture console output
+    function executeCode(code, outputElement) {
+      // Create a sandboxed console
+      const logs = [];
+      const sandbox = {
+        console: {
+          log: (...args) => logs.push({ type: 'log', args }),
+          warn: (...args) => logs.push({ type: 'warn', args }),
+          error: (...args) => logs.push({ type: 'error', args }),
+        }
+      };
+
+      try {
+        // Create function with sandboxed console
+        const fn = new Function('console', code);
+        fn(sandbox.console);
+
+        // Render output
+        outputElement.innerHTML = logs.map(log => {
+          const text = log.args.map(arg =>
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+          ).join(' ');
+          const className = log.type === 'warn' ? 'console-warn' :
+                           log.type === 'error' ? 'console-error' : '';
+          return `<span class="${className}">${escapeHtml(text)}</span>`;
+        }).join('\n') || '<span style="color: #666;">// Nessun output</span>';
+      } catch (e) {
+        outputElement.innerHTML = `<span class="console-error">Errore runtime: ${escapeHtml(e.message)}</span>`;
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // === Examples ===
+    const examples = {
+      hello: `// Hello World in FratmScript!
+chist è messaggio = "Ue, comme staje?"
+stamm a dì(messaggio)
+
+// Variabili
+tien contatore = 0
+contatore = contatore + 1
+stamm a dì("Contatore: " + contatore)`,
+
+      fibonacci: `// Fibonacci in FratmScript
+facc fibonacci(n) {
+    si (n <= 1) {
+        piglie n
+    }
+    piglie fibonacci(n - 1) + fibonacci(n - 2)
+}
+
+stamm a dì("Sequenza di Fibonacci:")
+pe (tien i = 0; i < 10; i = i + 1) {
+    stamm a dì("fib(" + i + ") = " + fibonacci(i))
+}`,
+
+      classe: `// Classi in FratmScript
+na famiglie Pizzaiolo {
+    facc costruttore(nome, specialita) {
+        stu cos.nome = nome
+        stu cos.specialita = specialita
+        stu cos.pizzeFatte = 0
+    }
+
+    facc faiPizza(tipo) {
+        stu cos.pizzeFatte = stu cos.pizzeFatte + 1
+        piglie stu cos.nome + " ha fatto una " + tipo + "!"
+    }
+
+    facc presentati() {
+        piglie "Sono " + stu cos.nome + ", specializzato in " + stu cos.specialita
+    }
+}
+
+chist è gennaro = nu bell Pizzaiolo("Gennaro", "Margherita DOC")
+stamm a dì(gennaro.presentati())
+stamm a dì(gennaro.faiPizza("Marinara"))
+stamm a dì(gennaro.faiPizza("Diavola"))
+stamm a dì("Pizze fatte: " + gennaro.pizzeFatte)`,
+
+      async: `// Async/Await in FratmScript
+mo vir facc caricaDati() {
+    stamm a dì("Caricamento...")
+    // Simula un delay
+    piglie "Dati caricati!"
+}
+
+mo vir facc main() {
+    chist è risultato = aspett caricaDati()
+    stamm a dì(risultato)
+}
+
+// Nota: in questo playground le Promise sono simulate
+stamm a dì("Demo async (simulato)")`,
+
+      operatori: `// Operatori Logici in FratmScript
+chist è a = overo
+chist è b = sfòls
+
+// AND: "e" oppure "pure"
+stamm a dì("overo e sfols = " + (a e b))
+
+// OR: "o"
+stamm a dì("overo o sfols = " + (a o b))
+
+// NOT: "no", "!", oppure "manco"
+stamm a dì("no overo = " + (no a))
+stamm a dì("!sfols = " + (!b))
+
+// Combinazioni
+chist è x = 5
+chist è y = 10
+si (x < y e y < 20) {
+    stamm a dì("x e minore di y, e y e minore di 20")
+}`,
+
+      array: `// Array e Oggetti in FratmScript
+
+// Array
+chist è pizze = ["Margherita", "Marinara", "Diavola", "Capricciosa"]
+stamm a dì("Menu pizze:")
+pe (tien i = 0; i < 4; i = i + 1) {
+    stamm a dì("  " + (i + 1) + ". " + pizze[i])
+}
+
+// Oggetto
+chist è ordine = {
+    cliente: "Mario",
+    pizza: "Margherita",
+    quantita: 2,
+    consegna: overo
+}
+
+stamm a dì("")
+stamm a dì("Ordine:")
+stamm a dì("  Cliente: " + ordine.cliente)
+stamm a dì("  Pizza: " + ordine.pizza)
+stamm a dì("  Quantita: " + ordine.quantita)
+stamm a dì("  Consegna: " + (ordine.consegna ? "Si" : "No"))`
+    };
+
+    window.loadExample = function(name) {
+      if (examples[name]) {
+        document.getElementById('editor').value = examples[name];
+        document.getElementById('exampleSelect').value = '';
+      }
+    };
+
+    // === Share functionality ===
+    window.shareCode = function() {
+      const source = document.getElementById('editor').value;
+      const encoded = btoa(encodeURIComponent(source));
+      const url = window.location.origin + window.location.pathname + '?code=' + encoded;
+
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Link copiato negli appunti!');
+      }).catch(() => {
+        prompt('Copia questo link:', url);
+      });
+    };
+
+    // Load code from URL
+    function loadFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      if (code) {
+        try {
+          document.getElementById('editor').value = decodeURIComponent(atob(code));
+        } catch (e) {
+          console.error('Failed to load code from URL:', e);
+        }
+      }
+    }
+
+    // === Keyboard shortcuts ===
+    document.getElementById('editor').addEventListener('keydown', (e) => {
+      // Ctrl+Enter or Cmd+Enter to run
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        runCode();
+      }
+
+      // Tab for indentation
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = e.target.selectionStart;
+        const end = e.target.selectionEnd;
+        e.target.value = e.target.value.substring(0, start) + '  ' + e.target.value.substring(end);
+        e.target.selectionStart = e.target.selectionEnd = start + 2;
+      }
+    });
+
+    // === Initialize ===
+    loadFromUrl();
+    loadWasm();
+  </script>
+</body>
+</html>
