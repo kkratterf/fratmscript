@@ -1,0 +1,17 @@
+{
+  "name": "fratm-wasm",
+  "type": "module",
+  "description": "WebAssembly bindings for FratmScript compiler",
+  "version": "0.1.0",
+  "license": "MIT",
+  "files": [
+    "fratm_wasm_bg.wasm",
+    "fratm_wasm.js",
+    "fratm_wasm.d.ts"
+  ],
+  "main": "fratm_wasm.js",
+  "types": "fratm_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
