@@ -2,6 +2,7 @@
 interface WasmModule {
   compile: (source: string, sourceMap: boolean) => CompileResult
   version: () => string
+  default: (input?: { module_or_path?: WebAssembly.Module | URL | string }) => Promise<void>
 }
 
 interface CompileResult {
@@ -18,10 +19,12 @@ let isWasmLoaded = false
 
 export async function loadWasm(): Promise<{ loaded: boolean; version?: string }> {
   try {
-    // WASM is served from /pkg/ in both dev (public/) and production (dist/)
-    const wasmPath = './pkg/fratm_wasm.js'
-    const module = await import(/* @vite-ignore */ wasmPath)
-    await module.default()
+    // Fetch and initialize WASM module from public directory
+    const wasmJsUrl = new URL('/pkg/fratm_wasm.js', window.location.origin).href
+    const module = await import(/* @vite-ignore */ wasmJsUrl) as WasmModule
+    // Initialize the WASM module with the .wasm file path
+    const wasmBinaryUrl = new URL('/pkg/fratm_wasm_bg.wasm', window.location.origin).href
+    await module.default({ module_or_path: wasmBinaryUrl })
     wasmModule = module
     isWasmLoaded = true
     return { loaded: true, version: module.version() }
