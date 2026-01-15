@@ -8,15 +8,15 @@ interface StatusBarProps {
 
 export function StatusBar({ status, statusText, compileTime }: StatusBarProps) {
   return (
-    <div className="px-4 py-1.5 bg-black/30 text-xs text-muted-foreground flex justify-between">
+    <div className="px-4 py-1.5 bg-card border-t border-border text-xs text-muted-foreground flex justify-between">
       <div className="flex items-center gap-2">
         <div
           className={cn(
             "w-2 h-2 rounded-full",
-            status === 'ready' && "bg-emerald-400",
-            status === 'loading' && "bg-amber-400 animate-pulse",
-            status === 'compiling' && "bg-amber-400 animate-pulse",
-            status === 'error' && "bg-red-400"
+            status === 'ready' && "bg-success",
+            status === 'loading' && "bg-warning animate-pulse",
+            status === 'compiling' && "bg-warning animate-pulse",
+            status === 'error' && "bg-destructive"
           )}
         />
         <span>{statusText}</span>

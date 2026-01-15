@@ -12,7 +12,7 @@ export function LoadingOverlay({ isVisible }: LoadingOverlayProps) {
         isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
       )}
     >
-      <div className="w-10 h-10 border-3 border-secondary border-t-primary rounded-full animate-spin" />
+      <div className="w-10 h-10 border-3 border-muted border-t-primary rounded-full animate-spin" />
       <p className="text-muted-foreground">Loading FratmScript...</p>
     </div>
   )

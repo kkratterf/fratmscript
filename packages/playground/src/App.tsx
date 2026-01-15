@@ -6,11 +6,13 @@ import { StatusBar } from '@/components/StatusBar'
 import { LoadingOverlay } from '@/components/LoadingOverlay'
 import { NativeSelect } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { ToastProvider, toastManager } from '@/components/ui/toast'
 import { useCompiler } from '@/hooks/useCompiler'
 import { examples, defaultCode } from '@/lib/examples'
 
 function App() {
   const [code, setCode] = useState(defaultCode)
+  const [selectedExample, setSelectedExample] = useState('')
   const compiler = useCompiler()
 
   // Load code from URL on mount
@@ -35,79 +37,93 @@ function App() {
     const url = window.location.origin + window.location.pathname + '?code=' + encoded
 
     navigator.clipboard.writeText(url).then(() => {
-      alert('Link copied to clipboard!')
+      toastManager.add({
+        title: 'Link copied!',
+        description: 'Share this link with others to share your code.',
+        type: 'success',
+      })
     }).catch(() => {
-      prompt('Copy this link:', url)
+      toastManager.add({
+        title: 'Copy failed',
+        description: url,
+        type: 'error',
+      })
     })
   }, [code])
 
   const handleExampleChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const name = e.target.value as keyof typeof examples
+    setSelectedExample(e.target.value)
     if (examples[name]) {
       setCode(examples[name])
-      e.target.value = ''
     }
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <LoadingOverlay isVisible={compiler.isLoading} />
+    <ToastProvider position="bottom-right">
+      <div className="min-h-screen flex flex-col bg-background">
+        <LoadingOverlay isVisible={compiler.isLoading} />
 
-      <Header
-        onRun={handleRun}
-        onShare={handleShare}
-        isCompiling={compiler.status === 'compiling'}
-      />
+        <Header
+          onRun={handleRun}
+          onShare={handleShare}
+          isCompiling={compiler.status === 'compiling'}
+        />
 
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 min-h-0">
-        {/* Editor Panel */}
-        <div className="flex flex-col border-r border-border min-h-0">
-          <div className="px-4 py-2 bg-secondary flex justify-between items-center border-b border-white/10">
-            <span className="font-semibold text-sm">FratmScript</span>
-            <Badge variant="secondary">v{compiler.version}</Badge>
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 min-h-0">
+          {/* Editor Panel */}
+          <div className="flex flex-col border-r border-border min-h-0">
+            <div className="px-4 py-2.5 bg-card flex justify-between items-center border-b border-border">
+              <span className="font-medium text-sm text-foreground">FratmScript</span>
+              <Badge variant="outline">v{compiler.version}</Badge>
+            </div>
+            <div className="flex-1 min-h-0 bg-background">
+              <Editor
+                value={code}
+                onChange={setCode}
+                onRun={handleRun}
+              />
+            </div>
+            <div className="px-4 py-2.5 bg-card border-t border-border flex items-center gap-3">
+              <label className="text-xs text-muted-foreground">Examples:</label>
+              <NativeSelect
+                value={selectedExample}
+                onChange={handleExampleChange}
+                className="w-52"
+              >
+                <option value="">-- Choose an example --</option>
+                <option value="hello">Hello World</option>
+                <option value="fibonacci">Fibonacci</option>
+                <option value="classe">Pizzaiolo Class</option>
+                <option value="async">Async/Await</option>
+                <option value="operatori">Logical Operators</option>
+                <option value="array">Arrays and Objects</option>
+              </NativeSelect>
+            </div>
           </div>
-          <div className="flex-1 min-h-0 bg-card">
-            <Editor
-              value={code}
-              onChange={setCode}
-              onRun={handleRun}
-            />
-          </div>
-          <div className="px-4 py-2 bg-black/20 flex items-center gap-3">
-            <label className="text-xs text-muted-foreground">Examples:</label>
-            <NativeSelect onChange={handleExampleChange} className="w-48">
-              <option value="">-- Choose an example --</option>
-              <option value="hello">Hello World</option>
-              <option value="fibonacci">Fibonacci</option>
-              <option value="classe">Pizzaiolo Class</option>
-              <option value="async">Async/Await</option>
-              <option value="operatori">Logical Operators</option>
-              <option value="array">Arrays and Objects</option>
-            </NativeSelect>
+
+          {/* Output Panel */}
+          <div className="flex flex-col min-h-0">
+            <div className="px-4 py-2.5 bg-card flex items-center border-b border-border">
+              <span className="font-medium text-sm text-foreground">Output</span>
+            </div>
+            <div className="flex-1 min-h-0 bg-background overflow-auto">
+              <OutputPanel
+                jsOutput={compiler.jsOutput}
+                consoleLogs={compiler.consoleLogs}
+                error={compiler.error}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Output Panel */}
-        <div className="flex flex-col min-h-0">
-          <div className="px-4 py-2 bg-secondary flex items-center border-b border-white/10">
-            <span className="font-semibold text-sm">Output</span>
-          </div>
-          <div className="flex-1 min-h-0 bg-card overflow-auto">
-            <OutputPanel
-              jsOutput={compiler.jsOutput}
-              consoleLogs={compiler.consoleLogs}
-              error={compiler.error}
-            />
-          </div>
-        </div>
+        <StatusBar
+          status={compiler.status}
+          statusText={compiler.statusText}
+          compileTime={compiler.compileTime}
+        />
       </div>
-
-      <StatusBar
-        status={compiler.status}
-        statusText={compiler.statusText}
-        compileTime={compiler.compileTime}
-      />
-    </div>
+    </ToastProvider>
   )
 }
 

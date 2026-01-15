@@ -29,7 +29,7 @@ export function OutputPanel({ jsOutput, consoleLogs, error }: OutputPanelProps) 
         <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
           Generated JavaScript
         </h3>
-        <pre className="font-mono text-sm leading-relaxed text-emerald-400 whitespace-pre-wrap break-words">
+        <pre className="font-mono text-sm leading-relaxed text-success whitespace-pre-wrap break-words">
           {jsOutput}
         </pre>
       </section>
@@ -47,9 +47,9 @@ export function OutputPanel({ jsOutput, consoleLogs, error }: OutputPanelProps) 
                 <span
                   key={i}
                   className={cn(
-                    log.type === 'warn' && 'text-amber-400',
-                    log.type === 'error' && 'text-red-400',
-                    log.type === 'log' && 'text-amber-300'
+                    log.type === 'warn' && 'text-warning',
+                    log.type === 'error' && 'text-destructive',
+                    log.type === 'log' && 'text-foreground'
                   )}
                 >
                   {escapeHtml(text)}
@@ -69,8 +69,8 @@ export function OutputPanel({ jsOutput, consoleLogs, error }: OutputPanelProps) 
           <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
             Error
           </h3>
-          <div className="bg-red-500/10 border border-red-500 rounded-md p-3">
-            <div className="font-semibold text-red-400 mb-1">
+          <div className="bg-destructive/10 border border-destructive rounded-md p-3">
+            <div className="font-semibold text-destructive mb-1">
               {error.error}
             </div>
             {error.line && (
@@ -79,7 +79,7 @@ export function OutputPanel({ jsOutput, consoleLogs, error }: OutputPanelProps) 
               </div>
             )}
             {error.suggestion && (
-              <div className="mt-2 pt-2 border-t border-white/10 text-amber-400 text-sm">
+              <div className="mt-2 pt-2 border-t border-border text-warning text-sm">
                 {error.suggestion}
               </div>
             )}
