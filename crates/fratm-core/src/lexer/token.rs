@@ -1,40 +1,40 @@
-//! # Definizioni Token per FratmScript
+//! # Token Definitions for FratmScript
 //!
-//! Questo modulo definisce tutti i tipi di token riconosciuti dal lexer
-//! e le strutture per tracciare le posizioni nel codice sorgente.
+//! This module defines all token types recognized by the lexer
+//! and structures for tracking positions in source code.
 //!
-//! ## Categorie di Token
+//! ## Token Categories
 //!
-//! ### Keyword Napoletane
-//! - **Variabili**: `chist` (const), `è`, `tien` (let)
-//! - **Funzioni**: `facc` (function), `piglie` (return)
-//! - **Controllo**: `si` (if), `sinnò` (else), `pe` (for), `mentre` (while)
-//! - **Classi**: `na` (class), `famiglie`, `nu` (new), `bell`
-//! - **Valori**: `overo` (true), `sfòls` (false), `nisciun` (null), `boh` (undefined)
+//! ### Neapolitan Keywords
+//! - **Variables**: `chist` (const), `è`, `tien` (let)
+//! - **Functions**: `facc` (function), `piglie` (return)
+//! - **Control**: `si` (if), `sinnò` (else), `pe` (for), `mentre` (while)
+//! - **Classes**: `na` (class), `famiglie`, `nu` (new), `bell`
+//! - **Values**: `overo` (true), `sfòls` (false), `nisciun` (null), `boh` (undefined)
 //! - **Async**: `mo` (async), `vir`, `aspett` (await)
 //!
-//! ### Operatori
-//! - **Aritmetici**: `+`, `-`, `*`, `/`, `%`, `**`
-//! - **Comparazione**: `==`, `===`, `!=`, `!==`, `<`, `>`, `<=`, `>=`
-//! - **Logici**: `e` (and), `o` (or), `no` (not)
-//! - **Assegnazione**: `=`, `+=`, `-=`, `*=`, `/=`
+//! ### Operators
+//! - **Arithmetic**: `+`, `-`, `*`, `/`, `%`, `**`
+//! - **Comparison**: `==`, `===`, `!=`, `!==`, `<`, `>`, `<=`, `>=`
+//! - **Logical**: `e` (and), `o` (or), `no` (not)
+//! - **Assignment**: `=`, `+=`, `-=`, `*=`, `/=`
 
 use std::fmt;
 use serde::{Serialize, Deserialize};
 
-/// Posizione di un token nel codice sorgente.
+/// Position of a token in the source code.
 ///
-/// Traccia sia l'offset in byte che la posizione riga/colonna per
-/// messaggi di errore human-readable e generazione di source maps.
+/// Tracks both byte offset and line/column position for
+/// human-readable error messages and source map generation.
 ///
-/// # Campi
+/// # Fields
 ///
-/// * `start` - Offset in byte dall'inizio del file
-/// * `end` - Offset in byte della fine del token
-/// * `line` - Numero di riga (1-indexed)
-/// * `column` - Numero di colonna (1-indexed)
+/// * `start` - Byte offset from file start
+/// * `end` - Byte offset of token end
+/// * `line` - Line number (1-indexed)
+/// * `column` - Column number (1-indexed)
 ///
-/// # Esempio
+/// # Example
 ///
 /// ```rust
 /// use fratm_core::lexer::Span;
@@ -45,25 +45,25 @@ use serde::{Serialize, Deserialize};
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Span {
-    /// Offset in byte dall'inizio del file (0-indexed)
+    /// Byte offset from file start (0-indexed)
     pub start: usize,
-    /// Offset in byte della fine del token (esclusivo)
+    /// Byte offset of token end (exclusive)
     pub end: usize,
-    /// Numero di riga (1-indexed)
+    /// Line number (1-indexed)
     pub line: usize,
-    /// Numero di colonna (1-indexed)
+    /// Column number (1-indexed)
     pub column: usize,
 }
 
 impl Span {
-    /// Crea un nuovo span con le posizioni specificate.
+    /// Creates a new span with the specified positions.
     pub fn new(start: usize, end: usize, line: usize, column: usize) -> Self {
         Self { start, end, line, column }
     }
 
-    /// Unisce due span creandone uno che copre entrambi.
+    /// Merges two spans creating one that covers both.
     ///
-    /// Utile per creare span che coprono intere espressioni composte.
+    /// Useful for creating spans that cover entire compound expressions.
     pub fn merge(&self, other: &Span) -> Span {
         Span {
             start: self.start.min(other.start),
@@ -80,12 +80,12 @@ impl Default for Span {
     }
 }
 
-/// Un token con la sua posizione nel sorgente.
+/// A token with its position in source.
 ///
-/// Rappresenta un singolo elemento lessicale riconosciuto dal lexer,
-/// completo di informazioni sulla posizione e il testo originale.
+/// Represents a single lexical element recognized by the lexer,
+/// complete with position information and original text.
 ///
-/// # Esempio
+/// # Example
 ///
 /// ```rust
 /// use fratm_core::lexer::{Token, TokenKind, Span};
@@ -99,33 +99,33 @@ impl Default for Span {
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Token {
-    /// Il tipo di token (keyword, operatore, letterale, etc.)
+    /// The token type (keyword, operator, literal, etc.)
     pub kind: TokenKind,
-    /// Posizione del token nel sorgente
+    /// Position of the token in source
     pub span: Span,
-    /// Testo originale del token come appare nel sorgente
+    /// Original text of the token as it appears in source
     pub literal: String,
 }
 
 impl Token {
-    /// Crea un nuovo token con tipo, posizione e testo letterale.
+    /// Creates a new token with type, position, and literal text.
     pub fn new(kind: TokenKind, span: Span, literal: String) -> Self {
         Self { kind, span, literal }
     }
 }
 
-/// Tutti i tipi di token riconosciuti dal lexer FratmScript.
+/// All token types recognized by the FratmScript lexer.
 ///
-/// I token sono organizzati in categorie:
-/// - **Keyword**: parole riservate del linguaggio napoletano
-/// - **Operatori**: aritmetici, logici, comparazione
-/// - **Punteggiatura**: parentesi, separatori
-/// - **Letterali**: identificatori, stringhe, numeri
-/// - **Speciali**: newline, EOF, token invalidi
+/// Tokens are organized in categories:
+/// - **Keywords**: reserved words in Neapolitan
+/// - **Operators**: arithmetic, logical, comparison
+/// - **Punctuation**: parentheses, separators
+/// - **Literals**: identifiers, strings, numbers
+/// - **Special**: newline, EOF, invalid tokens
 ///
-/// # Keyword Principali
+/// # Main Keywords
 ///
-/// | Token | Napoletano | JavaScript |
+/// | Token | Neapolitan | JavaScript |
 /// |-------|------------|------------|
 /// | `Chist` + `E` | `chist è` | `const` |
 /// | `Tien` | `tien` | `let` |
@@ -176,18 +176,18 @@ pub enum TokenKind {
     Rompe,          // break
     Salta,          // continue
 
-    // === New Keywords (Goliardiche) ===
-    Vir2,           // switch (part 1) - "vir" (vedi)
+    // === New Keywords (Goliardic) ===
+    Vir2,           // switch (part 1) - "vir" (see)
     Caso,           // case - "e che"
     SinnoFa,        // default in switch - "sinnò fa"
     Fisso,          // static
     Figlio,         // extends (part 1) - "figlio"
-    De,             // extends (part 2) - "'e" (di)
-    OPate,          // super - "'o pate" (il padre)
-    CheE,           // typeof - "chè è" (cos'è)
+    De,             // extends (part 2) - "'e" (of)
+    OPate,          // super - "'o pate" (the father)
+    CheE,           // typeof - "chè è" (what is)
     EUno,           // instanceof (part 1) - "è uno"
     Leva,           // delete
-    DintA,          // in - "dint'a" (dentro a)
+    DintA,          // in - "dint'a" (inside)
     Caccia,         // yield
     Fermete,        // debugger
     Scrive,         // console.error (part 1)
@@ -197,8 +197,8 @@ pub enum TokenKind {
     And,            // && - "e"
     Or,             // || - "o"
     Not,            // ! - "no"
-    Manco,          // ! (alias) - "manco" (neanche)
-    Pure,           // && (alias) - "pure" (anche)
+    Manco,          // ! (alias) - "manco" (not even)
+    Pure,           // && (alias) - "pure" (also)
 
     // === Operators ===
     Plus,
@@ -207,7 +207,7 @@ pub enum TokenKind {
     Slash,
     Percent,
     StarStar,
-    
+
     // === Comparison ===
     EqualEqual,
     EqualEqualEqual,
@@ -217,14 +217,14 @@ pub enum TokenKind {
     Greater,
     LessEqual,
     GreaterEqual,
-    
+
     // === Assignment ===
     Equal,
     PlusEqual,
     MinusEqual,
     StarEqual,
     SlashEqual,
-    
+
     // === Punctuation ===
     LeftParen,
     RightParen,
@@ -238,12 +238,12 @@ pub enum TokenKind {
     Semicolon,
     Question,
     Arrow,
-    
+
     // === Literals ===
     Identifier(String),
     String(String),
     Number(f64),
-    
+
     // === Special ===
     Newline,
     Eof,
@@ -353,28 +353,28 @@ impl fmt::Display for TokenKind {
     }
 }
 
-/// Mappa una stringa alla keyword corrispondente (se esiste).
+/// Maps a string to the corresponding keyword (if it exists).
 ///
-/// Usato dal lexer per determinare se un identificatore è una parola
-/// riservata del linguaggio.
+/// Used by the lexer to determine if an identifier is a reserved
+/// word of the language.
 ///
-/// # Argomenti
+/// # Arguments
 ///
-/// * `ident` - La stringa da verificare
+/// * `ident` - The string to verify
 ///
-/// # Ritorna
+/// # Returns
 ///
-/// * `Some(TokenKind)` - Se la stringa è una keyword
-/// * `None` - Se la stringa è un normale identificatore
+/// * `Some(TokenKind)` - If the string is a keyword
+/// * `None` - If the string is a normal identifier
 ///
-/// # Esempio
+/// # Example
 ///
 /// ```rust
 /// use fratm_core::lexer::{lookup_keyword, TokenKind};
 ///
 /// assert!(matches!(lookup_keyword("chist"), Some(TokenKind::Chist)));
 /// assert!(matches!(lookup_keyword("facc"), Some(TokenKind::Facc)));
-/// assert!(lookup_keyword("pizza").is_none()); // Non è una keyword
+/// assert!(lookup_keyword("pizza").is_none()); // Not a keyword
 /// ```
 pub fn lookup_keyword(ident: &str) -> Option<TokenKind> {
     match ident {
@@ -415,7 +415,7 @@ pub fn lookup_keyword(ident: &str) -> Option<TokenKind> {
         "predefinit" => Some(TokenKind::Predefinit),
         "rompe" => Some(TokenKind::Rompe),
         "salta" => Some(TokenKind::Salta),
-        // New keywords goliardiche
+        // New goliardic keywords
         "caso" => Some(TokenKind::Caso),
         "fisso" => Some(TokenKind::Fisso),
         "figlio" => Some(TokenKind::Figlio),
