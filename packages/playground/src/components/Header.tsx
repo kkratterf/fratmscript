@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipTrigger, TooltipPopup } from '@/components/ui/tooltip'
 
 interface HeaderProps {
   onRun: () => void
@@ -37,6 +38,56 @@ export function Header({ onRun, onShare, isCompiling }: HeaderProps) {
         <h1 className="font-bold text-primary text-xl">fratmscript 🤌🏻</h1>
       </div>
       <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <a
+                  href="https://github.com/kkratterf/fratmscript"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:bg-accent p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="View on GitHub"
+                >
+                  <GitHubIcon className="size-4" />
+                </a>
+              }
+            />
+            <TooltipPopup>Star this repo 🤌</TooltipPopup>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <a
+                  href="https://linkedin.com/in/kkratter"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:bg-accent p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="LinkedIn"
+                >
+                  <LinkedInIcon className="size-4" />
+                </a>
+              }
+            />
+            <TooltipPopup>Made with love by @kkratter</TooltipPopup>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <a
+                  href="https://x.com/kkratter"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:bg-accent p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="X (Twitter)"
+                >
+                  <XIcon className="size-4" />
+                </a>
+              }
+            />
+            <TooltipPopup>Follow for updates</TooltipPopup>
+          </Tooltip>
+        </div>
         <div className="flex items-center gap-1.5">
           <Button onClick={onRun} disabled={isCompiling}>
             Run
@@ -44,35 +95,6 @@ export function Header({ onRun, onShare, isCompiling }: HeaderProps) {
           <Button variant="outline" onClick={onShare}>
             Share
           </Button>
-        </div>
-        <div className="flex items-center gap-1">
-          <a
-            href="https://github.com/kkratterf/fratmscript"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:bg-accent p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="View on GitHub"
-          >
-            <GitHubIcon className="size-4" />
-          </a>
-          <a
-            href="https://linkedin.com/in/kkratter"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:bg-accent p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="LinkedIn"
-          >
-            <LinkedInIcon className="size-4" />
-          </a>
-          <a
-            href="https://x.com/kkratter"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:bg-accent p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="X (Twitter)"
-          >
-            <XIcon className="size-4" />
-          </a>
         </div>
       </div>
     </header>
