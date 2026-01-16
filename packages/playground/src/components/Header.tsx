@@ -53,7 +53,7 @@ export function Header({ onRun, onShare, isCompiling }: HeaderProps) {
                 </a>
               }
             />
-            <TooltipPopup>Star this repo 🤌</TooltipPopup>
+            <TooltipPopup>Star this repo 🤌🏻</TooltipPopup>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger
@@ -69,7 +69,7 @@ export function Header({ onRun, onShare, isCompiling }: HeaderProps) {
                 </a>
               }
             />
-            <TooltipPopup>Made with love by @kkratter</TooltipPopup>
+            <TooltipPopup>Made with love by @kkratter 🤍</TooltipPopup>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger
@@ -85,7 +85,7 @@ export function Header({ onRun, onShare, isCompiling }: HeaderProps) {
                 </a>
               }
             />
-            <TooltipPopup>Follow for updates</TooltipPopup>
+            <TooltipPopup>Follow for updates 👀</TooltipPopup>
           </Tooltip>
         </div>
         <div className="flex items-center gap-1.5">
