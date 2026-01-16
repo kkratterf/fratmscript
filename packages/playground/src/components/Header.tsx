@@ -35,12 +35,22 @@ export function Header({ onRun, onShare, isCompiling }: HeaderProps) {
     <header className="flex flex-wrap justify-between items-center gap-4 bg-card px-4 py-3 border-border border-b">
       <div className="flex items-center gap-3">
         <h1 className="font-bold text-primary text-xl">fratmscript 🤌🏻</h1>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5">
+          <Button onClick={onRun} disabled={isCompiling}>
+            Run
+          </Button>
+          <Button variant="outline" onClick={onShare}>
+            Share
+          </Button>
+        </div>
         <div className="flex items-center gap-1">
           <a
             href="https://github.com/kkratterf/fratmscript"
             target="_blank"
             rel="noopener noreferrer"
-            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            className="hover:bg-accent p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
             aria-label="View on GitHub"
           >
             <GitHubIcon className="size-4" />
@@ -49,29 +59,21 @@ export function Header({ onRun, onShare, isCompiling }: HeaderProps) {
             href="https://linkedin.com/in/kkratter"
             target="_blank"
             rel="noopener noreferrer"
-            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            className="hover:bg-accent p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
             aria-label="LinkedIn"
           >
             <LinkedInIcon className="size-4" />
           </a>
           <a
-            href="https://x.com/kkratterf"
+            href="https://x.com/kkratter"
             target="_blank"
             rel="noopener noreferrer"
-            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            className="hover:bg-accent p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
             aria-label="X (Twitter)"
           >
             <XIcon className="size-4" />
           </a>
         </div>
-      </div>
-      <div className="flex items-center gap-1.5">
-        <Button onClick={onRun} disabled={isCompiling}>
-          Run
-        </Button>
-        <Button variant="outline" onClick={onShare}>
-          Share
-        </Button>
       </div>
     </header>
   )
