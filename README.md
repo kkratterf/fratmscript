@@ -271,5 +271,5 @@ MIT
 ---
 
 <p align="center">
-  <b>Made with love and coffee</b>
+  <b>Made with Claude and coffee</b>
 </p>
