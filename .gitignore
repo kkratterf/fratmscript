@@ -29,3 +29,8 @@ package-lock.json
 # Environment
 .env
 .env.local
+
+# Build outputs
+packages/playground/dist/
+packages/vscode-extension/out/
+packages/vscode-extension/*.vsix
