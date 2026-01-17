@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#0d1f33"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="128" height="128" rx="16" fill="url(#bg)"/>
+  <!-- F letter stylized -->
+  <text x="64" y="85" font-family="Arial Black, sans-serif" font-size="72" font-weight="bold" fill="#f7df1e" text-anchor="middle">F</text>
+  <!-- Hand gesture (pinched fingers) -->
+  <text x="100" y="36" font-size="28">&#129292;</text>
+  <!-- JS badge -->
+  <rect x="8" y="96" width="32" height="24" rx="4" fill="#f7df1e"/>
+  <text x="24" y="114" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1e3a5f" text-anchor="middle">JS</text>
+</svg>

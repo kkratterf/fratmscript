@@ -1,5 +1,5 @@
 <a href="https://kkratterf.github.io/fratmscript/">
-  <img alt="JavaScript ma comme si deve" src="https://github.com/kkratterf/fratmscript/packages/playground/public/cover.jpeg">
+  <img alt="JavaScript ma comme si deve" src="https://github.com/kkratterf/fratmscript/tree/main/packages/playground/public/cover.jpeg">
 </a>
 
 # FratmScript 🤌🏻

@@ -1,0 +1,218 @@
+{
+  "Costante (const)": {
+    "prefix": ["chist", "const"],
+    "body": ["chist ${1:nome} è ${2:valore}"],
+    "description": "Dichiara una costante (const)"
+  },
+  "Variabile (let)": {
+    "prefix": ["tien", "let"],
+    "body": ["tien ${1:nome} = ${2:valore}"],
+    "description": "Dichiara una variabile (let)"
+  },
+  "Funzione": {
+    "prefix": ["facc", "function", "fn"],
+    "body": [
+      "facc ${1:nome}(${2:parametri}) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Dichiara una funzione"
+  },
+  "Funzione async": {
+    "prefix": ["mofacc", "async", "asyncfn"],
+    "body": [
+      "mo vir facc ${1:nome}(${2:parametri}) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Dichiara una funzione asincrona (async function)"
+  },
+  "Arrow function": {
+    "prefix": ["arrow", "=>"],
+    "body": ["(${1:parametri}) => ${2:espressione}"],
+    "description": "Arrow function"
+  },
+  "Arrow function con corpo": {
+    "prefix": ["arrowblock", "=>{}"],
+    "body": [
+      "(${1:parametri}) => {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Arrow function con blocco"
+  },
+  "If (si)": {
+    "prefix": ["si", "if"],
+    "body": [
+      "si (${1:condizione}) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Blocco condizionale if"
+  },
+  "If-else (si-sinnò)": {
+    "prefix": ["sisinno", "ifelse"],
+    "body": [
+      "si (${1:condizione}) {",
+      "\t$2",
+      "} sinnò {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Blocco condizionale if-else"
+  },
+  "While (mentre che)": {
+    "prefix": ["mentre", "while"],
+    "body": [
+      "mentre che (${1:condizione}) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Ciclo while"
+  },
+  "For (pe ogni)": {
+    "prefix": ["pe", "for"],
+    "body": [
+      "pe ogni (tien ${1:i} = ${2:0}; ${1:i} < ${3:length}; ${1:i} = ${1:i} + 1) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Ciclo for"
+  },
+  "For-of": {
+    "prefix": ["peogni", "forof"],
+    "body": [
+      "pe ogni (chist ${1:item} dint'a ${2:array}) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Ciclo for-of"
+  },
+  "Console.log (stamm a dì)": {
+    "prefix": ["stamm", "log", "console"],
+    "body": ["stamm a dì(${1:messaggio})"],
+    "description": "Console.log - stampa a console"
+  },
+  "Console.error (scrive)": {
+    "prefix": ["scrive", "error"],
+    "body": ["scrive(${1:errore})"],
+    "description": "Console.error - stampa errore"
+  },
+  "Console.warn (avvis)": {
+    "prefix": ["avvis", "warn"],
+    "body": ["avvis(${1:avviso})"],
+    "description": "Console.warn - stampa avviso"
+  },
+  "Return (piglie)": {
+    "prefix": ["piglie", "return"],
+    "body": ["piglie ${1:valore}"],
+    "description": "Return - ritorna un valore"
+  },
+  "Classe": {
+    "prefix": ["nafamiglie", "class"],
+    "body": [
+      "na famiglie ${1:Nome} {",
+      "\tcostruttore(${2:parametri}) {",
+      "\t\t$0",
+      "\t}",
+      "}"
+    ],
+    "description": "Dichiara una classe"
+  },
+  "Classe con extends": {
+    "prefix": ["nafamigliefiglio", "classextends"],
+    "body": [
+      "na famiglie ${1:Nome} figlio 'e ${2:Padre} {",
+      "\tcostruttore(${3:parametri}) {",
+      "\t\t'o pate(${4})",
+      "\t\t$0",
+      "\t}",
+      "}"
+    ],
+    "description": "Dichiara una classe che estende un'altra"
+  },
+  "Metodo di classe": {
+    "prefix": ["metodo", "method"],
+    "body": [
+      "${1:nome}(${2:parametri}) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Metodo di una classe"
+  },
+  "Try-catch (pruvamm-schiatta)": {
+    "prefix": ["pruvamm", "try"],
+    "body": [
+      "pruvamm {",
+      "\t$1",
+      "} e si schiatta (${2:errore}) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Blocco try-catch"
+  },
+  "Throw (iett)": {
+    "prefix": ["iett", "throw"],
+    "body": ["iett nu bell Error(${1:messaggio})"],
+    "description": "Lancia un'eccezione"
+  },
+  "Import": {
+    "prefix": ["chiamm", "import"],
+    "body": ["chiamm { ${1:nome} } da '${2:modulo}'"],
+    "description": "Importa un modulo"
+  },
+  "Import default": {
+    "prefix": ["chiammdefault", "importdefault"],
+    "body": ["chiamm ${1:nome} da '${2:modulo}'"],
+    "description": "Importa il default da un modulo"
+  },
+  "Export": {
+    "prefix": ["mann", "export"],
+    "body": ["mann for { ${1:nome} }"],
+    "description": "Esporta un valore"
+  },
+  "Export default": {
+    "prefix": ["manndefault", "exportdefault"],
+    "body": ["mann for predefinit ${1:nome}"],
+    "description": "Esporta come default"
+  },
+  "Await": {
+    "prefix": ["aspett", "await"],
+    "body": ["aspett ${1:promise}"],
+    "description": "Await - attende una Promise"
+  },
+  "New (nu bell)": {
+    "prefix": ["nubell", "new"],
+    "body": ["nu bell ${1:Classe}(${2:argomenti})"],
+    "description": "Crea una nuova istanza"
+  },
+  "This (stu cos)": {
+    "prefix": ["stu", "this"],
+    "body": ["stu cos"],
+    "description": "Riferimento a this"
+  },
+  "Template literal": {
+    "prefix": ["template", "`"],
+    "body": ["`${1:testo} \\${${2:variabile}}`"],
+    "description": "Template string con interpolazione"
+  },
+  "Oggetto": {
+    "prefix": ["obj", "object"],
+    "body": [
+      "{",
+      "\t${1:chiave}: ${2:valore}$0",
+      "}"
+    ],
+    "description": "Oggetto letterale"
+  },
+  "Array": {
+    "prefix": ["arr", "array"],
+    "body": ["[${1:elementi}]"],
+    "description": "Array letterale"
+  },
+  "Ternario": {
+    "prefix": ["tern", "?:"],
+    "body": ["${1:condizione} ? ${2:seVero} : ${3:seFalso}"],
+    "description": "Operatore ternario"
+  }
+}
