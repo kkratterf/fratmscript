@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { ToastProvider, toastManager } from '@/components/ui/toast'
 import { useCompiler } from '@/hooks/useCompiler'
 import { examples, defaultCode } from '@/lib/examples'
+import { SyntaxHelp } from '@/components/SyntaxHelp'
 
 function App() {
   const [code, setCode] = useState(defaultCode)
@@ -78,7 +79,7 @@ function App() {
             {/* Sticky panel header */}
             <div className="flex justify-between items-center bg-card px-4 py-2.5 border-border border-b shrink-0">
               <span className="font-medium text-muted-foreground text-sm">JavaScript ma comme si deve</span>
-              <Badge variant="outline">v{compiler.version}</Badge>
+              <Badge className="px-1 font-mono" variant="outline">{compiler.version}</Badge>
             </div>
             {/* Scrollable editor */}
             <div className="flex-1 bg-background min-h-0 overflow-auto">
@@ -89,21 +90,24 @@ function App() {
               />
             </div>
             {/* Sticky examples bar */}
-            <div className="flex items-center gap-3 bg-card px-4 py-2.5 border-border border-t shrink-0">
-              <label className="text-muted-foreground text-xs">Examples:</label>
-              <NativeSelect
-                value={selectedExample}
-                onChange={handleExampleChange}
-                className="w-52"
-              >
-                <option value="">-- Choose an example --</option>
-                <option value="hello">Hello World</option>
-                <option value="fibonacci">Fibonacci</option>
-                <option value="classe">Pizzaiolo Class</option>
-                <option value="async">Async/Await</option>
-                <option value="operatori">Logical Operators</option>
-                <option value="array">Arrays and Objects</option>
-              </NativeSelect>
+            <div className="flex items-center justify-between bg-card px-4 py-2.5 border-border border-t shrink-0">
+              <div className="flex items-center gap-3">
+                <label className="text-muted-foreground text-xs">Examples:</label>
+                <NativeSelect
+                  value={selectedExample}
+                  onChange={handleExampleChange}
+                  className="w-52"
+                >
+                  <option value="">-- Choose an example --</option>
+                  <option value="hello">Hello World</option>
+                  <option value="fibonacci">Fibonacci</option>
+                  <option value="classe">Pizzaiolo Class</option>
+                  <option value="async">Async/Await</option>
+                  <option value="operatori">Logical Operators</option>
+                  <option value="array">Arrays and Objects</option>
+                </NativeSelect>
+              </div>
+              <SyntaxHelp />
             </div>
           </div>
 
