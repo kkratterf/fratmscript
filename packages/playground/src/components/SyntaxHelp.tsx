@@ -5,7 +5,6 @@ import {
   DialogPopup,
   DialogHeader,
   DialogPanel,
-  DialogFooter,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
