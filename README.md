@@ -1,6 +1,10 @@
-# FratmScript
+<a href="https://kkratterf.github.io/fratmscript/">
+  <img alt="JavaScript ma comme si deve" src="https://github.com/kkratterf/fratmscript/packages/playground/public/cover.jpeg">
+</a>
 
-**JavaScript, ma comme si deve.** (JavaScript, the way it should be.)
+# FratmScript 🤌🏻
+
+**JavaScript ma comme si deve** (JavaScript, the way it should be)
 
 A transpiler that converts Neapolitan code to JavaScript. Written in Rust.
 

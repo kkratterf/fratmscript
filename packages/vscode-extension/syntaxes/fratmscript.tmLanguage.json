@@ -4,52 +4,252 @@
   "patterns": [
     { "include": "#comments" },
     { "include": "#strings" },
+    { "include": "#template-strings" },
     { "include": "#numbers" },
     { "include": "#keywords" },
     { "include": "#constants" },
     { "include": "#operators" },
-    { "include": "#functions" }
+    { "include": "#functions" },
+    { "include": "#variables" }
   ],
   "repository": {
     "comments": {
       "patterns": [
-        { "name": "comment.line.double-slash.fratm", "match": "//.*$" },
-        { "name": "comment.block.fratm", "begin": "/\\*", "end": "\\*/" }
+        {
+          "name": "comment.line.double-slash.fratm",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.fratm",
+          "begin": "/\\*",
+          "end": "\\*/",
+          "patterns": [
+            {
+              "name": "comment.block.fratm",
+              "match": "."
+            }
+          ]
+        }
       ]
     },
     "strings": {
       "patterns": [
-        { "name": "string.quoted.double.fratm", "begin": "\"", "end": "\"", "patterns": [{ "name": "constant.character.escape.fratm", "match": "\\\\." }] },
-        { "name": "string.quoted.single.fratm", "begin": "'", "end": "'", "patterns": [{ "name": "constant.character.escape.fratm", "match": "\\\\." }] }
+        {
+          "name": "string.quoted.double.fratm",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.fratm",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.fratm",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.fratm",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "template-strings": {
+      "patterns": [
+        {
+          "name": "string.template.fratm",
+          "begin": "`",
+          "end": "`",
+          "patterns": [
+            {
+              "name": "constant.character.escape.fratm",
+              "match": "\\\\."
+            },
+            {
+              "name": "meta.template.expression.fratm",
+              "begin": "\\$\\{",
+              "beginCaptures": {
+                "0": { "name": "punctuation.definition.template-expression.begin.fratm" }
+              },
+              "end": "\\}",
+              "endCaptures": {
+                "0": { "name": "punctuation.definition.template-expression.end.fratm" }
+              },
+              "patterns": [
+                { "include": "source.fratm" }
+              ]
+            }
+          ]
+        }
       ]
     },
     "numbers": {
       "patterns": [
-        { "name": "constant.numeric.fratm", "match": "\\b\\d+(\\.\\d+)?\\b" }
+        {
+          "name": "constant.numeric.hex.fratm",
+          "match": "\\b0[xX][0-9a-fA-F]+\\b"
+        },
+        {
+          "name": "constant.numeric.binary.fratm",
+          "match": "\\b0[bB][01]+\\b"
+        },
+        {
+          "name": "constant.numeric.octal.fratm",
+          "match": "\\b0[oO][0-7]+\\b"
+        },
+        {
+          "name": "constant.numeric.decimal.fratm",
+          "match": "\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b"
+        }
       ]
     },
     "keywords": {
       "patterns": [
-        { "name": "keyword.control.fratm", "match": "\\b(si|sinnò|mentre|che|pe|ogni|rompe|salta|piglie|pruvamm|schiatta|iett)\\b" },
-        { "name": "storage.type.fratm", "match": "\\b(chist|è|tien|facc|mo|vir|na|famiglie)\\b" },
-        { "name": "keyword.other.fratm", "match": "\\b(chiamm|da|mann|for|predefinit|nu|bell|stu|cos|aspett)\\b" },
-        { "name": "support.function.console.fratm", "match": "\\b(stamm|a|dì)\\b" }
+        {
+          "comment": "Control flow: si (if), sinnò (else), mentre che (while), pe ogni (for), rompe (break), salta (continue)",
+          "name": "keyword.control.fratm",
+          "match": "\\b(si|sinnò|mentre|che|pe|ogni|rompe|salta|piglie|pruvamm|schiatta|iett|vir|caso)\\b"
+        },
+        {
+          "comment": "Variable declarations: chist è (const), tien (let), facc (function)",
+          "name": "storage.type.fratm",
+          "match": "\\b(chist|è|tien|facc|mo|na|famiglie|fisso)\\b"
+        },
+        {
+          "comment": "Class/OOP: nu bell (new), figlio 'e (extends), 'o pate (super), costruttore",
+          "name": "keyword.other.fratm",
+          "match": "\\b(nu|bell|figlio|costruttore)\\b"
+        },
+        {
+          "comment": "Special keywords with apostrophe",
+          "name": "keyword.other.fratm",
+          "match": "'(e|o pate)\\b"
+        },
+        {
+          "comment": "Module: chiamm (import), da (from), mann for (export)",
+          "name": "keyword.control.import.fratm",
+          "match": "\\b(chiamm|da|mann|for|predefinit)\\b"
+        },
+        {
+          "comment": "Async: mo vir (async), aspett (await)",
+          "name": "keyword.control.async.fratm",
+          "match": "\\b(aspett)\\b"
+        },
+        {
+          "comment": "This: stu cos",
+          "name": "variable.language.this.fratm",
+          "match": "\\b(stu|cos)\\b"
+        },
+        {
+          "comment": "Operators as keywords: leva (delete), dint'a (in), caccia (yield), chè è (typeof), è uno (instanceof)",
+          "name": "keyword.operator.expression.fratm",
+          "match": "\\b(leva|caccia|fermete)\\b"
+        },
+        {
+          "comment": "Special: dint'a (in)",
+          "name": "keyword.operator.expression.fratm",
+          "match": "dint'a\\b"
+        },
+        {
+          "comment": "Console functions: stamm a dì (log), scrive (error), avvis (warn)",
+          "name": "support.function.console.fratm",
+          "match": "\\b(stamm|dì|scrive|avvis)\\b"
+        }
       ]
     },
     "constants": {
       "patterns": [
-        { "name": "constant.language.fratm", "match": "\\b(overo|sfòls|nisciun|boh)\\b" }
+        {
+          "comment": "Boolean true: overo",
+          "name": "constant.language.boolean.true.fratm",
+          "match": "\\b(overo)\\b"
+        },
+        {
+          "comment": "Boolean false: sfòls",
+          "name": "constant.language.boolean.false.fratm",
+          "match": "\\b(sfòls)\\b"
+        },
+        {
+          "comment": "Null: nisciun",
+          "name": "constant.language.null.fratm",
+          "match": "\\b(nisciun)\\b"
+        },
+        {
+          "comment": "Undefined: boh",
+          "name": "constant.language.undefined.fratm",
+          "match": "\\b(boh)\\b"
+        }
       ]
     },
     "operators": {
       "patterns": [
-        { "name": "keyword.operator.logical.fratm", "match": "\\b(e|o|no)\\b" },
-        { "name": "keyword.operator.fratm", "match": "(===|==|!==|!=|<=|>=|<|>|\\+|\\-|\\*|\\/|%|\\*\\*)" }
+        {
+          "comment": "Logical operators: e (and), o (or), no (not), manco, pure",
+          "name": "keyword.operator.logical.fratm",
+          "match": "\\b(e|o|no|manco|pure)\\b"
+        },
+        {
+          "comment": "Arrow function",
+          "name": "storage.type.function.arrow.fratm",
+          "match": "=>"
+        },
+        {
+          "comment": "Comparison operators",
+          "name": "keyword.operator.comparison.fratm",
+          "match": "(===|!==|==|!=|<=|>=|<|>)"
+        },
+        {
+          "comment": "Assignment operators",
+          "name": "keyword.operator.assignment.fratm",
+          "match": "(\\+=|-=|\\*=|/=|%=|=)"
+        },
+        {
+          "comment": "Arithmetic operators",
+          "name": "keyword.operator.arithmetic.fratm",
+          "match": "(\\*\\*|\\+|-|\\*|/|%)"
+        },
+        {
+          "comment": "Ternary operator",
+          "name": "keyword.operator.ternary.fratm",
+          "match": "[?:]"
+        },
+        {
+          "comment": "Spread operator",
+          "name": "keyword.operator.spread.fratm",
+          "match": "\\.\\.\\."
+        }
       ]
     },
     "functions": {
       "patterns": [
-        { "name": "entity.name.function.fratm", "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\()" }
+        {
+          "comment": "Function calls",
+          "name": "entity.name.function.fratm",
+          "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\()"
+        },
+        {
+          "comment": "Method definitions after facc",
+          "name": "entity.name.function.method.fratm",
+          "match": "(?<=facc\\s+)([a-zA-Z_][a-zA-Z0-9_]*)"
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "comment": "Variable after chist",
+          "name": "variable.other.constant.fratm",
+          "match": "(?<=chist\\s+)([a-zA-Z_][a-zA-Z0-9_]*)"
+        },
+        {
+          "comment": "Variable after tien",
+          "name": "variable.other.readwrite.fratm",
+          "match": "(?<=tien\\s+)([a-zA-Z_][a-zA-Z0-9_]*)"
+        }
       ]
     }
   }

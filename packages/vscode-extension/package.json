@@ -1,22 +1,105 @@
 {
   "name": "fratmscript-vscode",
   "displayName": "FratmScript",
-  "description": "🤌 Syntax highlighting for FratmScript - JavaScript in Napoletano",
-  "version": "0.1.0",
+  "description": "Syntax highlighting, snippets e Language Server per FratmScript - JavaScript in Napoletano",
+  "version": "0.2.0",
   "publisher": "fratmscript",
-  "engines": { "vscode": "^1.74.0" },
-  "categories": ["Programming Languages"],
+  "author": "FratmScript Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fratmscript/fratmscript"
+  },
+  "homepage": "https://github.com/fratmscript/fratmscript#readme",
+  "bugs": {
+    "url": "https://github.com/fratmscript/fratmscript/issues"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Linters"
+  ],
+  "keywords": [
+    "fratmscript",
+    "fratm",
+    "napoletano",
+    "napoli",
+    "javascript",
+    "transpiler",
+    "italian",
+    "dialect"
+  ],
+  "main": "./out/extension.js",
   "contributes": {
-    "languages": [{
-      "id": "fratmscript",
-      "aliases": ["FratmScript", "fratm"],
-      "extensions": [".fratm"],
-      "configuration": "./language-configuration.json"
-    }],
-    "grammars": [{
-      "language": "fratmscript",
-      "scopeName": "source.fratm",
-      "path": "./syntaxes/fratmscript.tmLanguage.json"
-    }]
+    "languages": [
+      {
+        "id": "fratmscript",
+        "aliases": [
+          "FratmScript",
+          "fratm",
+          "Napoletano JS"
+        ],
+        "extensions": [
+          ".fratm"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./images/icon.svg",
+          "dark": "./images/icon.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "fratmscript",
+        "scopeName": "source.fratm",
+        "path": "./syntaxes/fratmscript.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "fratmscript",
+        "path": "./snippets/fratmscript.json"
+      }
+    ],
+    "configuration": {
+      "title": "FratmScript",
+      "properties": {
+        "fratmscript.enableDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable real-time syntax diagnostics"
+        },
+        "fratmscript.showTranslationOnHover": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show JavaScript translation when hovering over keywords"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/vsce": "^3.7.1",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.0",
+    "vscode-languageserver": "^9.0.0",
+    "vscode-languageserver-textdocument": "^1.0.0"
   }
 }
