@@ -34,8 +34,21 @@ function XIcon({ className }: { className?: string }) {
 export function Header({ onRun, onShare, isCompiling }: HeaderProps) {
   return (
     <header className="flex flex-wrap justify-between items-center gap-4 bg-card px-4 py-3 border-border border-b">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <h1 className="font-bold text-primary text-xl">FratmScript 🤌🏻</h1>
+        <a
+          href="https://www.producthunt.com/products/fratmscript?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-fratmscript"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img
+            src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064494&theme=light&t=1769499803444"
+            alt="FratmScript - JavaScript ma comme si deve 🤌 | Product Hunt"
+            width="250"
+            height="54"
+            className="h-8 w-auto"
+          />
+        </a>
       </div>
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1">
