@@ -161,7 +161,7 @@ fermete                      // debugger
 
 ## Keyword Reference
 
-| FratmScript | JavaScript | Neapolitan |
+| FratmScript | JavaScript | English |
 |-------------|------------|------------|
 | `chist è` | `const` | "this is" |
 | `tien` | `let` | "hold" |
