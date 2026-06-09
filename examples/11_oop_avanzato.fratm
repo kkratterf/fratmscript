@@ -1,0 +1,48 @@
+// ============================================
+// Example 11: OOP Avanzato
+// Eredità (figlio 'e), super ('o pate), metodi statici (fisso)
+// ============================================
+
+na famiglie Persona {
+    costruttore(nome) {
+        stu cos.nome = nome
+    }
+
+    saluta() {
+        piglie "Ue, so' " + stu cos.nome
+    }
+
+    fisso categoria() {
+        piglie "Essere umano"
+    }
+}
+
+na famiglie Pizzaiolo figlio 'e Persona {
+    costruttore(nome, specialita) {
+        'o pate(nome)
+        stu cos.specialita = specialita
+        stu cos.pizzeFatte = 0
+    }
+
+    faiPizza(tipo) {
+        stu cos.pizzeFatte = stu cos.pizzeFatte + 1
+        piglie stu cos.nome + " ha sfornato na " + tipo + "!"
+    }
+
+    saluta() {
+        piglie 'o pate.saluta() + " e faccio " + stu cos.specialita
+    }
+
+    fisso salutoDiClasse() {
+        piglie "Nuje simm' pizzaiuoli"
+    }
+}
+
+chist è gennaro = nu bell Pizzaiolo("Gennaro", "Margherita")
+
+stamm a dì(gennaro.saluta())
+stamm a dì(gennaro.faiPizza("Marinara"))
+stamm a dì(gennaro.faiPizza("Diavola"))
+stamm a dì("Pizze fatte: " + gennaro.pizzeFatte)
+stamm a dì("Categoria: " + Persona.categoria())
+stamm a dì("Static subclass: " + Pizzaiolo.salutoDiClasse())

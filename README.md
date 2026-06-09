@@ -35,7 +35,8 @@ fratmscript/
 │   ├── vscode-extension/ # Syntax highlighting
 │   └── playground/       # Online editor
 ├── examples/             # Example programs
-└── docs/                 # Documentation
+├── Games/                # Games written in FratmScript
+└── PersonalScripts/      # Utility scripts + launcher
 ```
 
 ---
@@ -50,19 +51,21 @@ cd fratmscript
 # Build
 cargo build --release
 
-# Run
-./target/release/fratm run examples/01_salutatore.fratm
+# Launch
+./target/release/fratm lancia examples/01_salutatore.fratm
 
 # REPL
 ./target/release/fratm repl
 ```
+
+Per una guida completa a esempi, giochi e script: **[Run Guide](RUN_EXAMPLES.md)**.
 
 ---
 
 ## CLI Commands
 
 ```bash
-fratm run <file.fratm>              # Compile and run
+fratm lancia <file.fratm>           # Compile and launch
 fratm build <file.fratm>            # Compile to JavaScript
 fratm build <file> --sourcemap      # With source map
 fratm repl                          # Interactive REPL
@@ -120,11 +123,20 @@ manco                        // ! (alias for "no")
 ### Classes
 ```fratm
 na famiglie Persona {
-    facc costruttore(nome) {
+    costruttore(nome) {
         stu cos.nome = nome
     }
 }
-chist è p = nu bell Persona("Gennaro")
+
+na famiglie Pizzaiolo figlio 'e Persona {
+    costruttore(nome) {
+        'o pate(nome)
+    }
+
+    fisso specie() {
+        piglie "Essere umano"
+    }
+}
 ```
 
 ### Try/Catch
@@ -185,6 +197,9 @@ fermete                      // debugger
 | `iett` | `throw` | "throw" |
 | `nu bell` | `new` | "a nice" |
 | `na famiglie` | `class` | "a family" |
+| `figlio 'e` | `extends` | "child of" |
+| `'o pate` | `super` | "the father" |
+| `fisso` | `static` | "fixed/static" |
 | `stu cos` | `this` | "this thing" |
 | `chiamm` | `import` | "call" |
 | `da` | `from` | "from" |
@@ -199,20 +214,27 @@ fermete                      // debugger
 
 ## Development
 
+Install `just` (Linux/macOS/Windows) and official guide:
+- [RUN_EXAMPLES.md](RUN_EXAMPLES.md#install-just-optional-but-recommended)
+- https://just.systems/man/en/
+
 ```bash
-# Build all crates
-cargo build
+# Recommended task runner
+just --list
 
-# Run tests
-cargo test
+# Build and test
+just build
+just test
 
-# Build WASM
-cd crates/fratm-wasm
-wasm-pack build --target web
+# Build/launch all examples
+just examples-build
+just examples-lancia
 
-# Package VSCode extension
-cd packages/vscode-extension
-vsce package
+# Build release CLI
+just release
+
+# Build WASM for playground
+just wasm
 ```
 
 ---
@@ -224,7 +246,7 @@ The playground is a web-based editor to try FratmScript in your browser.
 ```bash
 # Build WASM module
 cd crates/fratm-wasm
-wasm-pack build --target web --out-dir ../../packages/playground/pkg
+wasm-pack build --target web --out-dir ../../packages/playground/public/pkg
 
 # Serve the playground
 cd ../../packages/playground
@@ -249,8 +271,20 @@ Check the `examples/` folder for complete programs:
 6. `06_funzioni.fratm` - Advanced functions
 7. `07_async.fratm` - Async/await
 8. `08_classi.fratm` - OOP
-9. `09_moduli.fratm` - Import/export
+9. `09_moduli.fratm` - Import/export without external deps
 10. `10_nuove_feature.fratm` - New features
+11. `11_oop_avanzato.fratm` - Inheritance, super and static methods
+12. `12_trycatch_validazione.fratm` - Try/catch and validation
+
+---
+
+## Script Launcher
+
+You can launch extra scripts from one entrypoint:
+
+```bash
+fratm lancia PersonalScripts/run_personal_scripts.fratm
+```
 
 ---
 

@@ -61,7 +61,8 @@ pub enum Statement {
     },
     ClassDecl {
         name: String,
-        methods: Vec<Statement>,
+        super_class: Option<String>,
+        methods: Vec<ClassMethod>,
         span: Span,
     },
     Import {
@@ -91,6 +92,16 @@ pub struct ImportSpecifier {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClassMethod {
+    pub name: String,
+    pub params: Vec<String>,
+    pub body: Vec<Statement>,
+    pub is_async: bool,
+    pub is_static: bool,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Expression {
     Identifier { name: String, span: Span },
     Number { value: f64, span: Span },
@@ -99,6 +110,7 @@ pub enum Expression {
     Null { span: Span },
     Undefined { span: Span },
     This { span: Span },
+    Super { span: Span },
     Array { elements: Vec<Expression>, span: Span },
     Object { properties: Vec<(String, Expression)>, span: Span },
     Binary {
@@ -184,6 +196,7 @@ impl Expression {
             Expression::Null { span } => *span,
             Expression::Undefined { span } => *span,
             Expression::This { span } => *span,
+            Expression::Super { span } => *span,
             Expression::Array { span, .. } => *span,
             Expression::Object { span, .. } => *span,
             Expression::Binary { span, .. } => *span,

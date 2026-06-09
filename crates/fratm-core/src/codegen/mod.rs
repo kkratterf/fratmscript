@@ -197,29 +197,32 @@ impl CodeGen {
                 self.emit(";");
             }
 
-            Statement::ClassDecl { name, methods, span, .. } => {
+            Statement::ClassDecl { name, super_class, methods, span, .. } => {
                 self.write_indent();
                 self.add_mapping(span.line, span.column);
                 self.emit("class ");
                 self.emit(name);
+                if let Some(parent) = super_class {
+                    self.emit(" extends ");
+                    self.emit(parent);
+                }
                 self.emit(" {\n");
                 self.indent += 1;
                 for method in methods {
-                    if let Statement::FunctionDecl { name: method_name, params, body, is_async, .. } = method {
-                        self.write_indent();
-                        if *is_async { self.emit("async "); }
-                        // Translate "costruttore" to JavaScript "constructor"
-                        let js_method_name = if method_name == "costruttore" { "constructor" } else { method_name };
-                        self.emit(js_method_name);
-                        self.emit("(");
-                        self.emit(&params.join(", "));
-                        self.emit(") {\n");
-                        self.indent += 1;
-                        for s in body { self.gen_statement(s); self.emit("\n"); }
-                        self.indent -= 1;
-                        self.write_indent();
-                        self.emit("}\n");
-                    }
+                    self.write_indent();
+                    if method.is_static { self.emit("static "); }
+                    if method.is_async { self.emit("async "); }
+                    // Translate "costruttore" to JavaScript "constructor"
+                    let js_method_name = if method.name == "costruttore" { "constructor" } else { method.name.as_str() };
+                    self.emit(js_method_name);
+                    self.emit("(");
+                    self.emit(&method.params.join(", "));
+                    self.emit(") {\n");
+                    self.indent += 1;
+                    for s in &method.body { self.gen_statement(s); self.emit("\n"); }
+                    self.indent -= 1;
+                    self.write_indent();
+                    self.emit("}\n");
                 }
                 self.indent -= 1;
                 self.write_indent();
@@ -300,6 +303,7 @@ impl CodeGen {
             Expression::Null { .. } => self.emit("null"),
             Expression::Undefined { .. } => self.emit("undefined"),
             Expression::This { .. } => self.emit("this"),
+            Expression::Super { .. } => self.emit("super"),
             Expression::Array { elements, .. } => {
                 self.emit("[");
                 for (i, elem) in elements.iter().enumerate() {

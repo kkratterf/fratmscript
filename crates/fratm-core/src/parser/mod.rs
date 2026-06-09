@@ -228,15 +228,61 @@ impl Parser {
         self.expect(&TokenKind::Na)?;
         self.expect(&TokenKind::Famiglie)?;
         let name = self.expect_identifier()?;
+
+        // Optional inheritance:
+        // - "figlio 'e Base"
+        // - "figlio de Base"
+        // - "figlio Base" (shortcut)
+        let super_class = if self.match_token(&TokenKind::Figlio) {
+            // Connector is optional to preserve backwards compatibility.
+            self.match_token(&TokenKind::De);
+            Some(self.expect_identifier()?)
+        } else {
+            None
+        };
+
         self.expect(&TokenKind::LeftBrace)?;
         let mut methods = Vec::new();
         while !self.check(&TokenKind::RightBrace) && !self.is_at_end() {
             while self.check(&TokenKind::Newline) { self.advance(); }
             if self.check(&TokenKind::RightBrace) { break; }
-            methods.push(self.parse_function()?);
+            methods.push(self.parse_class_method()?);
         }
         self.expect(&TokenKind::RightBrace)?;
-        Ok(Statement::ClassDecl { name, methods, span: self.span_from(start.start) })
+        Ok(Statement::ClassDecl {
+            name,
+            super_class,
+            methods,
+            span: self.span_from(start.start),
+        })
+    }
+
+    fn parse_class_method(&mut self) -> Result<ClassMethod, ParseError> {
+        let start = self.current_span();
+        let is_static = self.match_token(&TokenKind::Fisso);
+
+        let is_async = if self.match_token(&TokenKind::Mo) {
+            self.expect(&TokenKind::Vir)?;
+            true
+        } else {
+            false
+        };
+
+        // "facc" inside classes is optional.
+        self.match_token(&TokenKind::Facc);
+
+        let name = self.expect_identifier()?;
+        let params = self.parse_parameters()?;
+        let body = self.parse_block_body()?;
+
+        Ok(ClassMethod {
+            name,
+            params,
+            body,
+            is_async,
+            is_static,
+            span: self.span_from(start.start),
+        })
     }
 
     fn parse_import(&mut self) -> Result<Statement, ParseError> {
@@ -484,6 +530,7 @@ impl Parser {
                 self.expect(&TokenKind::Cos)?;
                 Ok(Expression::This { span: self.span_from(span.start) })
             }
+            TokenKind::OPate => Ok(Expression::Super { span: self.span_from(span.start) }),
             TokenKind::Nu => {
                 self.expect(&TokenKind::Bell)?;
                 let callee = self.parse_call()?;
@@ -534,13 +581,16 @@ impl Parser {
             }
             TokenKind::LeftBracket => {
                 let mut elements = Vec::new();
+                while self.check(&TokenKind::Newline) { self.advance(); }
                 if !self.check(&TokenKind::RightBracket) {
                     elements.push(self.parse_expression()?);
                     while self.match_token(&TokenKind::Comma) {
+                        while self.check(&TokenKind::Newline) { self.advance(); }
                         if self.check(&TokenKind::RightBracket) { break; }
                         elements.push(self.parse_expression()?);
                     }
                 }
+                while self.check(&TokenKind::Newline) { self.advance(); }
                 self.expect(&TokenKind::RightBracket)?;
                 Ok(Expression::Array { elements, span: self.span_from(span.start) })
             }

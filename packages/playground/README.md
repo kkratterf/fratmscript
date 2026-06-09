@@ -58,9 +58,11 @@ Output will be in the `dist/` folder.
 1. **Hello World** - variables and output
 2. **Fibonacci** - recursive functions
 3. **Pizzaiolo Class** - classes and methods
-4. **Async/Await** - asynchronous functions
-5. **Logical Operators** - e, o, no, pure, manco
-6. **Arrays and Objects** - data structures
+4. **Advanced OOP** - extends, super, static methods
+5. **Async/Await** - asynchronous functions
+6. **Logical Operators** - e, o, no, pure, manco
+7. **Arrays and Objects** - data structures
+8. **Try/Catch** - throw and error handling
 
 ## Tech Stack
 

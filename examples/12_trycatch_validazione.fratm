@@ -1,0 +1,28 @@
+// ============================================
+// Example 12: Try/Catch e Validazione
+// pruvamm, e si schiatta, iett
+// ============================================
+
+facc validaEta(eta) {
+    si (eta < 0) {
+        iett nu bell Error("L'eta nun po' essere negativa")
+    }
+    si (eta > 130) {
+        iett nu bell Error("L'eta è troppo alta pe' essere vera")
+    }
+    piglie "Eta valida: " + eta
+}
+
+facc provaValore(eta) {
+    pruvamm {
+        stamm a dì(validaEta(eta))
+    } e si schiatta (err) {
+        avvis a dì("Valore " + eta + " scartato: " + err.message)
+    }
+}
+
+stamm a dì("=== Validazione eta ===")
+provaValore(35)
+provaValore(-2)
+provaValore(200)
+provaValore(90)

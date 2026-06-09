@@ -245,7 +245,8 @@ impl<'a> Lexer<'a> {
                     }
                 }
                 
-                '"' | '\'' => self.scan_string(c),
+                '"' => self.scan_string(c),
+                '\'' => self.scan_apostrophe_or_string(),
                 c if c.is_ascii_digit() => self.scan_number(),
                 c if is_ident_start(c) => self.scan_identifier(),
                 
@@ -337,6 +338,43 @@ impl<'a> Lexer<'a> {
             Span::new(self.token_start, self.position, self.token_line, self.token_column),
             literal,
         )
+    }
+
+    /// Handles apostrophe-based OOP aliases before falling back to a normal string.
+    ///
+    /// Supported forms:
+    /// - `'e`   -> extends connector (`TokenKind::De`)
+    /// - `'o pate` -> super (`TokenKind::OPate`)
+    fn scan_apostrophe_or_string(&mut self) -> Token {
+        let rest = &self.source[self.position..];
+
+        // `'e` (used in "figlio 'e Padre")
+        if let Some(after_e) = rest.strip_prefix('e') {
+            if after_e.chars().next().map(|c| c.is_whitespace()).unwrap_or(false) {
+                self.advance(); // consume 'e'
+                return self.make_token(TokenKind::De);
+            }
+        }
+
+        // `'o pate` used for super calls
+        if let Some(after_o) = rest.strip_prefix('o') {
+            let spaces_len = after_o.len() - after_o.trim_start_matches(|c| c == ' ' || c == '\t').len();
+            let trimmed = &after_o[spaces_len..];
+            if spaces_len > 0 {
+                if let Some(after_pate) = trimmed.strip_prefix("pate") {
+                    if after_pate.chars().next().map(|c| !is_ident_continue(c)).unwrap_or(true) {
+                        let consumed = 1 + spaces_len + "pate".len();
+                        for _ in 0..consumed {
+                            self.advance();
+                        }
+                        return self.make_token(TokenKind::OPate);
+                    }
+                }
+            }
+        }
+
+        // Not an apostrophe keyword: parse as a single-quoted string.
+        self.scan_string('\'')
     }
 
     fn scan_string(&mut self, quote: char) -> Token {
@@ -447,5 +485,16 @@ mod tests {
         let tokens = lexer.tokenize();
         assert!(matches!(tokens[0].kind, TokenKind::Number(n) if n == 42.0));
         assert!(matches!(tokens[1].kind, TokenKind::Number(n) if (n - 3.14).abs() < 0.001));
+    }
+
+    #[test]
+    fn test_apostrophe_oop_keywords() {
+        let mut lexer = Lexer::new("figlio 'e Padre { 'o pate(nome) }");
+        let tokens = lexer.tokenize();
+
+        assert!(matches!(tokens[0].kind, TokenKind::Figlio));
+        assert!(matches!(tokens[1].kind, TokenKind::De));
+        assert!(matches!(tokens[2].kind, TokenKind::Identifier(_)));
+        assert!(matches!(tokens[4].kind, TokenKind::OPate));
     }
 }

@@ -1,0 +1,131 @@
+// ============================================
+// Pomodor e Muzzarel
+// Tic Tac Toe in versione napoletana
+// Esecuzione:
+// 1) fratm build Games/Pomodor_e_Muzzarel/pomodor_e_muzzarel.fratm
+// 2) node Games/Pomodor_e_Muzzarel/pomodor_e_muzzarel.js
+// ============================================
+
+tien readline = require("readline")
+tien rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+})
+
+tien tavola = [" ", " ", " ", " ", " ", " ", " ", " ", " "]
+tien giocatore_attuale = "P"
+
+facc nome_giocatore(simbolo) {
+    si (simbolo == "P") {
+        piglie "Pomodor"
+    }
+    piglie "Muzzarel"
+}
+
+facc simbolo_casella(indice) {
+    si (tavola[indice] == " ") {
+        piglie "" + (indice + 1)
+    }
+    piglie tavola[indice]
+}
+
+facc stampa_tavola() {
+    stamm a dì("")
+    stamm a dì(" " + simbolo_casella(0) + " | " + simbolo_casella(1) + " | " + simbolo_casella(2))
+    stamm a dì("---+---+---")
+    stamm a dì(" " + simbolo_casella(3) + " | " + simbolo_casella(4) + " | " + simbolo_casella(5))
+    stamm a dì("---+---+---")
+    stamm a dì(" " + simbolo_casella(6) + " | " + simbolo_casella(7) + " | " + simbolo_casella(8))
+    stamm a dì("")
+}
+
+facc casella_libera(indice) {
+    piglie tavola[indice] == " "
+}
+
+facc linea_vincente(a, b, c, simbolo) {
+    piglie tavola[a] == simbolo e tavola[b] == simbolo e tavola[c] == simbolo
+}
+
+facc ha_vinto(simbolo) {
+    si (linea_vincente(0, 1, 2, simbolo) o linea_vincente(3, 4, 5, simbolo) o linea_vincente(6, 7, 8, simbolo) o linea_vincente(0, 3, 6, simbolo) o linea_vincente(1, 4, 7, simbolo) o linea_vincente(2, 5, 8, simbolo) o linea_vincente(0, 4, 8, simbolo) o linea_vincente(2, 4, 6, simbolo)) {
+        piglie overo
+    }
+    piglie sfòls
+}
+
+facc e_pareggio() {
+    pe (tien i = 0; i < 9; i = i + 1) {
+        si (tavola[i] == " ") {
+            piglie sfòls
+        }
+    }
+    piglie overo
+}
+
+facc cambia_giocatore() {
+    si (giocatore_attuale == "P") {
+        giocatore_attuale = "M"
+        piglie nisciun
+    }
+    giocatore_attuale = "P"
+}
+
+facc mostra_titolo() {
+    stamm a dì("====================================")
+    stamm a dì("      POMODOR E MUZZAREL")
+    stamm a dì("   Tic Tac Toe napulitan edition")
+    stamm a dì("====================================")
+    stamm a dì("Pomodor = P | Muzzarel = M")
+}
+
+facc turno() {
+    stampa_tavola()
+    stamm a dì("Turno 'e " + nome_giocatore(giocatore_attuale) + " (" + giocatore_attuale + ")")
+
+    rl.question("Scegli na casella (1-9): ", (risposta) => {
+        tien mossa = parseInt(risposta, 10)
+
+        si (isNaN(mossa)) {
+            avvis a dì("Mossa nun valida. Miette nu numero tra 1 e 9.")
+            turno()
+            piglie nisciun
+        }
+
+        tien indice = mossa - 1
+
+        si (indice < 0 o indice > 8) {
+            avvis a dì("Casella fora campo. Scegli tra 1 e 9.")
+            turno()
+            piglie nisciun
+        }
+
+        si (no casella_libera(indice)) {
+            avvis a dì("Chest casella è già presa.")
+            turno()
+            piglie nisciun
+        }
+
+        tavola[indice] = giocatore_attuale
+
+        si (ha_vinto(giocatore_attuale)) {
+            stampa_tavola()
+            stamm a dì("Ha vinto " + nome_giocatore(giocatore_attuale) + "! Brav fratm!")
+            rl.close()
+            piglie nisciun
+        }
+
+        si (e_pareggio()) {
+            stampa_tavola()
+            stamm a dì("Pareggio! Pizza margherita pe tutte e dduje.")
+            rl.close()
+            piglie nisciun
+        }
+
+        cambia_giocatore()
+        turno()
+    })
+}
+
+mostra_titolo()
+turno()

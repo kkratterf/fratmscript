@@ -20,8 +20,9 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Compile and run a .fratm file
-    Run {
+    /// Compile and launch a .fratm file
+    #[command(name = "lancia", alias = "run")]
+    Lancia {
         file: PathBuf,
         #[arg(long)]
         sourcemap: bool,
@@ -45,7 +46,7 @@ enum Commands {
 fn main() {
     let cli = Cli::parse();
     match cli.command {
-        Commands::Run { file, sourcemap } => run_file(&file, sourcemap),
+        Commands::Lancia { file, sourcemap } => run_file(&file, sourcemap),
         Commands::Build { file, output, sourcemap } => build_file(&file, output, sourcemap),
         Commands::Repl => run_repl(),
         Commands::Tokens { file } => show_tokens(&file),
@@ -63,16 +64,16 @@ fn run_file(path: &PathBuf, sourcemap: bool) {
 
     match compile(&source, options) {
         Ok(result) => {
-            let temp_path = std::env::temp_dir().join("fratm_temp.js");
+            let script_dir = path.parent().unwrap_or_else(|| std::path::Path::new("."));
+            let temp_path = script_dir.join(format!(".fratm_temp_{}.js", std::process::id()));
             let mut output = result.code;
             if sourcemap { if let Some(sm) = &result.source_map { output.push_str("\n"); output.push_str(&sm.to_data_url()); } }
             if let Err(e) = fs::write(&temp_path, &output) { eprintln!("{} {}", "Error: cannot write file:".red().bold(), e); std::process::exit(1); }
-            let cmd_output = Command::new("node").arg(&temp_path).output();
-            match cmd_output {
-                Ok(out) => {
-                    io::stdout().write_all(&out.stdout).unwrap();
-                    io::stderr().write_all(&out.stderr).unwrap();
-                    if !out.status.success() { std::process::exit(out.status.code().unwrap_or(1)); }
+            let cmd_status = Command::new("node").arg(&temp_path).status();
+            let _ = fs::remove_file(&temp_path);
+            match cmd_status {
+                Ok(status) => {
+                    if !status.success() { std::process::exit(status.code().unwrap_or(1)); }
                 }
                 Err(e) => { eprintln!("{} {}", "Error: Node.js failed:".red().bold(), e); std::process::exit(1); }
             }

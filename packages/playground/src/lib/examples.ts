@@ -45,6 +45,36 @@ stamm a dì(gennaro.faiPizza("Marinara"))
 stamm a dì(gennaro.faiPizza("Diavola"))
 stamm a dì("Pizzas made: " + gennaro.pizzeFatte)`,
 
+  oop_avanzato: `// OOP avanzato: extends, super, static
+na famiglie Persona {
+    costruttore(nome) {
+        stu cos.nome = nome
+    }
+
+    saluta() {
+        piglie "Ue, so' " + stu cos.nome
+    }
+
+    fisso categoria() {
+        piglie "Essere umano"
+    }
+}
+
+na famiglie Pizzaiolo figlio 'e Persona {
+    costruttore(nome, specialita) {
+        'o pate(nome)
+        stu cos.specialita = specialita
+    }
+
+    saluta() {
+        piglie 'o pate.saluta() + " e faccio " + stu cos.specialita
+    }
+}
+
+chist è gennaro = nu bell Pizzaiolo("Gennaro", "Margherita")
+stamm a dì(gennaro.saluta())
+stamm a dì("Categoria: " + Persona.categoria())`,
+
   async: `// Async/Await in FratmScript
 mo vir facc caricaDati() {
     stamm a dì("Loading...")
@@ -104,6 +134,29 @@ stamm a dì("  Customer: " + ordine.cliente)
 stamm a dì("  Pizza: " + ordine.pizza)
 stamm a dì("  Quantity: " + ordine.quantita)
 stamm a dì("  Delivery: " + (ordine.consegna ? "Yes" : "No"))`,
+
+  trycatch: `// Try/Catch and Throw
+facc validaEta(eta) {
+    si (eta < 0) {
+        iett nu bell Error("Eta negativa")
+    }
+    si (eta > 130) {
+        iett nu bell Error("Eta troppo alta")
+    }
+    piglie "Eta valida: " + eta
+}
+
+facc prova(eta) {
+    pruvamm {
+        stamm a dì(validaEta(eta))
+    } e si schiatta (err) {
+        avvis a dì("Errore con " + eta + ": " + err.message)
+    }
+}
+
+prova(35)
+prova(-1)
+prova(200)`,
 }
 
 export const defaultCode = `// Try FratmScript!

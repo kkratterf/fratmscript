@@ -1,0 +1,353 @@
+chist è fs = require("node:fs")
+chist è path = require("node:path")
+chist è pdfLib = require("pdf-lib")
+chist è PDFDocument = pdfLib.PDFDocument
+
+facc aiuto() {
+    stamm a dì("Gestore PDF in FratmScript")
+    stamm a dì("")
+    stamm a dì("Comandi disponibili:")
+    stamm a dì("  info <file.pdf>")
+    stamm a dì("  unisci <output.pdf> <input1.pdf> <input2.pdf> [altri.pdf]")
+    stamm a dì("  estrai <input.pdf> <output.pdf> <pagine>")
+    stamm a dì("  taglia <input.pdf> <output.pdf> <pagine>")
+    stamm a dì("  riordina <input.pdf> <output.pdf> <pagine>")
+    stamm a dì("  dividi <input.pdf> <cartella-output>")
+    stamm a dì("  rinomina <vecchio.pdf> <nuovo.pdf>")
+    stamm a dì("  rinomina-massa <cartella> <prefisso>")
+    stamm a dì("")
+    stamm a dì("Formato pagine:")
+    stamm a dì("  1,3,5")
+    stamm a dì("  1-4")
+    stamm a dì("  5,1,2,3")
+    stamm a dì("  10-8")
+    stamm a dì("")
+    stamm a dì("Esempi:")
+    stamm a dì("  node pdf_manager.js unisci archivio.pdf a.pdf b.pdf c.pdf")
+    stamm a dì("  node pdf_manager.js estrai contratto.pdf pagine_pari.pdf 2,4,6,8")
+    stamm a dì("  node pdf_manager.js riordina scansione.pdf ordinato.pdf 3,1,2,4")
+    stamm a dì("  node pdf_manager.js dividi libro.pdf ./pagine")
+    stamm a dì("  node pdf_manager.js rinomina-massa ./documenti fattura")
+}
+
+facc esciConErrore(messaggio) {
+    scrive a dì("Errore: " + messaggio)
+    process.exit(1)
+}
+
+facc assicuraEsistenza(percorso) {
+    si (!fs.existsSync(percorso)) {
+        iett nu bell Error("File o cartella non trovato: " + percorso)
+    }
+}
+
+facc assicuraCartellaPerFile(percorsoFile) {
+    chist è cartella = path.dirname(percorsoFile)
+    si (!fs.existsSync(cartella)) {
+        fs.mkdirSync(cartella, { recursive: overo })
+    }
+}
+
+facc assicuraCartella(percorsoCartella) {
+    si (!fs.existsSync(percorsoCartella)) {
+        fs.mkdirSync(percorsoCartella, { recursive: overo })
+    }
+}
+
+facc leggiBytes(percorsoFile) {
+    assicuraEsistenza(percorsoFile)
+    piglie fs.readFileSync(percorsoFile)
+}
+
+facc salvaBytes(percorsoFile, bytes) {
+    assicuraCartellaPerFile(percorsoFile)
+    fs.writeFileSync(percorsoFile, bytes)
+}
+
+facc zeroPad(numero, lunghezza) {
+    tien testo = "" + numero
+    mentre che (testo.length < lunghezza) {
+        testo = "0" + testo
+    }
+    piglie testo
+}
+
+facc parsePagine(spec) {
+    si (spec == nisciun o spec.trim() == "") {
+        iett nu bell Error("Specifica pagine vuota")
+    }
+
+    chist è pezzi = spec.split(",")
+    tien indici = []
+
+    pe (tien i = 0; i < pezzi.length; i = i + 1) {
+        chist è pezzoGrezz = pezzi[i]
+        chist è pezzo = pezzoGrezz.trim()
+
+        si (pezzo == "") {
+            salta
+        }
+
+        si (pezzo.includes("-")) {
+            chist è estremi = pezzo.split("-")
+            si (estremi.length != 2) {
+                iett nu bell Error("Intervallo non valido: " + pezzo)
+            }
+
+            chist è inizio = parseInt(estremi[0].trim(), 10)
+            chist è fine = parseInt(estremi[1].trim(), 10)
+
+            si (Number.isNaN(inizio) o Number.isNaN(fine)) {
+                iett nu bell Error("Intervallo non numerico: " + pezzo)
+            }
+
+            si (inizio <= 0 o fine <= 0) {
+                iett nu bell Error("Le pagine partono da 1: " + pezzo)
+            }
+
+            si (inizio <= fine) {
+                pe (tien pagina = inizio; pagina <= fine; pagina = pagina + 1) {
+                    indici.push(pagina - 1)
+                }
+            } sinnò {
+                pe (tien pagina = inizio; pagina >= fine; pagina = pagina - 1) {
+                    indici.push(pagina - 1)
+                }
+            }
+        } sinnò {
+            chist è numero = parseInt(pezzo, 10)
+
+            si (Number.isNaN(numero)) {
+                iett nu bell Error("Numero pagina non valido: " + pezzo)
+            }
+
+            si (numero <= 0) {
+                iett nu bell Error("Le pagine partono da 1: " + pezzo)
+            }
+
+            indici.push(numero - 1)
+        }
+    }
+
+    si (indici.length == 0) {
+        iett nu bell Error("Nessuna pagina valida trovata in: " + spec)
+    }
+
+    piglie indici
+}
+
+facc validaIndici(indici, totalePagine) {
+    pe (tien i = 0; i < indici.length; i = i + 1) {
+        chist è indice = indici[i]
+        si (indice < 0 o indice >= totalePagine) {
+            iett nu bell Error("Pagina fuori range: " + (indice + 1) + " su " + totalePagine)
+        }
+    }
+}
+
+facc listaPdf(cartella) {
+    assicuraEsistenza(cartella)
+    chist è elementi = fs.readdirSync(cartella)
+    tien pdf = []
+
+    pe (tien i = 0; i < elementi.length; i = i + 1) {
+        chist è nome = elementi[i]
+        si (nome.toLowerCase().endsWith(".pdf")) {
+            pdf.push(nome)
+        }
+    }
+
+    pdf.sort()
+    piglie pdf
+}
+
+mo vir facc apriPdf(percorsoFile) {
+    chist è bytes = leggiBytes(percorsoFile)
+    piglie aspett PDFDocument.load(bytes)
+}
+
+mo vir facc comandoInfo(percorsoFile) {
+    chist è pdf = aspett apriPdf(percorsoFile)
+    chist è totalePagine = pdf.getPageCount()
+
+    stamm a dì("File: " + percorsoFile)
+    stamm a dì("Pagine: " + totalePagine)
+}
+
+mo vir facc comandoUnisci(outputFile, inputFiles) {
+    si (inputFiles.length < 2) {
+        iett nu bell Error("Per unire servono almeno 2 PDF di input")
+    }
+
+    chist è pdfFinale = aspett PDFDocument.create()
+
+    pe (tien i = 0; i < inputFiles.length; i = i + 1) {
+        chist è percorso = inputFiles[i]
+        chist è sorgente = aspett apriPdf(percorso)
+        chist è totalePagine = sorgente.getPageCount()
+        tien indici = []
+
+        pe (tien p = 0; p < totalePagine; p = p + 1) {
+            indici.push(p)
+        }
+
+        chist è pagineCopiate = aspett pdfFinale.copyPages(sorgente, indici)
+
+        pe (tien j = 0; j < pagineCopiate.length; j = j + 1) {
+            pdfFinale.addPage(pagineCopiate[j])
+        }
+
+        stamm a dì("Aggiunto: " + percorso + " (" + totalePagine + " pagine)")
+    }
+
+    chist è risultato = aspett pdfFinale.save()
+    salvaBytes(outputFile, risultato)
+    stamm a dì("Creato: " + outputFile)
+}
+
+mo vir facc comandoEstrai(percorsoInput, percorsoOutput, specPagine) {
+    chist è sorgente = aspett apriPdf(percorsoInput)
+    chist è totalePagine = sorgente.getPageCount()
+    chist è indici = parsePagine(specPagine)
+
+    validaIndici(indici, totalePagine)
+
+    chist è pdfFinale = aspett PDFDocument.create()
+    chist è pagineCopiate = aspett pdfFinale.copyPages(sorgente, indici)
+
+    pe (tien i = 0; i < pagineCopiate.length; i = i + 1) {
+        pdfFinale.addPage(pagineCopiate[i])
+    }
+
+    chist è risultato = aspett pdfFinale.save()
+    salvaBytes(percorsoOutput, risultato)
+
+    stamm a dì("Creato: " + percorsoOutput)
+    stamm a dì("Pagine esportate: " + specPagine)
+}
+
+mo vir facc comandoDividi(percorsoInput, cartellaOutput) {
+    chist è sorgente = aspett apriPdf(percorsoInput)
+    chist è totalePagine = sorgente.getPageCount()
+    chist è base = path.basename(percorsoInput, path.extname(percorsoInput))
+
+    assicuraCartella(cartellaOutput)
+
+    pe (tien i = 0; i < totalePagine; i = i + 1) {
+        chist è pdfPagina = aspett PDFDocument.create()
+        chist è pagineCopiate = aspett pdfPagina.copyPages(sorgente, [i])
+        pdfPagina.addPage(pagineCopiate[0])
+
+        chist è nomeOutput = path.join(cartellaOutput, base + "_pag_" + zeroPad(i + 1, 3) + ".pdf")
+        chist è risultato = aspett pdfPagina.save()
+        salvaBytes(nomeOutput, risultato)
+
+        stamm a dì("Creato: " + nomeOutput)
+    }
+}
+
+facc comandoRinomina(vecchioNome, nuovoNome) {
+    assicuraEsistenza(vecchioNome)
+    assicuraCartellaPerFile(nuovoNome)
+    fs.renameSync(vecchioNome, nuovoNome)
+    stamm a dì("Rinominato: " + vecchioNome + " -> " + nuovoNome)
+}
+
+facc comandoRinominaMassa(cartella, prefisso) {
+    chist è files = listaPdf(cartella)
+
+    si (files.length == 0) {
+        iett nu bell Error("Nessun PDF trovato in: " + cartella)
+    }
+
+    chist è marcatore = "__fratm_tmp__" + Date.now()
+    tien tempFiles = []
+
+    pe (tien i = 0; i < files.length; i = i + 1) {
+        chist è vecchioPath = path.join(cartella, files[i])
+        chist è tempPath = path.join(cartella, marcatore + "_" + zeroPad(i + 1, 3) + ".pdf")
+        fs.renameSync(vecchioPath, tempPath)
+        tempFiles.push(tempPath)
+    }
+
+    pe (tien i = 0; i < tempFiles.length; i = i + 1) {
+        chist è nuovoPath = path.join(cartella, prefisso + "_" + zeroPad(i + 1, 3) + ".pdf")
+        fs.renameSync(tempFiles[i], nuovoPath)
+        stamm a dì("Rinominato: " + nuovoPath)
+    }
+}
+
+mo vir facc main() {
+    pruvamm {
+        chist è args = process.argv.slice(2)
+
+        si (args.length == 0) {
+            aiuto()
+            piglie
+        }
+
+        chist è comando = args[0]
+
+        si (comando == "aiuto" o comando == "help" o comando == "--help" o comando == "-h") {
+            aiuto()
+            piglie
+        }
+
+        si (comando == "info") {
+            si (args.length != 2) {
+                iett nu bell Error("Uso: info <file.pdf>")
+            }
+            aspett comandoInfo(args[1])
+            piglie
+        }
+
+        si (comando == "unisci") {
+            si (args.length < 4) {
+                iett nu bell Error("Uso: unisci <output.pdf> <input1.pdf> <input2.pdf> [altri.pdf]")
+            }
+            aspett comandoUnisci(args[1], args.slice(2))
+            piglie
+        }
+
+        si (comando == "estrai" o comando == "taglia" o comando == "riordina") {
+            si (args.length != 4) {
+                iett nu bell Error("Uso: " + comando + " <input.pdf> <output.pdf> <pagine>")
+            }
+            aspett comandoEstrai(args[1], args[2], args[3])
+            piglie
+        }
+
+        si (comando == "dividi") {
+            si (args.length != 3) {
+                iett nu bell Error("Uso: dividi <input.pdf> <cartella-output>")
+            }
+            aspett comandoDividi(args[1], args[2])
+            piglie
+        }
+
+        si (comando == "rinomina") {
+            si (args.length != 3) {
+                iett nu bell Error("Uso: rinomina <vecchio.pdf> <nuovo.pdf>")
+            }
+            comandoRinomina(args[1], args[2])
+            piglie
+        }
+
+        si (comando == "rinomina-massa") {
+            si (args.length != 3) {
+                iett nu bell Error("Uso: rinomina-massa <cartella> <prefisso>")
+            }
+            comandoRinominaMassa(args[1], args[2])
+            piglie
+        }
+
+        iett nu bell Error("Comando sconosciuto: " + comando)
+    } e si schiatta (errore) {
+        scrive a dì("Errore: " + errore.message)
+        scrive a dì("")
+        aiuto()
+        process.exit(1)
+    }
+}
+
+main()

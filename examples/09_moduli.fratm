@@ -3,14 +3,21 @@
 // chiamm (import), mann for (export)
 // ============================================
 
-// How to import
-chiamm { useState, useEffect } da "react"
-chiamm { Router, Route } da "react-router"
+// Import from Node built-in modules (no external dependencies)
+chiamm { basename, dirname } da "node:path"
+chiamm { platform } da "node:os"
+
+facc descriviPercorso(percorso) {
+    piglie "file=" + basename(percorso) + ", cartella=" + dirname(percorso)
+}
 
 // How to export a function
 mann for facc calcolaIVA(prezzo) {
     piglie prezzo * 1.22
 }
 
-// Export default
-mann for predefinit { nome: "App", versione: "1.0" }
+// Export default object
+mann for predefinit { nome: "ModuloDemo", versione: "1.1", ambiente: platform() }
+
+stamm a dì(descriviPercorso("/tmp/fratm/esempio.js"))
+stamm a dì("IVA 100 => " + calcolaIVA(100))

@@ -1,0 +1,126 @@
+// ============================================
+// Launcher script per script aggiuntivi
+// Uso:
+//   fratm lancia PersonalScripts/run_personal_scripts.fratm
+// ============================================
+
+chist è fs = require("node:fs")
+chist è path = require("node:path")
+chist è cp = require("node:child_process")
+chist è readline = require("node:readline")
+
+facc aiuto() {
+    stamm a dì("Launcher script aggiuntivi")
+    stamm a dì("")
+    stamm a dì("Scegli dal menu:")
+    stamm a dì("  1 -> PDF Manager")
+    stamm a dì("  2 -> Pomodor e Muzzarel")
+    stamm a dì("  q -> Esci")
+    stamm a dì("")
+    stamm a dì("Esempi:")
+    stamm a dì("  fratm lancia PersonalScripts/run_personal_scripts.fratm")
+}
+
+facc binarioFratm() {
+    chist è cwd = process.cwd()
+    chist è releaseBin = path.join(cwd, "target", "release", "fratm")
+    si (fs.existsSync(releaseBin)) {
+        piglie releaseBin
+    }
+
+    chist è debugBin = path.join(cwd, "target", "debug", "fratm")
+    si (fs.existsSync(debugBin)) {
+        piglie debugBin
+    }
+
+    piglie "fratm"
+}
+
+facc eseguiScriptFratm(scriptRelativo, argsExtra) {
+    chist è fratmBin = binarioFratm()
+    chist è scriptPath = path.join(process.cwd(), scriptRelativo)
+    chist è scriptDir = path.dirname(scriptPath)
+    chist è outputTmp = path.join(scriptDir, ".fratm_tmp_" + path.basename(scriptRelativo, ".fratm") + "_" + Date.now() + ".js")
+
+    // 1) Compila il file Fratm in JS temporaneo
+    chist è buildArgs = ["build", scriptPath, "-o", outputTmp]
+    chist è buildRes = cp.spawnSync(fratmBin, buildArgs, { stdio: "inherit" })
+
+    si (buildRes.error != nisciun) {
+        scrive a dì("Errore build script: " + buildRes.error.message)
+        process.exit(1)
+    }
+
+    si (buildRes.status != 0) {
+        process.exit(buildRes.status)
+    }
+
+    // 2) Esegue con Node passando eventuali argomenti extra
+    chist è runArgs = [outputTmp]
+    pe (tien i = 0; i < argsExtra.length; i = i + 1) {
+        runArgs.push(argsExtra[i])
+    }
+
+    chist è risultato = cp.spawnSync("node", runArgs, { stdio: "inherit" })
+
+    si (risultato.error != nisciun) {
+        scrive a dì("Errore avvio script: " + risultato.error.message)
+        si (fs.existsSync(outputTmp)) {
+            fs.unlinkSync(outputTmp)
+        }
+        process.exit(1)
+    }
+
+    si (risultato.status != 0) {
+        si (fs.existsSync(outputTmp)) {
+            fs.unlinkSync(outputTmp)
+        }
+        process.exit(risultato.status)
+    }
+
+    si (fs.existsSync(outputTmp)) {
+        fs.unlinkSync(outputTmp)
+    }
+}
+
+facc apriMenu() {
+    chist è rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    })
+
+    stamm a dì("====================================")
+    stamm a dì(" Launcher Script Aggiuntivi")
+    stamm a dì("====================================")
+    stamm a dì("1) PDF Manager")
+    stamm a dì("2) Pomodor e Muzzarel")
+    stamm a dì("q) Esci")
+    stamm a dì("")
+
+    rl.question("Scelta: ", (scelta) => {
+        si (scelta == "1") {
+            rl.question("Argomenti PDF manager (vuoto = help): ", (linea) => {
+                chist è pulita = linea.trim()
+                tien args = []
+                si (pulita != "") {
+                    args = pulita.split(" ")
+                }
+                rl.close()
+                eseguiScriptFratm("PersonalScripts/pdf_manager/pdf_manager.fratm", args)
+            })
+            piglie nisciun
+        }
+
+        si (scelta == "2") {
+            rl.close()
+            eseguiScriptFratm("Games/Pomodor_e_Muzzarel/pomodor_e_muzzarel.fratm", [])
+            piglie nisciun
+        }
+
+        rl.close()
+        stamm a dì("Ciao fratm!")
+    })
+}
+
+aiuto()
+apriMenu()

@@ -8,14 +8,14 @@ use serde::{Serialize, Deserialize};
 /// Main compilation error type
 #[derive(Debug, Error, Clone, Serialize, Deserialize)]
 pub enum CompileError {
-    #[error("Riga {line}, colonna {column}: {message}")]
+    #[error("Riga {line}, colonna {column}: {msg}", msg = napoletanize_error(message))]
     LexerError {
         message: String,
         line: usize,
         column: usize,
     },
     
-    #[error("Riga {line}, colonna {column}: {message}")]
+    #[error("Riga {line}, colonna {column}: {msg}", msg = napoletanize_error(message))]
     ParseError {
         message: String,
         line: usize,

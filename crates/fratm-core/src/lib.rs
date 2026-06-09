@@ -275,4 +275,42 @@ mod tests {
         assert!(result.code.contains("function test()"));
         assert!(result.code.contains("return 1"));
     }
+
+    #[test]
+    fn test_oop_extends_super_and_static_compile() {
+        let source = r#"
+na famiglie Persona {
+    costruttore(nome) {
+        stu cos.nome = nome
+    }
+
+    saluta() {
+        piglie "Ue " + stu cos.nome
+    }
+
+    fisso specie() {
+        piglie "Essere umano"
+    }
+}
+
+na famiglie Pizzaiolo figlio 'e Persona {
+    costruttore(nome, specialita) {
+        'o pate(nome)
+        stu cos.specialita = specialita
+    }
+}
+"#;
+
+        let result = compile(source, Default::default()).unwrap();
+        assert!(result.code.contains("class Persona"));
+        assert!(result.code.contains("static specie()"));
+        assert!(result.code.contains("class Pizzaiolo extends Persona"));
+        assert!(result.code.contains("super(nome)"));
+    }
+
+    #[test]
+    fn test_single_quote_string_still_works() {
+        let result = compile("chist è a = 'e'\nstamm a dì(a)", Default::default()).unwrap();
+        assert!(result.code.contains("const a = \"e\";"));
+    }
 }

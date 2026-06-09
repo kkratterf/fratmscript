@@ -102,9 +102,11 @@ function App() {
                   <option value="hello">Hello World</option>
                   <option value="fibonacci">Fibonacci</option>
                   <option value="classe">Pizzaiolo Class</option>
+                  <option value="oop_avanzato">Advanced OOP</option>
                   <option value="async">Async/Await</option>
                   <option value="operatori">Logical Operators</option>
                   <option value="array">Arrays and Objects</option>
+                  <option value="trycatch">Try/Catch</option>
                 </NativeSelect>
               </div>
               <SyntaxHelp />
