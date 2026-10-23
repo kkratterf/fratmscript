@@ -69,7 +69,7 @@ wasm:
   cd crates/fratm-wasm; wasm-pack build --target web --out-dir ../../packages/playground/public/pkg
 
 # Start playground dev server.
-playground-dev:
+playground-dev: wasm
   cd packages/playground; pnpm dev
 
 # Build VSCode extension sources.

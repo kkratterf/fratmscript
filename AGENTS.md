@@ -13,7 +13,7 @@ FratmScript is a Neapolitan-flavoured language that transpiles to JavaScript.
 | `crates/fratm-cli` | `fratm` binary (`build`, `run`, `lancia`) |
 | `crates/fratm-wasm` | WASM bindings used by the playground |
 | `packages/playground` | React + Vite + CodeMirror playground, deployed to GitHub Pages from `main` |
-| `packages/playground/public/pkg` | **Committed** WASM build of `fratm-wasm` |
+| `packages/playground/public/pkg` | WASM build of `fratm-wasm` (generated, git-ignored) |
 | `packages/vscode-extension` | VS Code extension (grammar, snippets, LSP) |
 | `examples/*.fratm` | Example programs; CI compiles every one of them |
 
@@ -44,11 +44,11 @@ VS Code extension: `cd packages/vscode-extension && pnpm compile`.
 
 `just` lists every shortcut (`just test`, `just lancia <file>`, `just examples-build`, ...).
 
-### The committed WASM (`public/pkg`)
+### The playground WASM (`public/pkg`)
 
-- If your change touches `crates/fratm-core` or `crates/fratm-wasm` in a way the playground can observe, rebuild with `just wasm` and commit the regenerated `public/pkg` **in the same PR**.
-- Never hand-edit files in `public/pkg`.
-- When two open PRs both regenerate `pkg/`, the second one to merge must rebase and rebuild; do not resolve `.wasm` conflicts by picking a side.
+- `public/pkg` is generated and git-ignored. CI and the Pages deploy build it from the current sources with `wasm-pack`.
+- Locally, run `just wasm` (or `just playground-dev`, which runs it first) after changing `crates/fratm-core` or `crates/fratm-wasm`. Without it the playground falls back to a regex demo transpiler.
+- Never commit files in `public/pkg`.
 
 ## Rules for changes
 

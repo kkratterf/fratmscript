@@ -87,3 +87,6 @@ jobs:
         run: |
           cd packages/playground
           pnpm build
+
+      - name: Check the WASM compiler is bundled
+        run: test -f packages/playground/dist/pkg/fratm_wasm_bg.wasm

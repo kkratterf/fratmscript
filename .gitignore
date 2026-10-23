@@ -17,7 +17,7 @@
 Thumbs.db
 
 # WASM build output
-/packages/playground/pkg/
+/packages/playground/public/pkg/
 
 # Node
 node_modules/
