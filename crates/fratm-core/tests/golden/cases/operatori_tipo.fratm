@@ -1,0 +1,13 @@
+// typeof, instanceof and number literals (#7)
+na famiglie Pizza {
+    costruttore(gusto) {
+        stu cos.gusto = gusto
+    }
+}
+
+chist è margherita = nu bell Pizza("margherita")
+stamm a dì(typeof margherita)
+stamm a dì(margherita instanceof Pizza)
+stamm a dì(0x1F + 0b101 + 0o17)
+stamm a dì(1e3 + 2.5e-1)
+stamm a dì(1_000_000)

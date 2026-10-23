@@ -1,0 +1,12 @@
+// short keywords can be used as names outside their constructs (#11)
+pruvamm {
+    iett nu bell Error("guaio")
+} e si schiatta (e) {
+    stamm a dì(e.message)
+}
+
+tien o = 1
+tien da = 2
+stamm a dì(o + da)
+stamm a dì(overo e sfòls)
+stamm a dì(overo o sfòls)

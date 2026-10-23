@@ -1,0 +1,34 @@
+=== Simplified For Loop ===
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+=== Logical Operators ===
+pure works as AND!
+manco works as NOT!
+! works directly!
+
+=== Advanced Console ===
+This is a normal log
+
+=== Delete (leva) ===
+Before: Napoli
+After leva: undefined
+
+=== Debugger ===
+The debugger is activated with 'fermete'
+
+=== Combinations ===
+Sum of odd numbers: 9
+
+=== New Syntax Summary ===
+pe (...)        -> for loop (ogni optional)
+pure            -> AND (alias for 'e')
+manco           -> NOT (alias for 'no')
+!               -> direct NOT
+avvis a di(...) -> console.warn
+scrive a di(...)-> console.error
+leva x.y        -> delete x.y
+fermete         -> debugger

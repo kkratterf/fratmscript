@@ -1,0 +1,16 @@
+let conto = 10;
+conto += 5;
+conto -= 3;
+conto *= 2;
+conto /= 4;
+conto %= 4;
+console.log(conto);
+let i = 0;
+i++;
+++i;
+i--;
+console.log(i);
+const pizza = { fette: 8 };
+pizza.fette -= 2;
+pizza.fette++;
+console.log(pizza.fette);

@@ -1,0 +1,32 @@
+=== Basic Functions ===
+somma(3, 4) = 7
+moltiplica(5) = 10
+
+=== Calculate Total ===
+Price: €10, Quantity: 5, Discount: 15%
+Total: €42.5
+
+=== Factorial (Recursion) ===
+5! = 120
+7! = 5040
+
+=== Fibonacci (Recursion) ===
+fib(0) = 0
+fib(1) = 1
+fib(2) = 1
+fib(3) = 2
+fib(4) = 3
+fib(5) = 5
+fib(6) = 8
+fib(7) = 13
+fib(8) = 21
+fib(9) = 34
+
+=== Higher Order Functions ===
+raddoppia(5) = 10
+triplica(5) = 15
+
+=== Greetings with Style ===
+Good day, Mr. Mario
+Uè Gennaro, comm staje?!
+Hello Luigi

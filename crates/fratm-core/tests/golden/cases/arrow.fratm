@@ -1,0 +1,13 @@
+// arrow functions with any number of parameters (#12)
+chist è zero = () => 42
+chist è somma = (a, b) => a + b
+chist è doppio = x => x * 2
+chist è blocco = (a, b, c) => {
+    piglie a * b + c
+}
+
+stamm a dì(zero())
+stamm a dì(somma(2, 3))
+stamm a dì(doppio(21))
+stamm a dì(blocco(2, 3, 4))
+stamm a dì([1, 2, 3].map((v, i) => v * i).join(","))

@@ -1,0 +1,19 @@
+// compound assignment and ++ / -- (#13)
+tien conto = 10
+conto += 5
+conto -= 3
+conto *= 2
+conto /= 4
+conto %= 4
+stamm a dì(conto)
+
+tien i = 0
+i++
+++i
+i--
+stamm a dì(i)
+
+chist è pizza = { fette: 8 }
+pizza.fette -= 2
+pizza.fette++
+stamm a dì(pizza.fette)

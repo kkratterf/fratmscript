@@ -1,0 +1,29 @@
+=== Pizza Menu ===
+1. Margherita
+2. Marinara
+3. Diavola
+4. Quattro Formaggi
+5. Capricciosa
+
+=== Grade Average ===
+Grades: 8, 9, 7, 10, 6, 9
+Average: 8.166666666666666
+
+=== Person ===
+Name: Gennaro Esposito
+Age: 35
+City: Napoli
+
+=== Restaurant ===
+🍝 Trattoria da Nonna
+📍 Via Toledo 123
+⭐ Michelin Stars: 0
+👨‍🍳 Specialty: Neapolitan Ragù
+
+=== Dynamic Access ===
+Value of 'nome': Trattoria da Nonna
+
+=== Team ===
+Diego - Forward (#10)
+Ciro - Midfielder (#8)
+Paolo - Defender (#3)
