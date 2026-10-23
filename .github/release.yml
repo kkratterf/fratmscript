@@ -1,0 +1,22 @@
+# Groups the auto-generated release notes by PR label.
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+  categories:
+    - title: Linguaggio
+      labels:
+        - compiler
+    - title: Playground
+      labels:
+        - playground
+    - title: Correzioni
+      labels:
+        - bug
+    - title: CI e strumenti
+      labels:
+        - ci
+        - ecosystem
+    - title: Altro
+      labels:
+        - "*"

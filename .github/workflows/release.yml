@@ -1,0 +1,170 @@
+name: Release
+
+# Started by hand with the version to publish (e.g. 0.2.0).
+# The version must already be set in the workspace Cargo.toml.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, without the leading v (e.g. 0.2.0)"
+        required: true
+        type: string
+      prerelease:
+        description: "Mark the release as a pre-release"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  VERSION: ${{ inputs.version }}
+  TAG: v${{ inputs.version }}
+
+jobs:
+  verify:
+    name: Verify version and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check version format
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::'$VERSION' is not a SemVer version (expected X.Y.Z)"
+            exit 1
+          fi
+
+      - name: Check the version matches Cargo.toml
+        run: |
+          cargo_version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)
+          if [ "$cargo_version" != "$VERSION" ]; then
+            echo "::error::Cargo.toml has version $cargo_version, but the release asks for $VERSION. Merge a version bump first."
+            exit 1
+          fi
+
+      - name: Check the tag does not exist yet
+        run: |
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::Tag $TAG already exists"
+            exit 1
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Run tests
+        run: cargo test -p fratm-core -p fratm-cli
+
+  build-cli:
+    name: Build fratm (${{ matrix.target }})
+    needs: verify
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --locked -p fratm-cli --target ${{ matrix.target }}
+
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          name="fratm-$TAG-${{ matrix.target }}"
+          mkdir "$name"
+          cp "target/${{ matrix.target }}/release/fratm" README.md "$name/"
+          tar -czf "$name.tar.gz" "$name"
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $name = "fratm-$env:TAG-${{ matrix.target }}"
+          New-Item -ItemType Directory -Path $name | Out-Null
+          Copy-Item "target/${{ matrix.target }}/release/fratm.exe", "README.md" -Destination $name
+          Compress-Archive -Path $name -DestinationPath "$name.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cli-${{ matrix.target }}
+          path: fratm-${{ env.TAG }}-${{ matrix.target }}.*
+          if-no-files-found: error
+
+  build-wasm:
+    name: Build WASM package
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build
+        run: |
+          wasm-pack build crates/fratm-wasm --release --target web --out-dir "$GITHUB_WORKSPACE/fratm-wasm-$TAG"
+          tar -czf "fratm-wasm-$TAG.tar.gz" "fratm-wasm-$TAG"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wasm
+          path: fratm-wasm-${{ env.TAG }}.tar.gz
+          if-no-files-found: error
+
+  publish:
+    name: Tag and publish the release
+    needs: [build-cli, build-wasm]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: |
+          flags=()
+          if [ "$PRERELEASE" = "true" ]; then flags+=(--prerelease); fi
+          gh release create "$TAG" dist/* \
+            --target "$GITHUB_SHA" \
+            --title "$TAG" \
+            --generate-notes \
+            "${flags[@]}"
