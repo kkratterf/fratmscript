@@ -13,6 +13,7 @@ import { SyntaxHelp } from '@/components/SyntaxHelp'
 import { MobileTabs, type MobileTab } from '@/components/MobileTabs'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { cn } from '@/lib/utils'
+import { buildShareUrl, readSharedCode, loadSavedCode, saveCode } from '@/lib/share'
 
 const AUTO_RUN_KEY = 'fratm:autoRun'
 const AUTO_RUN_DELAY_MS = 700
@@ -35,8 +36,13 @@ function writeStoredFlag(key: string, value: boolean) {
 }
 
 function App() {
-  const [code, setCode] = useState(defaultCode)
-  const [selectedExample, setSelectedExample] = useState('')
+  // A share link wins over the autosaved code, which wins over the default
+  const [initial] = useState(() => {
+    const code = readSharedCode() ?? loadSavedCode() ?? defaultCode
+    return { code, example: code === defaultCode ? '' : 'custom' }
+  })
+  const [code, setCode] = useState(initial.code)
+  const [selectedExample, setSelectedExample] = useState(initial.example)
   const compiler = useCompiler()
   const editorRef = useRef<EditorHandle>(null)
   const isRunning = compiler.status === 'running'
@@ -46,19 +52,11 @@ function App() {
   const [lastRunCode, setLastRunCode] = useState<string | null>(null)
   const [autoRun, setAutoRun] = useState(() => readStoredFlag(AUTO_RUN_KEY, true))
 
-  // Load code from URL on mount
+  // Autosave, debounced so typing doesn't write on every keystroke
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const urlCode = params.get('code')
-    if (urlCode) {
-      try {
-        setCode(decodeURIComponent(atob(urlCode)))
-        setSelectedExample('custom')
-      } catch (e) {
-        console.error('Failed to load code from URL:', e)
-      }
-    }
-  }, [])
+    const timer = setTimeout(() => saveCode(code), 500)
+    return () => clearTimeout(timer)
+  }, [code])
 
   const { runCode, stop } = compiler
   const run = useCallback((source: string) => {
@@ -107,8 +105,7 @@ function App() {
   }), [compiler.errors])
 
   const handleShare = useCallback(() => {
-    const encoded = btoa(encodeURIComponent(code))
-    const url = window.location.origin + window.location.pathname + '?code=' + encoded
+    const url = buildShareUrl(code)
 
     navigator.clipboard.writeText(url).then(() => {
       toastManager.add({
