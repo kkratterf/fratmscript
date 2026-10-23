@@ -46,6 +46,11 @@ examples-build:
   cargo run -p fratm-cli -- build examples/13_pomodor_e_muzzarel.fratm
   cargo run -p fratm-cli -- build examples/14_sintassi_moderna.fratm
 
+# Check that every example compiles and is formatted.
+examples-check:
+  cargo run -p fratm-cli -- check examples/*.fratm
+  cargo run -p fratm-cli -- fmt --check examples/*.fratm
+
 # Launch all examples (`examples/*.fratm`).
 examples-lancia:
   cargo run -p fratm-cli -- lancia examples/01_salutatore.fratm

@@ -47,6 +47,8 @@ jobs:
           for f in examples/*.fratm; do
             ./target/debug/fratm build "$f"
           done
+          ./target/debug/fratm check examples/*.fratm
+          ./target/debug/fratm fmt --check examples/*.fratm
 
   playground:
     name: Playground build

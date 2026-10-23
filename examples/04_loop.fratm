@@ -53,7 +53,7 @@ pe (tien n = 1; n <= 100; n++) {
 stamm a dì("\n=== Odd numbers (continue) ===")
 pe (tien j = 1; j <= 10; j++) {
     si (j % 2 == 0) {
-        salta  // Skip even numbers
+        salta // Skip even numbers
     }
     stamm a dì(j)
 }

@@ -35,6 +35,19 @@ enum Commands {
         #[arg(long)]
         sourcemap: bool,
     },
+    /// Check .fratm files for errors without writing any output
+    Check {
+        #[arg(required = true)]
+        files: Vec<PathBuf>,
+    },
+    /// Format .fratm files in place
+    Fmt {
+        #[arg(required = true)]
+        files: Vec<PathBuf>,
+        /// Only report files that are not formatted (non-zero exit if any)
+        #[arg(long)]
+        check: bool,
+    },
     /// Interactive REPL
     Repl,
     /// Show tokens (debug)
@@ -52,6 +65,8 @@ fn main() {
             output,
             sourcemap,
         } => build_file(&file, output, sourcemap),
+        Commands::Check { files } => check_files(&files),
+        Commands::Fmt { files, check } => format_files(&files, check),
         Commands::Repl => run_repl(),
         Commands::Tokens { file } => show_tokens(&file),
         Commands::Ast { file } => show_ast(&file),
@@ -160,6 +175,92 @@ fn build_file(path: &PathBuf, output: Option<PathBuf>, sourcemap: bool) {
         Err(e) => {
             print_error(&source, &e);
             std::process::exit(1);
+        }
+    }
+}
+
+fn check_files(paths: &[PathBuf]) {
+    let mut failed = 0;
+    for path in paths {
+        let Some(source) = read_source(path) else {
+            failed += 1;
+            continue;
+        };
+        if let Err(e) = compile(&source, Default::default()) {
+            eprintln!("{}", path.display().to_string().bold());
+            print_error(&source, &e);
+            failed += 1;
+        }
+    }
+    if failed > 0 {
+        eprintln!(
+            "{}",
+            format!("✗ {} of {} files have errors", failed, paths.len())
+                .red()
+                .bold()
+        );
+        std::process::exit(1);
+    }
+    println!(
+        "{} {} file(s) checked",
+        errors::success_message().green().bold(),
+        paths.len()
+    );
+}
+
+fn format_files(paths: &[PathBuf], check: bool) {
+    let mut failed = 0;
+    let mut unformatted = 0;
+    for path in paths {
+        let Some(source) = read_source(path) else {
+            failed += 1;
+            continue;
+        };
+        let formatted = match fratm_core::format(&source) {
+            Ok(formatted) => formatted,
+            Err(e) => {
+                eprintln!("{}", path.display().to_string().bold());
+                print_error(&source, &e);
+                failed += 1;
+                continue;
+            }
+        };
+        if formatted == source {
+            continue;
+        }
+        unformatted += 1;
+        if check {
+            println!("{} {}", "Not formatted:".yellow(), path.display());
+        } else if let Err(e) = fs::write(path, formatted) {
+            eprintln!("{} {}", "Error: cannot write file:".red().bold(), e);
+            failed += 1;
+        } else {
+            println!("{} {}", "Formatted:".green(), path.display());
+        }
+    }
+    if failed > 0 || (check && unformatted > 0) {
+        std::process::exit(1);
+    }
+    if unformatted == 0 {
+        println!(
+            "{} {} file(s) already formatted",
+            errors::success_message().green().bold(),
+            paths.len()
+        );
+    }
+}
+
+fn read_source(path: &PathBuf) -> Option<String> {
+    match fs::read_to_string(path) {
+        Ok(s) => Some(s),
+        Err(e) => {
+            eprintln!(
+                "{} {}: {}",
+                "Error: cannot read file".red().bold(),
+                path.display(),
+                e
+            );
+            None
         }
     }
 }

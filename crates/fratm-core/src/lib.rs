@@ -80,6 +80,7 @@
 pub mod checker;
 pub mod codegen;
 pub mod errors;
+pub mod formatter;
 pub mod lexer;
 pub mod parser;
 pub mod sourcemap;
@@ -89,6 +90,8 @@ use errors::CompileError;
 use lexer::Lexer;
 use parser::Parser;
 use sourcemap::SourceMap;
+
+pub use formatter::format;
 
 /// Compilation options to customize the transpiler behavior.
 ///
