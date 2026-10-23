@@ -48,7 +48,7 @@ VS Code extension: `cd packages/vscode-extension && pnpm compile`.
 ### The playground WASM (`public/pkg`)
 
 - `public/pkg` is generated and git-ignored. CI and the Pages deploy build it from the current sources with `wasm-pack`.
-- Locally, run `just wasm` (or `just playground-dev`, which runs it first) after changing `crates/fratm-core` or `crates/fratm-wasm`. Without it the playground falls back to a regex demo transpiler.
+- Locally, run `just wasm` (or `just playground-dev`, which runs it first) after changing `crates/fratm-core` or `crates/fratm-wasm`. Without it the playground shows "Compiler not available".
 - Never commit files in `public/pkg`.
 
 ## Rules for changes

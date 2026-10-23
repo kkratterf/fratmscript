@@ -31,34 +31,13 @@ export async function loadWasm(): Promise<{ loaded: boolean; version?: string }>
     isWasmLoaded = true
     return { loaded: true, version: module.version() }
   } catch (e) {
-    console.warn('WASM not available, using fallback:', e)
+    console.error('Failed to load the FratmScript compiler:', e)
     return { loaded: false }
   }
 }
 
 export function isCompilerLoaded(): boolean {
   return isWasmLoaded
-}
-
-// Simple demo transpiler (when WASM is not available)
-function demoTranspile(source: string): string {
-  return source
-    .replace(/chist è (\w+) = /g, 'const $1 = ')
-    .replace(/tien (\w+) = /g, 'let $1 = ')
-    .replace(/facc (\w+)\(/g, 'function $1(')
-    .replace(/piglie /g, 'return ')
-    .replace(/si \(/g, 'if (')
-    .replace(/sinnò/g, 'else')
-    .replace(/mentre che \(/g, 'while (')
-    .replace(/pe \(/g, 'for (')
-    .replace(/stamm a dì\(/g, 'console.log(')
-    .replace(/overo/g, 'true')
-    .replace(/sfòls/g, 'false')
-    .replace(/nisciun/g, 'null')
-    .replace(/boh/g, 'undefined')
-    .replace(/ e /g, ' && ')
-    .replace(/ o /g, ' || ')
-    .replace(/no /g, '!')
 }
 
 export interface CompilationOutput {
@@ -70,7 +49,6 @@ export interface CompilationOutput {
   column?: number
   suggestion?: string
   compileTime: number
-  isDemo: boolean
 }
 
 export function compile(source: string): CompilationOutput {
@@ -87,7 +65,6 @@ export function compile(source: string): CompilationOutput {
           code: result.code,
           sourceMap: result.sourceMap,
           compileTime,
-          isDemo: false,
         }
       } else {
         return {
@@ -98,7 +75,6 @@ export function compile(source: string): CompilationOutput {
           column: result.column,
           suggestion: result.suggestion,
           compileTime,
-          isDemo: false,
         }
       }
     } catch (e) {
@@ -106,26 +82,12 @@ export function compile(source: string): CompilationOutput {
         success: false,
         error: e instanceof Error ? e.message : 'Internal error',
         compileTime: performance.now() - startTime,
-        isDemo: false,
       }
     }
-  } else {
-    // Demo mode
-    try {
-      const code = demoTranspile(source)
-      return {
-        success: true,
-        code,
-        compileTime: performance.now() - startTime,
-        isDemo: true,
-      }
-    } catch (e) {
-      return {
-        success: false,
-        error: e instanceof Error ? e.message : 'Error',
-        compileTime: performance.now() - startTime,
-        isDemo: true,
-      }
-    }
+  }
+  return {
+    success: false,
+    error: 'The compiler is not loaded',
+    compileTime: performance.now() - startTime,
   }
 }

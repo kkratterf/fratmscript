@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 import type { LogEntry } from '@/lib/runner'
 import type { PlaygroundError } from '@/hooks/useCompiler'
-import { CircleAlert, TriangleAlert, ChevronRight, Timer, Ban, Copy, Check } from 'lucide-react'
+import { CircleAlert, TriangleAlert, ChevronRight, Timer, Ban, Copy, Check, Link2 } from 'lucide-react'
 import { useState } from 'react'
 import { ValueTree } from '@/components/ValueTree'
 
@@ -13,6 +13,10 @@ interface OutputPanelProps {
   isRunning: boolean
   onErrorClick: (line: number, column?: number) => void
   onClearConsole: () => void
+  /** Source line for each generated JS line (null when unmapped) */
+  jsLineMap: (number | null)[]
+  /** Line of the editor cursor, to highlight the JS it produced */
+  cursorLine: number
   /** Which sections to render: everything (desktop) or one mobile tab */
   show?: 'all' | 'console' | 'js'
   /** The code changed since this output was produced */
@@ -23,11 +27,53 @@ const ERROR_TITLES: Record<PlaygroundError['kind'], string> = {
   compile: 'Compilation error',
   runtime: 'Runtime error',
   timeout: 'Execution timed out',
+  load: 'Compiler not available',
 }
 
-function SectionAction({ onClick, disabled, icon, label }: {
+/**
+ * Generated JS with each line linked to the FratmScript line it came from:
+ * lines produced by the editor's current line are highlighted, and
+ * clicking a line moves the editor cursor to its source.
+ */
+function MappedJs({ code, lineMap, cursorLine, onLineClick }: {
+  code: string
+  lineMap: (number | null)[]
+  cursorLine: number
+  onLineClick: (line: number) => void
+}) {
+  const lines = code.replace(/\n$/, '').split('\n')
+  // Unmapped lines (closing braces) belong to the nearest mapped line above
+  let owner: number | null = null
+  const owners = lines.map((_, i) => (owner = lineMap[i] ?? owner))
+  return (
+    <div className="bg-card/50 py-2 border border-border rounded-md font-mono text-foreground/90 text-sm leading-relaxed">
+      {lines.map((text, i) => {
+        const src = owners[i]
+        return (
+          <div
+            key={i}
+            onClick={src !== null ? () => onLineClick(src) : undefined}
+            className={cn(
+              'flex gap-3 px-3 whitespace-pre-wrap break-words',
+              src !== null && 'cursor-pointer hover:bg-accent/60',
+              src === cursorLine && 'bg-primary/10',
+            )}
+          >
+            <span className="w-6 text-muted-foreground/60 text-xs text-right select-none shrink-0" title={src !== null ? `From line ${src}` : undefined}>
+              {lineMap[i] ?? ''}
+            </span>
+            <span className="flex-1 min-w-0">{text || ' '}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function SectionAction({ onClick, disabled, pressed, icon, label }: {
   onClick: () => void
   disabled?: boolean
+  pressed?: boolean
   icon: React.ReactNode
   label: string
 }) {
@@ -36,7 +82,11 @@ function SectionAction({ onClick, disabled, icon, label }: {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex items-center gap-1 hover:bg-accent disabled:opacity-40 px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground text-xs transition-colors disabled:pointer-events-none"
+      aria-pressed={pressed}
+      className={cn(
+        'flex items-center gap-1 hover:bg-accent disabled:opacity-40 px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground text-xs transition-colors disabled:pointer-events-none',
+        pressed && 'bg-accent text-foreground',
+      )}
     >
       {icon}
       {label}
@@ -63,8 +113,8 @@ function CopyButton({ text }: { text: string }) {
 }
 
 function ErrorCard({ error, onErrorClick }: { error: PlaygroundError; onErrorClick: OutputPanelProps['onErrorClick'] }) {
-  const line = error.kind !== 'timeout' ? error.line : undefined
-  const column = error.kind !== 'timeout' ? error.column : undefined
+  const line = error.kind === 'compile' || error.kind === 'runtime' ? error.line : undefined
+  const column = error.kind === 'compile' || error.kind === 'runtime' ? error.column : undefined
   const message = error.kind === 'runtime' ? `${error.name}: ${error.message}` : error.message
   const Icon = error.kind === 'timeout' ? Timer : CircleAlert
 
@@ -102,7 +152,9 @@ function ErrorCard({ error, onErrorClick }: { error: PlaygroundError; onErrorCli
   )
 }
 
-export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, onErrorClick, onClearConsole, show = 'all', stale = false }: OutputPanelProps) {
+export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, onErrorClick, onClearConsole, jsLineMap, cursorLine, show = 'all', stale = false }: OutputPanelProps) {
+  const [mapLines, setMapLines] = useState(false)
+  const canMap = jsLineMap.some(line => line !== null)
   const showConsole = show !== 'js'
   const showJs = show !== 'console'
   return (
@@ -191,11 +243,24 @@ export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, 
               <span className="bg-success rounded-full w-2 h-2" />
               Generated JavaScript
             </h3>
-            <CopyButton text={jsOutput} />
+            <div className="flex items-center gap-1">
+              <SectionAction
+                onClick={() => setMapLines(on => !on)}
+                disabled={!canMap}
+                pressed={mapLines}
+                icon={<Link2 className="size-3" />}
+                label="Map lines"
+              />
+              <CopyButton text={jsOutput} />
+            </div>
           </div>
-          <pre className="bg-card/50 p-3 border border-border rounded-md font-mono text-foreground/90 text-sm break-words leading-relaxed whitespace-pre-wrap">
-            {jsOutput || <span className="text-muted-foreground/50">// Run code to see output</span>}
-          </pre>
+          {mapLines && canMap ? (
+            <MappedJs code={jsOutput} lineMap={jsLineMap} cursorLine={cursorLine} onLineClick={onErrorClick} />
+          ) : (
+            <pre className="bg-card/50 p-3 border border-border rounded-md font-mono text-foreground/90 text-sm break-words leading-relaxed whitespace-pre-wrap">
+              {jsOutput || <span className="text-muted-foreground/50">// Run code to see output</span>}
+            </pre>
+          )}
         </section>
       )}
     </div>

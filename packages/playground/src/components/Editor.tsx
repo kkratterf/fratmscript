@@ -274,6 +274,8 @@ interface EditorProps {
   onChange: (value: string) => void
   onRun: () => void
   diagnostics?: EditorDiagnostic[]
+  /** Called with the 1-based line of the cursor when it moves */
+  onCursorLineChange?: (line: number) => void
   className?: string
 }
 
@@ -323,7 +325,7 @@ function toCodeMirror(doc: EditorState['doc'], diagnostics: EditorDiagnostic[]) 
 }
 
 export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
-  { value, onChange, onRun, diagnostics, className },
+  { value, onChange, onRun, diagnostics, onCursorLineChange, className },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -336,6 +338,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
   // The editor is created once, so read the latest callback through a ref
   const onRunRef = useRef(onRun)
   onRunRef.current = onRun
+  const onCursorLineRef = useRef(onCursorLineChange)
+  onCursorLineRef.current = onCursorLineChange
 
   useImperativeHandle(ref, () => ({
     revealLine(lineNumber, column) {
@@ -389,6 +393,10 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             onChange(update.state.doc.toString())
+          }
+          if (update.selectionSet || update.docChanged) {
+            const state = update.state
+            onCursorLineRef.current?.(state.doc.lineAt(state.selection.main.head).number)
           }
         }),
       ],

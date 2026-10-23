@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipPopup } from '@/components/ui/tooltip'
 import { Play, Square } from 'lucide-react'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 interface HeaderProps {
   onRun: () => void
@@ -43,7 +44,8 @@ export function Header({ onRun, onStop, onShare, isRunning, disabled }: HeaderPr
       <div className="flex items-center gap-3 min-w-0">
         <h1 className="font-bold text-primary text-lg sm:text-xl truncate">FratmScript 🤌🏻</h1>
       </div>
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+        <ThemeToggle />
         <div className="hidden sm:flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger

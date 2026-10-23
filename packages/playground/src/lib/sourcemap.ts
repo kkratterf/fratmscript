@@ -88,3 +88,11 @@ export function originalPosition(
   }
   return null
 }
+
+/**
+ * For each generated line (0-based index), the 1-based source line it was
+ * generated from, or null when the line has no mapping.
+ */
+export function sourceLinePerGeneratedLine(map: Segment[][]): (number | null)[] {
+  return map.map(segments => (segments.length > 0 ? segments[0].srcLine + 1 : null))
+}

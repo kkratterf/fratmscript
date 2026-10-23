@@ -1,18 +1,21 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { loadWasm, compile, isCompilerLoaded } from '@/lib/compiler'
 import { runInWorker, SYNC_TIME_LIMIT_MS, TOTAL_TIME_LIMIT_MS, type LogEntry, type RunEnd } from '@/lib/runner'
-import { parseSourceMap, originalPosition } from '@/lib/sourcemap'
+import { parseSourceMap, originalPosition, sourceLinePerGeneratedLine } from '@/lib/sourcemap'
 
 export type PlaygroundError =
   | { kind: 'compile'; message: string; line?: number; column?: number; suggestion?: string }
   | { kind: 'runtime'; name: string; message: string; line?: number; column?: number }
   | { kind: 'timeout'; message: string }
+  | { kind: 'load'; message: string }
 
 interface CompilerState {
   isLoading: boolean
   isWasmLoaded: boolean
   version: string
   jsOutput: string
+  /** Source line for each line of jsOutput (null when unmapped) */
+  jsLineMap: (number | null)[]
   consoleLogs: LogEntry[]
   errors: PlaygroundError[]
   /** Muted note shown under the console (stopped, truncated, …) */
@@ -28,6 +31,7 @@ export function useCompiler() {
     isWasmLoaded: false,
     version: '0.1.0',
     jsOutput: '// Press "Run" to compile',
+    jsLineMap: [],
     consoleLogs: [],
     errors: [],
     notice: '',
@@ -46,24 +50,31 @@ export function useCompiler() {
         isLoading: false,
         isWasmLoaded: loaded,
         version: version || '0.1.0',
-        status: 'ready',
-        statusText: loaded ? 'WASM loaded' : 'Demo mode (WASM not available)',
+        status: loaded ? 'ready' : 'error',
+        statusText: loaded ? 'WASM loaded' : 'Compiler failed to load',
+        errors: loaded ? [] : [{
+          kind: 'load',
+          message: 'The FratmScript compiler could not be downloaded. Check your connection and reload the page.',
+        }],
       }))
     })
     return () => stopRef.current?.()
   }, [])
 
   const runCode = useCallback((source: string) => {
+    // Without the compiler there is nothing to run; keep the load error visible
+    if (!isCompilerLoaded()) return
     stopRef.current?.()
     const runId = ++runIdRef.current
 
     const result = compile(source)
-    const compileTime = result.isDemo ? 'Demo mode' : `Compiled in ${result.compileTime.toFixed(1)}ms`
+    const compileTime = `Compiled in ${result.compileTime.toFixed(1)}ms`
 
     if (!result.success || !result.code) {
       setState(prev => ({
         ...prev,
         jsOutput: '// Compilation error',
+        jsLineMap: [],
         consoleLogs: [],
         errors: [{
           kind: 'compile',
@@ -84,14 +95,13 @@ export function useCompiler() {
     const sourceMap = result.sourceMap ? parseSourceMap(result.sourceMap) : null
     const toSource = (line?: number, column?: number) => {
       if (line === undefined) return {}
-      if (sourceMap) return originalPosition(sourceMap, line, column ?? 1) ?? {}
-      // The demo transpiler keeps lines 1:1
-      return result.isDemo ? { line, column } : {}
+      return sourceMap ? originalPosition(sourceMap, line, column ?? 1) ?? {} : {}
     }
 
     setState(prev => ({
       ...prev,
       jsOutput: result.code!,
+      jsLineMap: sourceMap ? sourceLinePerGeneratedLine(sourceMap) : [],
       consoleLogs: [],
       errors: [],
       notice: '',
@@ -155,7 +165,7 @@ export function useCompiler() {
             statusText: failed
               ? (errors.some(e => e.kind === 'timeout') ? 'Execution timed out' : 'Runtime error')
               : reason === 'completed'
-                ? (result.isDemo ? 'Demo - compiled' : 'Done')
+                ? 'Done'
                 : 'Stopped',
           }
         })
@@ -177,6 +187,5 @@ export function useCompiler() {
     runCode,
     stop,
     clearConsole,
-    isReady: !state.isLoading && isCompilerLoaded() || !state.isLoading,
   }
 }

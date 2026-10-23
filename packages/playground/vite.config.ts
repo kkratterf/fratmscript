@@ -15,5 +15,17 @@ export default defineConfig({
   base: '/fratmscript/',
   build: {
     outDir: 'dist',
+    rollupOptions: {
+      output: {
+        // Vendor code changes less often than the app: separate chunks
+        // cache better across deploys and stay under Vite's size warning.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          if (/[\\/](@codemirror|@lezer|style-mod|w3c-keyname|crelt)[\\/]/.test(id)) return 'codemirror'
+          if (/node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'react'
+          return 'vendor'
+        },
+      },
+    },
   },
 })

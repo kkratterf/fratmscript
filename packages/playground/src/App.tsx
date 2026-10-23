@@ -15,6 +15,19 @@ import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { cn } from '@/lib/utils'
 import { buildShareUrl, readSharedCode, loadSavedCode, saveCode } from '@/lib/share'
 
+const EXAMPLE_OPTIONS: [keyof typeof examples, string][] = [
+  ['hello', 'Hello World'],
+  ['fibonacci', 'Fibonacci'],
+  ['classe', 'Pizzaiolo Class'],
+  ['oop_avanzato', 'Advanced OOP'],
+  ['async', 'Async/Await'],
+  ['operatori', 'Logical Operators'],
+  ['array', 'Arrays and Objects'],
+  ['trycatch', 'Try/Catch'],
+  ['moderna', 'Modern Syntax'],
+]
+const EXAMPLE_TITLES: Record<string, string> = Object.fromEntries(EXAMPLE_OPTIONS)
+
 const AUTO_RUN_KEY = 'fratm:autoRun'
 const AUTO_RUN_DELAY_MS = 700
 
@@ -39,7 +52,10 @@ function App() {
   // A share link wins over the autosaved code, which wins over the default
   const [initial] = useState(() => {
     const code = readSharedCode() ?? loadSavedCode() ?? defaultCode
-    return { code, example: code === defaultCode ? '' : 'custom' }
+    if (code === defaultCode) return { code, example: '' }
+    // Unedited example code restored from autosave keeps its name in the picker
+    const match = Object.entries(examples).find(([, source]) => source === code)
+    return { code, example: match ? match[0] : 'custom' }
   })
   const [code, setCode] = useState(initial.code)
   const [selectedExample, setSelectedExample] = useState(initial.example)
@@ -48,6 +64,7 @@ function App() {
   const isRunning = compiler.status === 'running'
   const isMobile = useMediaQuery('(max-width: 767px)')
   const [mobileTab, setMobileTab] = useState<MobileTab>('code')
+  const [cursorLine, setCursorLine] = useState(1)
   // Source of the last run, to tell whether the output is out of date
   const [lastRunCode, setLastRunCode] = useState<string | null>(null)
   const [autoRun, setAutoRun] = useState(() => readStoredFlag(AUTO_RUN_KEY, true))
@@ -104,7 +121,7 @@ function App() {
   }, [])
 
   const diagnostics = useMemo<EditorDiagnostic[]>(() => compiler.errors.flatMap(error => {
-    if (error.kind === 'timeout' || error.line === undefined) return []
+    if ((error.kind !== 'compile' && error.kind !== 'runtime') || error.line === undefined) return []
     const message = error.kind === 'runtime' ? `${error.name}: ${error.message}` : error.message
     return [{ line: error.line, column: error.column, message }]
   }), [compiler.errors])
@@ -172,7 +189,10 @@ function App() {
           >
             {/* Sticky panel header */}
             <div className="flex justify-between items-center bg-card px-4 py-2.5 border-border border-b shrink-0">
-              <span className="font-medium text-muted-foreground text-sm">JavaScript ma comme si deve</span>
+              <span className="font-medium text-muted-foreground text-sm truncate">
+                {EXAMPLE_TITLES[selectedExample] ?? 'main.fratm'}
+                {selectedExample === 'custom' && <span className="ml-1.5 text-xs">(edited)</span>}
+              </span>
               <Badge className="px-1 font-mono" variant="outline">{compiler.version}</Badge>
             </div>
             {/* Scrollable editor */}
@@ -183,6 +203,7 @@ function App() {
                 onChange={handleCodeChange}
                 onRun={handleRun}
                 diagnostics={diagnostics}
+                onCursorLineChange={setCursorLine}
               />
             </div>
             {/* Sticky examples bar */}
@@ -196,15 +217,9 @@ function App() {
                 >
                   <option value="">-- Choose an example --</option>
                   {selectedExample === 'custom' && <option value="custom" disabled>Custom code</option>}
-                  <option value="hello">Hello World</option>
-                  <option value="fibonacci">Fibonacci</option>
-                  <option value="classe">Pizzaiolo Class</option>
-                  <option value="oop_avanzato">Advanced OOP</option>
-                  <option value="async">Async/Await</option>
-                  <option value="operatori">Logical Operators</option>
-                  <option value="array">Arrays and Objects</option>
-                  <option value="trycatch">Try/Catch</option>
-                  <option value="moderna">Modern Syntax</option>
+                  {EXAMPLE_OPTIONS.map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
                 </NativeSelect>
               </div>
               <div className="flex items-center gap-3 shrink-0">
@@ -245,6 +260,8 @@ function App() {
                 isRunning={isRunning}
                 onErrorClick={handleErrorClick}
                 onClearConsole={compiler.clearConsole}
+                jsLineMap={compiler.jsLineMap}
+                cursorLine={cursorLine}
                 show={isMobile && mobileTab !== 'code' ? mobileTab : 'all'}
                 stale={isStale && !isRunning}
               />
