@@ -60,7 +60,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Run tests
-        run: cargo test -p fratm-core -p fratm-cli
+        run: cargo test --workspace --locked
 
   build-cli:
     name: Build fratm (${{ matrix.target }})
