@@ -8,6 +8,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Shared with the VS Code extension's language server
+      '@keywords': path.resolve(__dirname, '../vscode-extension/src/server/keywords.ts'),
     },
   },
   base: '/fratmscript/',

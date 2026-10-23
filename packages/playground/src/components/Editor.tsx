@@ -7,6 +7,7 @@ import { HighlightStyle, syntaxHighlighting, StreamLanguage } from '@codemirror/
 import { tags } from '@lezer/highlight'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
+import { keywordHelp } from '@/lib/keywordHelp'
 
 // FratmScript language definition for StreamLanguage
 const fratmScriptLanguage = StreamLanguage.define({
@@ -145,10 +146,32 @@ const darkTheme = EditorView.theme({
   '.cm-errorLine': {
     backgroundColor: 'rgba(248, 113, 113, 0.12)',
   },
-  '.cm-tooltip-lint': {
+  '.cm-tooltip': {
     backgroundColor: '#171717',
     border: '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: '6px',
     color: '#e5e7eb',
+  },
+  '.cm-tooltip-autocomplete > ul > li[aria-selected]': {
+    backgroundColor: 'rgba(239, 68, 68, 0.25)',
+    color: '#f5f5f5',
+  },
+  '.cm-completionDetail': {
+    color: '#9ca3af',
+    fontStyle: 'normal',
+    marginLeft: '0.75em',
+  },
+  '.cm-keyword-hover': {
+    padding: '6px 10px',
+    maxWidth: '320px',
+    fontSize: '13px',
+  },
+  '.cm-keyword-hover code': {
+    color: '#a78bfa',
+  },
+  '.cm-keyword-hover-desc': {
+    marginTop: '2px',
+    color: '#9ca3af',
   },
 }, { dark: true })
 
@@ -202,6 +225,33 @@ const lightTheme = EditorView.theme({
   '.cm-errorLine': {
     backgroundColor: 'rgba(220, 38, 38, 0.08)',
   },
+  '.cm-tooltip': {
+    backgroundColor: '#ffffff',
+    border: '1px solid rgba(0, 0, 0, 0.1)',
+    borderRadius: '6px',
+    color: '#374151',
+  },
+  '.cm-tooltip-autocomplete > ul > li[aria-selected]': {
+    backgroundColor: 'rgba(220, 38, 38, 0.12)',
+    color: '#111827',
+  },
+  '.cm-completionDetail': {
+    color: '#6b7280',
+    fontStyle: 'normal',
+    marginLeft: '0.75em',
+  },
+  '.cm-keyword-hover': {
+    padding: '6px 10px',
+    maxWidth: '320px',
+    fontSize: '13px',
+  },
+  '.cm-keyword-hover code': {
+    color: '#7c3aed',
+  },
+  '.cm-keyword-hover-desc': {
+    marginTop: '2px',
+    color: '#6b7280',
+  },
 }, { dark: false })
 
 export interface EditorDiagnostic {
@@ -215,6 +265,8 @@ export interface EditorDiagnostic {
 export interface EditorHandle {
   /** Moves the cursor to a 1-based line/column and focuses the editor */
   revealLine: (line: number, column?: number) => void
+  /** Replaces the selection with text and focuses the editor */
+  insertText: (text: string) => void
 }
 
 interface EditorProps {
@@ -298,6 +350,12 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
       })
       view.focus()
     },
+    insertText(text) {
+      const view = viewRef.current
+      if (!view) return
+      view.dispatch(view.state.replaceSelection(text), { scrollIntoView: true })
+      view.focus()
+    },
   }), [])
 
   // Run on Mod-Enter. Highest precedence so defaultKeymap's insertBlankLine
@@ -324,6 +382,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
         keymap.of([...defaultKeymap, indentWithTab]),
         lintGutter(),
         errorLines,
+        keywordHelp,
         fratmScriptLanguage,
         highlightCompartment.of(syntaxHighlighting(isDark ? darkHighlighting : lightHighlighting)),
         themeCompartment.of(isDark ? darkTheme : lightTheme),

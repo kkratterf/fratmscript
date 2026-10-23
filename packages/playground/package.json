@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0-alpha.10",
+    "@codemirror/autocomplete": "^6.20.4",
     "@codemirror/commands": "^6.10.1",
     "@codemirror/language": "^6.12.1",
     "@codemirror/lint": "^6.8.5",

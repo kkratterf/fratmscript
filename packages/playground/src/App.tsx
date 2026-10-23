@@ -92,6 +92,11 @@ function App() {
     ))
   }, [])
 
+  const handleInsert = useCallback((text: string) => {
+    setMobileTab('code')
+    requestAnimationFrame(() => editorRef.current?.insertText(text))
+  }, [])
+
   const handleErrorClick = useCallback((line: number, column?: number) => {
     setMobileTab('code')
     // Wait a frame so the editor is visible before scrolling to the line
@@ -212,7 +217,7 @@ function App() {
                   />
                   Auto-run
                 </label>
-                <SyntaxHelp />
+                <SyntaxHelp onInsert={handleInsert} />
               </div>
             </div>
           </div>

@@ -19,7 +19,8 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@keywords": ["../vscode-extension/src/server/keywords.ts"]
     }
   },
   "include": ["src"]
