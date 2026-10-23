@@ -238,6 +238,7 @@ function App() {
                 notice={compiler.notice}
                 isRunning={isRunning}
                 onErrorClick={handleErrorClick}
+                onClearConsole={compiler.clearConsole}
                 show={isMobile && mobileTab !== 'code' ? mobileTab : 'all'}
                 stale={isStale && !isRunning}
               />
