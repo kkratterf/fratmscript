@@ -32,6 +32,8 @@ const syntaxReference = [
     { fratm: 'mo vir (x) => …', js: 'async (x) => …', desc: 'Async arrow function' },
     { fratm: 'facc f(a = 1, ...resto)', js: 'function f(a = 1, ...resto)', desc: 'Default and rest parameters' },
     { fratm: '[...a]  { ...o }  f(...xs)', js: '[...a]  { ...o }  f(...xs)', desc: 'Spread' },
+    { fratm: 'chist è { a, b: x, ...r } = o', js: 'const { a, b: x, ...r } = o', desc: 'Object destructuring' },
+    { fratm: 'tien [primo, ...ato] = xs', js: 'let [primo, ...ato] = xs', desc: 'Array destructuring' },
     { fratm: '{ nome, [k]: v, saluta() { } }', js: '{ nome, [k]: v, saluta() { } }', desc: 'Object shorthand, computed keys, methods' },
     { fratm: 'aspett', js: 'await', desc: 'Await expression' },
   ]},

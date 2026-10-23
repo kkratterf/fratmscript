@@ -98,6 +98,13 @@ facc saluta(nome = "Gennà", ...altri) { }  // default and rest parameters
 somma(...numeri)                          // spread in calls, [...a] and { ...o }
 ```
 
+### Destructuring
+```fratm
+chist è { nome, età: anni = 0, ...altro } = persona
+tien [primo, , terzo, ...ato] = lista
+facc saluta({ nome }) { }      // also in arrow and catch parameters
+```
+
 ### Objects
 ```fratm
 chist è pizza = {

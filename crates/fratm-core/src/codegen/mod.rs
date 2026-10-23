@@ -65,7 +65,7 @@ impl CodeGen {
     fn gen_statement(&mut self, stmt: &Statement) {
         match stmt {
             Statement::VariableDecl {
-                name,
+                target,
                 value,
                 is_const,
                 span,
@@ -74,7 +74,7 @@ impl CodeGen {
                 self.write_indent();
                 self.add_mapping(span.line, span.column);
                 self.emit(if *is_const { "const " } else { "let " });
-                self.emit(&js_name(name));
+                self.gen_pattern(target);
                 if let Some(val) = value {
                     self.emit(" = ");
                     self.gen_expression(val);
@@ -195,13 +195,13 @@ impl CodeGen {
                 if let Some(i) = init {
                     match i.as_ref() {
                         Statement::VariableDecl {
-                            name,
+                            target,
                             value,
                             is_const,
                             ..
                         } => {
                             self.emit(if *is_const { "const " } else { "let " });
-                            self.emit(&js_name(name));
+                            self.gen_pattern(target);
                             if let Some(val) = value {
                                 self.emit(" = ");
                                 self.gen_expression(val);
@@ -263,7 +263,7 @@ impl CodeGen {
                 self.emit("} catch");
                 if let Some(param) = catch_param {
                     self.emit(" (");
-                    self.emit(&js_name(param));
+                    self.gen_pattern(param);
                     self.emit(")");
                 }
                 self.emit(" {\n");
@@ -445,6 +445,7 @@ impl CodeGen {
                 }
                 self.emit("]");
             }
+            Expression::Object { properties, .. } if properties.is_empty() => self.emit("{}"),
             Expression::Object { properties, .. } => {
                 self.emit("{ ");
                 for (i, property) in properties.iter().enumerate() {
@@ -748,6 +749,54 @@ impl CodeGen {
                 self.emit("...");
                 self.gen_pattern(argument);
             }
+            Pattern::Array { elements, .. } => {
+                self.emit("[");
+                for (i, element) in elements.iter().enumerate() {
+                    if i > 0 {
+                        self.emit(", ");
+                    }
+                    if let Some(element) = element {
+                        self.gen_pattern(element);
+                    }
+                }
+                // A trailing hole needs its own comma: `[a, ]` has one element
+                if matches!(elements.last(), Some(None)) {
+                    self.emit(",");
+                }
+                self.emit("]");
+            }
+            Pattern::Object { properties, .. } if properties.is_empty() => self.emit("{}"),
+            Pattern::Object { properties, .. } => {
+                self.emit("{ ");
+                for (i, property) in properties.iter().enumerate() {
+                    if i > 0 {
+                        self.emit(", ");
+                    }
+                    match property {
+                        ObjectPatternProperty::Property {
+                            key,
+                            value,
+                            shorthand,
+                        } => {
+                            let keeps_name = match (key, pattern_name(value)) {
+                                (PropertyKey::Name(k), Some(n)) => js_name(n) == k.as_str(),
+                                _ => false,
+                            };
+                            // `{ for }` binds `$for`, so it must be spelled `{ for: $for }`
+                            if !(*shorthand && keeps_name) {
+                                self.gen_property_key(key);
+                                self.emit(": ");
+                            }
+                            self.gen_pattern(value);
+                        }
+                        ObjectPatternProperty::Rest(argument) => {
+                            self.emit("...");
+                            self.gen_pattern(argument);
+                        }
+                    }
+                }
+                self.emit(" }");
+            }
         }
     }
 
@@ -849,6 +898,15 @@ pub fn js_name(name: &str) -> std::borrow::Cow<'_, str> {
         format!("${}", name).into()
     } else {
         name.into()
+    }
+}
+
+/// The bound name of a shorthand pattern (`a` or `a = 1`).
+fn pattern_name(pattern: &Pattern) -> Option<&str> {
+    match pattern {
+        Pattern::Identifier { name, .. } => Some(name),
+        Pattern::Default { target, .. } => pattern_name(target),
+        _ => None,
     }
 }
 

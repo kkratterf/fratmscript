@@ -143,11 +143,11 @@ impl Parser {
         let start = self.current_span();
         self.expect(&TokenKind::Chist)?;
         self.expect(&TokenKind::E)?;
-        let name = self.expect_identifier()?;
+        let target = self.parse_binding_target()?;
         self.expect(&TokenKind::Equal)?;
         let value = self.parse_expression()?;
         Ok(Statement::VariableDecl {
-            name,
+            target,
             value: Some(value),
             is_const: true,
             span: self.span_from(start.start),
@@ -157,14 +157,20 @@ impl Parser {
     fn parse_let_declaration(&mut self) -> Result<Statement, ParseError> {
         let start = self.current_span();
         self.expect(&TokenKind::Tien)?;
-        let name = self.expect_identifier()?;
+        let target = self.parse_binding_target()?;
         let value = if self.match_token(&TokenKind::Equal) {
             Some(self.parse_expression()?)
         } else {
             None
         };
+        if value.is_none() && !matches!(target, Pattern::Identifier { .. }) {
+            return Err(ParseError::new(
+                "Destructuring needs a value: add '= …'",
+                self.current_span(),
+            ));
+        }
         Ok(Statement::VariableDecl {
-            name,
+            target,
             value,
             is_const: false,
             span: self.span_from(start.start),
@@ -246,10 +252,119 @@ impl Parser {
         Ok(target)
     }
 
+    /// A name or a destructuring pattern: `x`, `[a, ...b]`, `{ a, b: { c } }`.
     fn parse_binding_target(&mut self) -> Result<Pattern, ParseError> {
-        let span = self.current_span();
+        let start = self.current_span();
+        if self.match_token(&TokenKind::LeftBracket) {
+            let mut elements = Vec::new();
+            loop {
+                self.skip_newlines();
+                if self.check(&TokenKind::RightBracket) {
+                    break;
+                }
+                if let Some(Some(Pattern::Rest { .. })) = elements.last() {
+                    return Err(ParseError::new(
+                        "The rest element must be the last one",
+                        self.current_span(),
+                    ));
+                }
+                if self.check(&TokenKind::Comma) {
+                    self.advance();
+                    elements.push(None);
+                    continue;
+                }
+                elements.push(Some(self.parse_parameter()?));
+                self.skip_newlines();
+                if !self.match_token(&TokenKind::Comma) {
+                    break;
+                }
+            }
+            self.expect(&TokenKind::RightBracket)?;
+            return Ok(Pattern::Array {
+                elements,
+                span: self.span_from(start.start),
+            });
+        }
+        if self.match_token(&TokenKind::LeftBrace) {
+            let mut properties = Vec::new();
+            loop {
+                self.skip_newlines();
+                if self.check(&TokenKind::RightBrace) {
+                    break;
+                }
+                if let Some(ObjectPatternProperty::Rest(_)) = properties.last() {
+                    return Err(ParseError::new(
+                        "The rest element must be the last one",
+                        self.current_span(),
+                    ));
+                }
+                properties.push(self.parse_object_pattern_property()?);
+                self.skip_newlines();
+                if !self.match_token(&TokenKind::Comma) {
+                    break;
+                }
+            }
+            self.skip_newlines();
+            self.expect(&TokenKind::RightBrace)?;
+            return Ok(Pattern::Object {
+                properties,
+                span: self.span_from(start.start),
+            });
+        }
         let name = self.expect_identifier()?;
-        Ok(Pattern::Identifier { name, span })
+        Ok(Pattern::Identifier { name, span: start })
+    }
+
+    fn parse_object_pattern_property(&mut self) -> Result<ObjectPatternProperty, ParseError> {
+        if self.match_token(&TokenKind::Ellipsis) {
+            let span = self.current_span();
+            let name = self.expect_identifier()?;
+            return Ok(ObjectPatternProperty::Rest(Pattern::Identifier {
+                name,
+                span,
+            }));
+        }
+        let key_token = self.peek().clone();
+        let key = self.parse_property_key()?;
+        if self.match_token(&TokenKind::Colon) {
+            let value = self.parse_parameter()?;
+            return Ok(ObjectPatternProperty::Property {
+                key,
+                value,
+                shorthand: false,
+            });
+        }
+        // Shorthand `{ nome }` / `{ nome = 1 }` binds a variable with the key's name
+        let is_name = matches!(key_token.kind, TokenKind::Identifier(_))
+            || contextual_name(&key_token).is_some();
+        let PropertyKey::Name(name) = &key else {
+            return Err(ParseError::new(
+                format!("Expected ':', but found '{}'", self.peek().kind),
+                self.peek().span,
+            ));
+        };
+        if !is_name {
+            return Err(ParseError::new(
+                format!("Expected an identifier, not '{}'", key_token.kind),
+                key_token.span,
+            ));
+        }
+        let mut value = Pattern::Identifier {
+            name: name.clone(),
+            span: key_token.span,
+        };
+        if self.match_token(&TokenKind::Equal) {
+            let default = self.parse_assignment()?;
+            value = Pattern::Default {
+                target: Box::new(value),
+                default: Box::new(default),
+            };
+        }
+        Ok(ObjectPatternProperty::Property {
+            key,
+            value,
+            shorthand: true,
+        })
     }
 
     fn parse_return(&mut self) -> Result<Statement, ParseError> {
@@ -381,7 +496,7 @@ impl Parser {
         self.expect(&TokenKind::Si)?;
         self.expect(&TokenKind::Schiatta)?;
         let catch_param = if self.match_token(&TokenKind::LeftParen) {
-            let param = self.expect_identifier()?;
+            let param = self.parse_binding_target()?;
             self.expect(&TokenKind::RightParen)?;
             Some(param)
         } else {

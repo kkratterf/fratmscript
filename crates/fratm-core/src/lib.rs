@@ -654,4 +654,61 @@ na famiglie Pizzaiolo figlio 'e Persona {
             "let o = { mo: 1, facc: 2, si: 3 };\n"
         );
     }
+
+    #[test]
+    fn test_destructuring_declarations() {
+        assert_eq!(js("chist è {a, b} = o2"), "const { a, b } = o2;\n");
+        assert_eq!(
+            js("tien { a: x, b = 1, c: { d }, ...r } = o"),
+            "let { a: x, b = 1, c: { d }, ...r } = o;\n"
+        );
+        assert_eq!(
+            js("tien [primo, , terzo = 3, ...ato] = xs"),
+            "let [primo, , terzo = 3, ...ato] = xs;\n"
+        );
+        assert_eq!(js("tien [a, ,] = xs"), "let [a, ,] = xs;\n");
+        assert_eq!(js("tien [[a], { b }] = xs"), "let [[a], { b }] = xs;\n");
+        assert_eq!(
+            js("tien { [k]: v, \"s s\": w } = o"),
+            "let { [k]: v, \"s s\": w } = o;\n"
+        );
+        assert_eq!(js("tien { for, e } = o"), "let { for: $for, e } = o;\n");
+        assert_eq!(
+            js("pe (tien [i, j] = p; i < j; i++) { }"),
+            "for (let [i, j] = p; (i < j); i++) {\n}\n"
+        );
+    }
+
+    #[test]
+    fn test_destructuring_parameters() {
+        assert_eq!(
+            js("facc f({ a, b = 1 }, [c]) { }"),
+            "function f({ a, b = 1 }, [c]) {\n}\n"
+        );
+        assert_eq!(js("tien f = ({ a }) => a"), "let f = ({ a }) => a;\n");
+        assert_eq!(
+            js("tien f = ([a, b] = []) => a"),
+            "let f = ([a, b] = []) => a;\n"
+        );
+        assert!(js("pruvamm { } e si schiatta ({ message }) { }").contains("catch ({ message }) {"));
+    }
+
+    #[test]
+    fn test_destructuring_errors() {
+        for (src, expected) in [
+            ("tien {a}", "spacchettà"),
+            ("tien [...a, b] = x", "urdemo"),
+            ("tien { ...a, b } = x", "urdemo"),
+            ("tien { \"s\" } = x", "ce vo' ':'"),
+            ("tien { si } = x", "nu nome"),
+        ] {
+            let err = compile(src, Default::default()).unwrap_err();
+            assert!(err.to_string().contains(expected), "{}: {}", src, err);
+        }
+    }
+
+    #[test]
+    fn test_empty_object_literal() {
+        assert_eq!(js("tien o = {}"), "let o = {};\n");
+    }
 }

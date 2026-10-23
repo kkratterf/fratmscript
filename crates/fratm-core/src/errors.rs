@@ -105,6 +105,12 @@ pub fn napoletanize_error(message: &str) -> String {
             found
         );
     }
+    if message.contains("rest element must be the last") {
+        return "L'elemento cu '...' adda essere l'urdemo!".to_string();
+    }
+    if message.contains("Destructuring needs a value") {
+        return "Pe spacchettà ce vo' 'nu valore! Aggiunge '= …'.".to_string();
+    }
     if message.contains("rest parameter must be the last") {
         return "'O parametro cu '...' adda essere l'urdemo!".to_string();
     }
@@ -122,6 +128,17 @@ pub fn napoletanize_error(message: &str) -> String {
     }
     if message.contains("expression") || message.contains("espressione") {
         return "Ma che staje scrivenn?! Ccà ce vo' 'na espressione!".to_string();
+    }
+
+    // Any other "Expected 'x', but found 'y'" from the parser
+    if let Some(rest) = message.strip_prefix("Expected '") {
+        if let Some((expected, found)) = rest.split_once("', but found '") {
+            return format!(
+                "Ccà ce vo' '{}', ma aggio truvato '{}'!",
+                expected,
+                found.trim_end_matches('\'')
+            );
+        }
     }
 
     // Default: return with some Napoletano flair

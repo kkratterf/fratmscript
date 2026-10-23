@@ -11,7 +11,7 @@ pub struct Program {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Statement {
     VariableDecl {
-        name: String,
+        target: Pattern,
         value: Option<Expression>,
         is_const: bool,
         span: Span,
@@ -57,7 +57,7 @@ pub enum Statement {
     },
     TryCatch {
         try_body: Vec<Statement>,
-        catch_param: Option<String>,
+        catch_param: Option<Pattern>,
         catch_body: Vec<Statement>,
         span: Span,
     },
@@ -272,11 +272,21 @@ impl Expression {
     }
 }
 
-/// A binding target: function parameters (and, later, declarations).
+/// A binding target: declarations, function parameters and catch parameters.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Pattern {
     Identifier {
         name: String,
+        span: Span,
+    },
+    /// `[primo, , terzo, ...ato]` (`None` is a hole)
+    Array {
+        elements: Vec<Option<Pattern>>,
+        span: Span,
+    },
+    /// `{ a, b: x, c = 1, ...resto }`
+    Object {
+        properties: Vec<ObjectPatternProperty>,
         span: Span,
     },
     /// `target = default`
@@ -288,6 +298,19 @@ pub enum Pattern {
     Rest {
         argument: Box<Pattern>,
     },
+}
+
+/// An entry of an object pattern.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ObjectPatternProperty {
+    /// `key: value`, or `key` / `key = default` when `shorthand`
+    Property {
+        key: PropertyKey,
+        value: Pattern,
+        shorthand: bool,
+    },
+    /// `...resto`
+    Rest(Pattern),
 }
 
 /// An entry of an object literal.
