@@ -14,6 +14,26 @@ import { MobileTabs, type MobileTab } from '@/components/MobileTabs'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { cn } from '@/lib/utils'
 
+const AUTO_RUN_KEY = 'fratm:autoRun'
+const AUTO_RUN_DELAY_MS = 700
+
+function readStoredFlag(key: string, fallback: boolean): boolean {
+  try {
+    const value = localStorage.getItem(key)
+    return value === null ? fallback : value === 'true'
+  } catch {
+    return fallback
+  }
+}
+
+function writeStoredFlag(key: string, value: boolean) {
+  try {
+    localStorage.setItem(key, String(value))
+  } catch {
+    // Storage can be unavailable (private mode): the toggle still works for this visit
+  }
+}
+
 function App() {
   const [code, setCode] = useState(defaultCode)
   const [selectedExample, setSelectedExample] = useState('')
@@ -22,6 +42,9 @@ function App() {
   const isRunning = compiler.status === 'running'
   const isMobile = useMediaQuery('(max-width: 767px)')
   const [mobileTab, setMobileTab] = useState<MobileTab>('code')
+  // Source of the last run, to tell whether the output is out of date
+  const [lastRunCode, setLastRunCode] = useState<string | null>(null)
+  const [autoRun, setAutoRun] = useState(() => readStoredFlag(AUTO_RUN_KEY, true))
 
   // Load code from URL on mount
   useEffect(() => {
@@ -30,6 +53,7 @@ function App() {
     if (urlCode) {
       try {
         setCode(decodeURIComponent(atob(urlCode)))
+        setSelectedExample('custom')
       } catch (e) {
         console.error('Failed to load code from URL:', e)
       }
@@ -37,11 +61,38 @@ function App() {
   }, [])
 
   const { runCode, stop } = compiler
+  const run = useCallback((source: string) => {
+    runCode(source)
+    setLastRunCode(source)
+  }, [runCode])
+
   const handleRun = useCallback(() => {
-    runCode(code)
+    run(code)
     // On phones the output lives in its own tab: show it
     setMobileTab(tab => (tab === 'code' ? 'console' : tab))
-  }, [code, runCode])
+  }, [code, run])
+
+  // Auto-run: rerun shortly after typing stops (and once the compiler loads)
+  useEffect(() => {
+    if (!autoRun || compiler.isLoading || code === lastRunCode) return
+    const timer = setTimeout(() => run(code), AUTO_RUN_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [autoRun, code, compiler.isLoading, lastRunCode, run])
+
+  const handleAutoRunChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setAutoRun(e.target.checked)
+    writeStoredFlag(AUTO_RUN_KEY, e.target.checked)
+  }, [])
+
+  const isStale = lastRunCode !== null && code !== lastRunCode
+
+  const handleCodeChange = useCallback((value: string) => {
+    setCode(value)
+    // Editing an example turns it into custom code
+    setSelectedExample(prev => (
+      prev && prev !== 'custom' && examples[prev as keyof typeof examples] !== value ? 'custom' : prev
+    ))
+  }, [])
 
   const handleErrorClick = useCallback((line: number, column?: number) => {
     setMobileTab('code')
@@ -127,7 +178,7 @@ function App() {
               <Editor
                 ref={editorRef}
                 value={code}
-                onChange={setCode}
+                onChange={handleCodeChange}
                 onRun={handleRun}
                 diagnostics={diagnostics}
               />
@@ -142,6 +193,7 @@ function App() {
                   className="w-44 sm:w-52"
                 >
                   <option value="">-- Choose an example --</option>
+                  {selectedExample === 'custom' && <option value="custom" disabled>Custom code</option>}
                   <option value="hello">Hello World</option>
                   <option value="fibonacci">Fibonacci</option>
                   <option value="classe">Pizzaiolo Class</option>
@@ -152,7 +204,18 @@ function App() {
                   <option value="trycatch">Try/Catch</option>
                 </NativeSelect>
               </div>
-              <SyntaxHelp />
+              <div className="flex items-center gap-3 shrink-0">
+                <label className="flex items-center gap-1.5 text-muted-foreground text-xs cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={autoRun}
+                    onChange={handleAutoRunChange}
+                    className="accent-primary size-3.5"
+                  />
+                  Auto-run
+                </label>
+                <SyntaxHelp />
+              </div>
             </div>
           </div>
 
@@ -179,6 +242,7 @@ function App() {
                 isRunning={isRunning}
                 onErrorClick={handleErrorClick}
                 show={isMobile && mobileTab !== 'code' ? mobileTab : 'all'}
+                stale={isStale && !isRunning}
               />
             </div>
           </div>
@@ -186,8 +250,10 @@ function App() {
 
         {/* Sticky StatusBar */}
         <StatusBar
-          status={compiler.status}
-          statusText={compiler.statusText}
+          status={isStale && !isRunning ? 'stale' : compiler.status}
+          statusText={isStale && !isRunning
+            ? (autoRun ? 'Code changed, updating…' : 'Code changed: output is out of date, press Run')
+            : compiler.statusText}
           compileTime={compiler.compileTime}
         />
       </div>

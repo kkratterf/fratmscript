@@ -12,6 +12,8 @@ interface OutputPanelProps {
   onErrorClick: (line: number, column?: number) => void
   /** Which sections to render: everything (desktop) or one mobile tab */
   show?: 'all' | 'console' | 'js'
+  /** The code changed since this output was produced */
+  stale?: boolean
 }
 
 const ERROR_TITLES: Record<PlaygroundError['kind'], string> = {
@@ -105,11 +107,14 @@ function ErrorCard({ error, onErrorClick }: { error: PlaygroundError; onErrorCli
   )
 }
 
-export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, onErrorClick, show = 'all' }: OutputPanelProps) {
+export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, onErrorClick, show = 'all', stale = false }: OutputPanelProps) {
   const showConsole = show !== 'js'
   const showJs = show !== 'console'
   return (
-    <div className="flex flex-col h-full">
+    <div
+      className={cn('flex flex-col h-full transition-opacity duration-200', stale && 'opacity-60')}
+      title={stale ? 'The code changed since this output was produced' : undefined}
+    >
       {/* Errors first: they are what you need to see */}
       {showConsole && errors.length > 0 && (
         <section className="flex flex-col gap-2 p-4 border-border border-b" aria-live="polite">

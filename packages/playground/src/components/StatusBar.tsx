@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
 interface StatusBarProps {
-  status: 'loading' | 'ready' | 'compiling' | 'running' | 'error'
+  status: 'loading' | 'ready' | 'compiling' | 'running' | 'error' | 'stale'
   statusText: string
   compileTime: string
 }
@@ -16,7 +16,8 @@ export function StatusBar({ status, statusText, compileTime }: StatusBarProps) {
             status === 'ready' && "bg-success",
             status === 'loading' && "bg-warning animate-pulse",
             (status === 'compiling' || status === 'running') && "bg-warning animate-pulse",
-            status === 'error' && "bg-destructive"
+            status === 'error' && "bg-destructive",
+            status === 'stale' && "bg-warning"
           )}
         />
         <span>{statusText}</span>
