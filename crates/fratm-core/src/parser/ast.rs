@@ -128,10 +128,10 @@ pub struct ImportSpecifier {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ClassMember {
     Method(ClassMethod),
-    /// `conteggio = 0`, `fisso totale = 0`, `#segreto`
+    /// `conteggio = 0`, `fisso totale = 0`, `#segreto`, `[chiave] = 1`
     Field {
-        /// Private names keep their `#`
-        name: String,
+        /// Private names are `PropertyKey::Name` and keep their `#`
+        key: PropertyKey,
         value: Option<Expression>,
         is_static: bool,
         span: Span,
@@ -149,8 +149,9 @@ pub enum MethodKind {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClassMethod {
-    /// Private names keep their `#`
-    pub name: String,
+    /// Private names are `PropertyKey::Name` and keep their `#`;
+    /// `*[Symbol.iterator]()` has a computed key
+    pub key: PropertyKey,
     pub kind: MethodKind,
     pub params: Vec<Pattern>,
     pub body: Vec<Statement>,

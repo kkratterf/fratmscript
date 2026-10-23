@@ -190,8 +190,12 @@ impl Checker {
                 self.declare(name, Binding::Lexical, *span);
                 for member in members {
                     match member {
-                        ClassMember::Method(m) => self.function(&m.params, &m.body),
-                        ClassMember::Field { value, .. } => {
+                        ClassMember::Method(m) => {
+                            self.property_key(&m.key);
+                            self.function(&m.params, &m.body);
+                        }
+                        ClassMember::Field { key, value, .. } => {
+                            self.property_key(key);
                             if let Some(value) = value {
                                 self.expression(value);
                             }

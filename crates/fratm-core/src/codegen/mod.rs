@@ -362,7 +362,7 @@ impl CodeGen {
                     self.write_indent();
                     match member {
                         ClassMember::Field {
-                            name,
+                            key,
                             value,
                             is_static,
                             ..
@@ -370,7 +370,7 @@ impl CodeGen {
                             if *is_static {
                                 self.emit("static ");
                             }
-                            self.emit(name);
+                            self.gen_property_key(key);
                             if let Some(value) = value {
                                 self.emit(" = ");
                                 self.gen_expression(value);
@@ -393,12 +393,12 @@ impl CodeGen {
                                 MethodKind::Method => {}
                             }
                             // Translate "costruttore" to JavaScript "constructor"
-                            let js_method_name = if method.name == "costruttore" {
-                                "constructor"
-                            } else {
-                                method.name.as_str()
-                            };
-                            self.emit(js_method_name);
+                            match &method.key {
+                                PropertyKey::Name(name) if name == "costruttore" => {
+                                    self.emit("constructor")
+                                }
+                                key => self.gen_property_key(key),
+                            }
                             self.gen_params(&method.params);
                             self.emit(" {\n");
                             self.gen_block_statements(&method.body);

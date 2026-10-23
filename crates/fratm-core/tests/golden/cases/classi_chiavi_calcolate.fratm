@@ -1,0 +1,40 @@
+// Nomi calcolati ([…]) pe metodi, getter, setter e campi 'e na famiglie
+chist è saluto = "saluto"
+
+na famiglie Squadra {
+    #giocatori = []
+    ["sport"] = "pallone"
+    fisso [saluto + "Fisso"] = "Forza Napoli!"
+
+    costruttore(...giocatori) {
+        stu cos.#giocatori = giocatori
+    }
+
+    *[Symbol.iterator]() {
+        pe ogni (chist è nomme dint stu cos.#giocatori) {
+            caccia nomme
+        }
+    }
+
+    [saluto](chi) {
+        piglie "Uè " + chi + "!"
+    }
+
+    damme [saluto + "Getter"]() {
+        piglie stu cos.#giocatori.length + " giocatori"
+    }
+
+    miette ["capitano"](nomme) {
+        stu cos.#giocatori.unshift(nomme)
+    }
+
+    fisso "nomme strano"() {
+        piglie 10
+    }
+}
+
+chist è napoli = nu bell Squadra("Careca", "Alemão")
+napoli.capitano = "Maradona"
+stamm a dì([...napoli])
+stamm a dì(napoli.saluto("Diego"), napoli.salutoGetter, napoli.sport)
+stamm a dì(Squadra.salutoFisso, Squadra["nomme strano"]())

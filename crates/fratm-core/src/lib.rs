@@ -483,6 +483,20 @@ na famiglie Pizzaiolo figlio 'e Persona {
     }
 
     #[test]
+    fn test_class_computed_member_names() {
+        let out = js("na famiglie C {\n*[Symbol.iterator]() { }\nfisso [k] = 1\n[\"a\" + b] = 2\ndamme [k]() { piglie 1 }\nmiette [k](v) { }\nmo vir [k]() { }\n\"x y\"() { }\n}");
+        assert_eq!(
+            out,
+            "class C {\n  *[Symbol.iterator]() {\n  }\n  static [k] = 1;\n  [(\"a\" + b)] = 2;\n  get [k]() {\n    return 1;\n  }\n  set [k](v) {\n  }\n  async [k]() {\n  }\n  \"x y\"() {\n  }\n}\n"
+        );
+        // A computed key is an ordinary expression, so undeclared names are not errors
+        // and `costruttore` is only translated as a plain name
+        assert!(js("na famiglie C { [\"costruttore\"]() { } }").contains("  [\"costruttore\"]() {"));
+        assert!(js("na famiglie C { costruttore() { } }").contains("  constructor() {"));
+        assert!(compile("na famiglie C { [k() { } }", Default::default()).is_err());
+    }
+
+    #[test]
     fn test_do_while() {
         assert_eq!(
             js("primm fa {\n  i++\n} mentre che (i < 3)"),

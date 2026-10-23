@@ -806,7 +806,13 @@ impl Parser {
 
         // `damme x()` / `miette x(v)`; `damme()` alone is a method called damme
         let mut kind = MethodKind::Method;
-        if !is_async && !has_facc && !is_generator && self.check_at(2, &TokenKind::LeftParen) {
+        // (`damme [chiave]()` has a computed name)
+        if !is_async
+            && !has_facc
+            && !is_generator
+            && (self.check_at(2, &TokenKind::LeftParen)
+                || self.check_at(1, &TokenKind::LeftBracket))
+        {
             if self.check_identifier_at(0, "damme") {
                 kind = MethodKind::Getter;
             } else if self.check_identifier_at(0, "miette") {
@@ -817,7 +823,7 @@ impl Parser {
             }
         }
 
-        let name = self.expect_member_name()?;
+        let key = self.parse_member_key()?;
 
         if kind == MethodKind::Method
             && !is_async
@@ -832,7 +838,7 @@ impl Parser {
             };
             self.expect_statement_end()?;
             return Ok(ClassMember::Field {
-                name,
+                key,
                 value,
                 is_static,
                 span: self.span_from(start.start),
@@ -858,7 +864,7 @@ impl Parser {
         let body = self.parse_function_body(is_generator)?;
 
         Ok(ClassMember::Method(ClassMethod {
-            name,
+            key,
             kind,
             params,
             body,
@@ -869,7 +875,7 @@ impl Parser {
         }))
     }
 
-    /// A class member name: any word (keywords included, as in JS) or `#private`.
+    /// A member name: any word (keywords included, as in JS) or `#private`.
     fn expect_member_name(&mut self) -> Result<String, ParseError> {
         if let TokenKind::PrivateName(name) = &self.peek().kind {
             let name = name.clone();
@@ -877,6 +883,15 @@ impl Parser {
             return Ok(name);
         }
         self.expect_property_name()
+    }
+
+    /// A class member key: `#private` or anything an object key accepts
+    /// (a word, a string, a number or `[expr]`).
+    fn parse_member_key(&mut self) -> Result<PropertyKey, ParseError> {
+        if matches!(self.peek().kind, TokenKind::PrivateName(_)) {
+            return Ok(PropertyKey::Name(self.expect_member_name()?));
+        }
+        self.parse_property_key()
     }
 
     fn parse_import(&mut self) -> Result<Statement, ParseError> {
