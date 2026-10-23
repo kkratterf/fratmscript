@@ -65,7 +65,7 @@ fratm lancia <file.fratm>           # Compile and launch
 fratm build <file.fratm>            # Compile to JavaScript
 fratm build <file> --sourcemap      # With source map
 fratm check <files...>              # Report errors without writing output
-fratm fmt <files...>                  # Format files in place (comments kept)
+fratm fmt <files...>                # Format files in place (comments kept)
 fratm fmt --check <files...>        # Fail if a file is not formatted
 fratm repl                          # Interactive REPL
 fratm tokens <file>                 # Debug: show tokens
