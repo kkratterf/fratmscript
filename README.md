@@ -32,6 +32,7 @@ fratmscript/
 │   ├── fratm-cli/        # CLI tool
 │   └── fratm-wasm/       # WebAssembly bindings
 ├── packages/
+│   ├── fratmscript/      # npm package: WASM compiler + Vite plugin
 │   ├── vscode-extension/ # Syntax highlighting
 │   └── playground/       # Online editor
 └── examples/             # Example programs
@@ -54,6 +55,18 @@ cargo build --release
 
 # REPL
 ./target/release/fratm repl
+```
+
+---
+
+## npm and Vite
+
+The `fratmscript` npm package ships the compiler as WebAssembly with a small JS API and a Vite plugin that lets you `import` `.fratm` files. See [`packages/fratmscript`](packages/fratmscript/README.md).
+
+```js
+// vite.config.js
+import fratmscript from 'fratmscript/vite';
+export default { plugins: [fratmscript()] };
 ```
 
 ---

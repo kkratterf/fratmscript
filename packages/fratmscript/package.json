@@ -1,0 +1,56 @@
+{
+  "name": "fratmscript",
+  "version": "0.4.0",
+  "description": "FratmScript compiler (WebAssembly) and Vite plugin: JavaScript, ma comme si deve 🤌",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kkratterf/fratmscript.git",
+    "directory": "packages/fratmscript"
+  },
+  "homepage": "https://github.com/kkratterf/fratmscript/tree/main/packages/fratmscript#readme",
+  "keywords": [
+    "fratmscript",
+    "napoletano",
+    "compiler",
+    "transpiler",
+    "wasm",
+    "vite-plugin"
+  ],
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./vite": {
+      "types": "./vite.d.ts",
+      "default": "./vite.js"
+    },
+    "./web": {
+      "types": "./web.d.ts",
+      "default": "./web.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "vite.js",
+    "vite.d.ts",
+    "web.js",
+    "web.d.ts",
+    "lib/",
+    "wasm/node/package.json",
+    "wasm/node/fratm_wasm.js",
+    "wasm/node/fratm_wasm_bg.wasm",
+    "wasm/web/fratm_wasm.js",
+    "wasm/web/fratm_wasm_bg.wasm"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node scripts/build-wasm.js",
+    "test": "node --test test/*.test.js"
+  }
+}

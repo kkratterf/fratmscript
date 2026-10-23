@@ -14,6 +14,7 @@ FratmScript is a Neapolitan-flavoured language that transpiles to JavaScript.
 | `crates/fratm-wasm` | WASM bindings used by the playground |
 | `packages/playground` | React + Vite + CodeMirror playground, deployed to GitHub Pages from `main` |
 | `packages/playground/public/pkg` | WASM build of `fratm-wasm` (generated, git-ignored) |
+| `packages/fratmscript` | npm package: WASM compiler, JS API and Vite plugin (`wasm/` is generated, git-ignored) |
 | `packages/vscode-extension` | VS Code extension (grammar, snippets, LSP) |
 | `examples/*.fratm` | Example programs; CI compiles every one of them |
 
@@ -40,6 +41,8 @@ Playground (needs `wasm-pack`, Node 20, pnpm 9):
 just wasm                                  # rebuilds packages/playground/public/pkg
 cd packages/playground && pnpm install --frozen-lockfile && pnpm build
 ```
+
+npm package (needs `wasm-pack`, Node 20): `cd packages/fratmscript && npm run build && npm test`.
 
 VS Code extension: `cd packages/vscode-extension && pnpm compile`.
 
@@ -102,7 +105,7 @@ Agent platforms that assign their own branch names (e.g. `claude/...`) are fine;
 
 - SemVer, tags `vX.Y.Z` (older `@0.1.0`-style tags are kept as they are).
 - Minor release = a version milestone, cut when all `P0` issues of that version label are closed and `main` is green. Patch release when a user-facing fix lands.
-- First a version-bump PR (`chore(release): vX.Y.Z`) that updates `[workspace.package] version` in `Cargo.toml` and `version` in `packages/playground/package.json` (and the VS Code extension if it ships).
+- First a version-bump PR (`chore(release): vX.Y.Z`) that updates `[workspace.package] version` in `Cargo.toml` and `version` in `packages/playground/package.json` and `packages/fratmscript/package.json` (and the VS Code extension if it ships).
 - The release is created by the manual `release.yml` workflow (`workflow_dispatch`), which tags, builds the binaries and WASM package, and generates notes.
 - **No `CHANGELOG.md`.** The changelog lives only in GitHub Release notes.
 

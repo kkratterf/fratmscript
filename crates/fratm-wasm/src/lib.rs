@@ -45,15 +45,43 @@ fn compile_to_response(source: &str, generate_source_map: bool) -> CompileRespon
             column: None,
             suggestion: None,
         },
-        Err(e) => CompileResponse {
-            success: false,
-            code: None,
+        Err(e) => error_response(&e),
+    }
+}
+
+/// Format FratmScript source like `fratm fmt`
+///
+/// Returns a JSON object with `success`, `code` (the formatted source) or
+/// `error`, `line`, `column` and `suggestion`.
+#[wasm_bindgen]
+pub fn format(source: &str) -> JsValue {
+    serde_wasm_bindgen::to_value(&format_to_response(source)).unwrap_or(JsValue::NULL)
+}
+
+fn format_to_response(source: &str) -> CompileResponse {
+    match fratm_core::format(source) {
+        Ok(code) => CompileResponse {
+            success: true,
+            code: Some(code),
             source_map: None,
-            error: Some(format!("{}", e)),
-            line: e.line(),
-            column: e.column(),
-            suggestion: fratm_core::errors::get_suggestion(&e),
+            error: None,
+            line: None,
+            column: None,
+            suggestion: None,
         },
+        Err(e) => error_response(&e),
+    }
+}
+
+fn error_response(e: &fratm_core::errors::CompileError) -> CompileResponse {
+    CompileResponse {
+        success: false,
+        code: None,
+        source_map: None,
+        error: Some(format!("{}", e)),
+        line: e.line(),
+        column: e.column(),
+        suggestion: fratm_core::errors::get_suggestion(e),
     }
 }
 
@@ -101,6 +129,16 @@ mod tests {
         let result = compile_to_response("chist è x = 42", true);
         assert!(result.success);
         assert!(result.source_map.is_some());
+    }
+
+    #[test]
+    fn test_format() {
+        let result = format_to_response("si (overo) {\nstamm a dì(1)\n}");
+        assert!(result.success);
+        assert_eq!(result.code.unwrap(), "si (overo) {\n    stamm a dì(1)\n}\n");
+        let result = format_to_response("tien = 1");
+        assert!(!result.success);
+        assert_eq!(result.line, Some(1));
     }
 
     #[test]

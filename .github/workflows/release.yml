@@ -50,6 +50,14 @@ jobs:
             exit 1
           fi
 
+      - name: Check the npm package has the same version
+        run: |
+          npm_version=$(node -p "require('./packages/fratmscript/package.json').version")
+          if [ "$npm_version" != "$VERSION" ]; then
+            echo "::error::packages/fratmscript/package.json has version $npm_version, but the release asks for $VERSION"
+            exit 1
+          fi
+
       - name: Check the tag does not exist yet
         run: |
           if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
@@ -168,3 +176,47 @@ jobs:
             --title "$TAG" \
             --generate-notes \
             "${flags[@]}"
+
+  publish-npm:
+    name: Publish the npm package
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - name: Skip without an npm token
+        if: env.NODE_AUTH_TOKEN == ''
+        run: echo "::warning::NPM_TOKEN is not set, so the fratmscript npm package was not published"
+
+      - uses: actions/checkout@v4
+        if: env.NODE_AUTH_TOKEN != ''
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: env.NODE_AUTH_TOKEN != ''
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        if: env.NODE_AUTH_TOKEN != ''
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - uses: actions/setup-node@v4
+        if: env.NODE_AUTH_TOKEN != ''
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Build, test and publish
+        if: env.NODE_AUTH_TOKEN != ''
+        env:
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: |
+          cd packages/fratmscript
+          npm run build
+          npm test
+          tag=latest
+          if [ "$PRERELEASE" = "true" ]; then tag=next; fi
+          npm publish --provenance --access public --tag "$tag"

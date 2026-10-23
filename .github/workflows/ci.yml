@@ -50,6 +50,36 @@ jobs:
           ./target/debug/fratm check examples/*.fratm
           ./target/debug/fratm fmt --check examples/*.fratm
 
+  npm-package:
+    name: npm package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build and test
+        run: |
+          cd packages/fratmscript
+          npm run build
+          npm test
+          npm pack --dry-run
+
   playground:
     name: Playground build
     runs-on: ubuntu-latest

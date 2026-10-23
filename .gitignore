@@ -18,6 +18,7 @@ Thumbs.db
 
 # WASM build output
 /packages/playground/public/pkg/
+/packages/fratmscript/wasm/
 
 # Node
 node_modules/
