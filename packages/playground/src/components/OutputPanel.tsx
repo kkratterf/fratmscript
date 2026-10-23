@@ -1,7 +1,9 @@
 import { cn } from '@/lib/utils'
-import type { LogEntry, LogValue } from '@/lib/runner'
+import type { LogEntry } from '@/lib/runner'
 import type { PlaygroundError } from '@/hooks/useCompiler'
-import { CircleAlert, TriangleAlert, ChevronRight, Timer } from 'lucide-react'
+import { CircleAlert, TriangleAlert, ChevronRight, Timer, Ban, Copy, Check } from 'lucide-react'
+import { useState } from 'react'
+import { ValueTree } from '@/components/ValueTree'
 
 interface OutputPanelProps {
   jsOutput: string
@@ -10,6 +12,7 @@ interface OutputPanelProps {
   notice: string
   isRunning: boolean
   onErrorClick: (line: number, column?: number) => void
+  onClearConsole: () => void
   /** Which sections to render: everything (desktop) or one mobile tab */
   show?: 'all' | 'console' | 'js'
   /** The code changed since this output was produced */
@@ -22,49 +25,41 @@ const ERROR_TITLES: Record<PlaygroundError['kind'], string> = {
   timeout: 'Execution timed out',
 }
 
-function isSpecial(arg: unknown): arg is { __fratm: 'special'; text: string } {
-  return typeof arg === 'object' && arg !== null && (arg as { __fratm?: unknown }).__fratm === 'special'
+function SectionAction({ onClick, disabled, icon, label }: {
+  onClick: () => void
+  disabled?: boolean
+  icon: React.ReactNode
+  label: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex items-center gap-1 hover:bg-accent disabled:opacity-40 px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground text-xs transition-colors disabled:pointer-events-none"
+    >
+      {icon}
+      {label}
+    </button>
+  )
 }
 
-function formatValue(arg: LogValue): React.ReactNode {
-  if (isSpecial(arg)) return <span className="text-muted-foreground italic">{arg.text}</span>
-  if (arg === null) return <span className="text-purple-400">null</span>
-  if (arg === undefined) return <span className="text-muted-foreground">undefined</span>
-  if (typeof arg === 'string') return <span className="text-green-400">"{arg}"</span>
-  if (typeof arg === 'number') return <span className="text-amber-400">{arg}</span>
-  if (typeof arg === 'boolean') return <span className="text-purple-400">{String(arg)}</span>
-  if (Array.isArray(arg)) {
-    return (
-      <span className="text-foreground">
-        {'['}{arg.map((item, i) => (
-          <span key={i}>
-            {i > 0 && ', '}
-            {formatValue(item)}
-          </span>
-        ))}{']'}
-      </span>
-    )
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  const copy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    }).catch(() => {})
   }
-  if (typeof arg === 'object') {
-    try {
-      const entries = Object.entries(arg as Record<string, LogValue>)
-      return (
-        <span className="text-foreground">
-          {'{ '}
-          {entries.map(([key, val], i) => (
-            <span key={key}>
-              {i > 0 && ', '}
-              <span className="text-cyan-400">{key}</span>: {formatValue(val)}
-            </span>
-          ))}
-          {' }'}
-        </span>
-      )
-    } catch {
-      return <span className="text-foreground">{String(arg)}</span>
-    }
-  }
-  return <span className="text-foreground">{String(arg)}</span>
+  return (
+    <SectionAction
+      onClick={copy}
+      disabled={!text || text.startsWith('// ')}
+      icon={copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+      label={copied ? 'Copied' : 'Copy JS'}
+    />
+  )
 }
 
 function ErrorCard({ error, onErrorClick }: { error: PlaygroundError; onErrorClick: OutputPanelProps['onErrorClick'] }) {
@@ -107,7 +102,7 @@ function ErrorCard({ error, onErrorClick }: { error: PlaygroundError; onErrorCli
   )
 }
 
-export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, onErrorClick, show = 'all', stale = false }: OutputPanelProps) {
+export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, onErrorClick, onClearConsole, show = 'all', stale = false }: OutputPanelProps) {
   const showConsole = show !== 'js'
   const showJs = show !== 'console'
   return (
@@ -127,11 +122,19 @@ export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, 
       {/* Console Output - Chrome DevTools style */}
       {showConsole && (
         <section className={cn('p-4 border-border', showJs && 'border-b')}>
-          <h3 className="flex items-center gap-2 mb-3 text-muted-foreground text-xs uppercase tracking-wider">
-            <span className={cn('bg-info rounded-full w-2 h-2', isRunning && 'animate-pulse')} />
-            Console
-            {isRunning && <span className="normal-case tracking-normal">running…</span>}
-          </h3>
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider">
+              <span className={cn('bg-info rounded-full w-2 h-2', isRunning && 'animate-pulse')} />
+              Console
+              {isRunning && <span className="normal-case tracking-normal">running…</span>}
+            </h3>
+            <SectionAction
+              onClick={onClearConsole}
+              disabled={consoleLogs.length === 0 && !notice}
+              icon={<Ban className="size-3" />}
+              label="Clear"
+            />
+          </div>
           <div className="bg-card/50 border border-border rounded-md overflow-hidden font-mono text-sm">
             {consoleLogs.length > 0 ? (
               consoleLogs.map((log, i) => (
@@ -159,7 +162,8 @@ export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, 
                     {log.args.map((arg, j) => (
                       <span key={j}>
                         {j > 0 && ' '}
-                        {typeof arg === 'string' ? arg : formatValue(arg)}
+                        {/* Top-level strings print raw, like console.log does */}
+                      <ValueTree value={arg} quoted={false} />
                       </span>
                     ))}
                   </span>
@@ -182,10 +186,13 @@ export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, 
       {/* JavaScript Output */}
       {showJs && (
         <section className="flex-1 p-4">
-          <h3 className="flex items-center gap-2 mb-3 text-muted-foreground text-xs uppercase tracking-wider">
-            <span className="bg-success rounded-full w-2 h-2" />
-            Generated JavaScript
-          </h3>
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider">
+              <span className="bg-success rounded-full w-2 h-2" />
+              Generated JavaScript
+            </h3>
+            <CopyButton text={jsOutput} />
+          </div>
           <pre className="bg-card/50 p-3 border border-border rounded-md font-mono text-foreground/90 text-sm break-words leading-relaxed whitespace-pre-wrap">
             {jsOutput || <span className="text-muted-foreground/50">// Run code to see output</span>}
           </pre>

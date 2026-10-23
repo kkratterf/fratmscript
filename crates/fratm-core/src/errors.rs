@@ -105,6 +105,9 @@ pub fn napoletanize_error(message: &str) -> String {
             found
         );
     }
+    if message.contains("rest parameter must be the last") {
+        return "'O parametro cu '...' adda essere l'urdemo!".to_string();
+    }
     if message.contains("Unterminated template") {
         return "'O template nun è chiuso! Ce vo' 'nu backtick '`' 'a fine.".to_string();
     }

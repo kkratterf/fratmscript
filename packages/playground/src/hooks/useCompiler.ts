@@ -168,10 +168,15 @@ export function useCompiler() {
     stopRef.current?.()
   }, [])
 
+  const clearConsole = useCallback(() => {
+    setState(prev => ({ ...prev, consoleLogs: [], notice: '' }))
+  }, [])
+
   return {
     ...state,
     runCode,
     stop,
+    clearConsole,
     isReady: !state.isLoading && isCompilerLoaded() || !state.isLoading,
   }
 }

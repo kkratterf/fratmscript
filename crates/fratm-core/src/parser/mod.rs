@@ -203,17 +203,53 @@ impl Parser {
         })
     }
 
-    fn parse_parameters(&mut self) -> Result<Vec<String>, ParseError> {
+    /// `(a, b = 1, ...resto)`
+    fn parse_parameters(&mut self) -> Result<Vec<Pattern>, ParseError> {
         self.expect(&TokenKind::LeftParen)?;
         let mut params = Vec::new();
-        if !self.check(&TokenKind::RightParen) {
-            params.push(self.expect_identifier()?);
-            while self.match_token(&TokenKind::Comma) {
-                params.push(self.expect_identifier()?);
+        loop {
+            self.skip_newlines();
+            if self.check(&TokenKind::RightParen) {
+                break;
+            }
+            if let Some(Pattern::Rest { .. }) = params.last() {
+                return Err(ParseError::new(
+                    "The rest parameter must be the last one",
+                    self.current_span(),
+                ));
+            }
+            params.push(self.parse_parameter()?);
+            self.skip_newlines();
+            if !self.match_token(&TokenKind::Comma) {
+                break;
             }
         }
         self.expect(&TokenKind::RightParen)?;
         Ok(params)
+    }
+
+    fn parse_parameter(&mut self) -> Result<Pattern, ParseError> {
+        if self.match_token(&TokenKind::Ellipsis) {
+            let argument = self.parse_binding_target()?;
+            return Ok(Pattern::Rest {
+                argument: Box::new(argument),
+            });
+        }
+        let target = self.parse_binding_target()?;
+        if self.match_token(&TokenKind::Equal) {
+            let default = self.parse_assignment()?;
+            return Ok(Pattern::Default {
+                target: Box::new(target),
+                default: Box::new(default),
+            });
+        }
+        Ok(target)
+    }
+
+    fn parse_binding_target(&mut self) -> Result<Pattern, ParseError> {
+        let span = self.current_span();
+        let name = self.expect_identifier()?;
+        Ok(Pattern::Identifier { name, span })
     }
 
     fn parse_return(&mut self) -> Result<Statement, ParseError> {
@@ -878,7 +914,7 @@ impl Parser {
         let params = if self.check(&TokenKind::LeftParen) {
             self.parse_parameters()?
         } else {
-            vec![self.expect_identifier()?]
+            vec![self.parse_binding_target()?]
         };
         self.expect(&TokenKind::Arrow)?;
         let body = if self.check(&TokenKind::LeftBrace) {
@@ -894,16 +930,34 @@ impl Parser {
         })
     }
 
+    /// Call arguments after `(`; they may span lines and use `...spread`.
     fn parse_arguments(&mut self) -> Result<Vec<Expression>, ParseError> {
         let mut args = Vec::new();
-        if !self.check(&TokenKind::RightParen) {
-            args.push(self.parse_expression()?);
-            while self.match_token(&TokenKind::Comma) {
-                args.push(self.parse_expression()?);
+        loop {
+            self.skip_newlines();
+            if self.check(&TokenKind::RightParen) {
+                break;
+            }
+            args.push(self.parse_spread_or_expression()?);
+            self.skip_newlines();
+            if !self.match_token(&TokenKind::Comma) {
+                break;
             }
         }
         self.expect(&TokenKind::RightParen)?;
         Ok(args)
+    }
+
+    fn parse_spread_or_expression(&mut self) -> Result<Expression, ParseError> {
+        if self.match_token(&TokenKind::Ellipsis) {
+            let start = self.previous().span;
+            let argument = self.parse_assignment()?;
+            return Ok(Expression::Spread {
+                argument: Box::new(argument),
+                span: self.span_from(start.start),
+            });
+        }
+        self.parse_expression()
     }
 
     fn parse_primary(&mut self) -> Result<Expression, ParseError> {
@@ -1040,7 +1094,7 @@ impl Parser {
                     self.advance();
                 }
                 if !self.check(&TokenKind::RightBracket) {
-                    elements.push(self.parse_expression()?);
+                    elements.push(self.parse_spread_or_expression()?);
                     while self.match_token(&TokenKind::Comma) {
                         while self.check(&TokenKind::Newline) {
                             self.advance();
@@ -1048,7 +1102,7 @@ impl Parser {
                         if self.check(&TokenKind::RightBracket) {
                             break;
                         }
-                        elements.push(self.parse_expression()?);
+                        elements.push(self.parse_spread_or_expression()?);
                     }
                 }
                 while self.check(&TokenKind::Newline) {
@@ -1075,10 +1129,14 @@ impl Parser {
                         if self.check(&TokenKind::RightBrace) {
                             break;
                         }
-                        let key = self.expect_property_name()?;
-                        self.expect(&TokenKind::Colon)?;
-                        let value = self.parse_expression()?;
-                        properties.push((key, value));
+                        if self.match_token(&TokenKind::Ellipsis) {
+                            properties.push(Property::Spread(self.parse_assignment()?));
+                        } else {
+                            let key = self.expect_property_name()?;
+                            self.expect(&TokenKind::Colon)?;
+                            let value = self.parse_expression()?;
+                            properties.push(Property::KeyValue { key, value });
+                        }
                         // Skip newlines after the value
                         while self.check(&TokenKind::Newline) {
                             self.advance();
@@ -1114,6 +1172,11 @@ impl Parser {
 
     // === Helpers ===
 
+    fn skip_newlines(&mut self) {
+        while self.check(&TokenKind::Newline) {
+            self.advance();
+        }
+    }
     fn is_at_end(&self) -> bool {
         self.peek().kind == TokenKind::Eof
     }

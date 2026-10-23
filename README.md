@@ -93,6 +93,9 @@ mo vir facc caricaDati() {   // async
 chist è doppio = x => x * 2           // arrow functions
 chist è somma = (a, b) => a + b
 chist è carica = mo vir (url) => aspett fetch(url)
+
+facc saluta(nome = "Gennà", ...altri) { }  // default and rest parameters
+somma(...numeri)                          // spread in calls, [...a] and { ...o }
 ```
 
 ### Control Flow

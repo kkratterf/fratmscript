@@ -97,9 +97,8 @@ impl CodeGen {
                 }
                 self.emit("function ");
                 self.emit(&js_name(name));
-                self.emit("(");
-                self.emit(&js_names(params));
-                self.emit(") {\n");
+                self.gen_params(params);
+                self.emit(" {\n");
                 self.indent += 1;
                 for s in body {
                     self.gen_statement(s);
@@ -317,9 +316,8 @@ impl CodeGen {
                         method.name.as_str()
                     };
                     self.emit(js_method_name);
-                    self.emit("(");
-                    self.emit(&js_names(&method.params));
-                    self.emit(") {\n");
+                    self.gen_params(&method.params);
+                    self.emit(" {\n");
                     self.indent += 1;
                     for s in &method.body {
                         self.gen_statement(s);
@@ -449,15 +447,27 @@ impl CodeGen {
             }
             Expression::Object { properties, .. } => {
                 self.emit("{ ");
-                for (i, (key, value)) in properties.iter().enumerate() {
+                for (i, property) in properties.iter().enumerate() {
                     if i > 0 {
                         self.emit(", ");
                     }
-                    self.emit(key);
-                    self.emit(": ");
-                    self.gen_expression(value);
+                    match property {
+                        Property::KeyValue { key, value } => {
+                            self.emit(key);
+                            self.emit(": ");
+                            self.gen_expression(value);
+                        }
+                        Property::Spread(argument) => {
+                            self.emit("...");
+                            self.gen_expression(argument);
+                        }
+                    }
                 }
                 self.emit(" }");
+            }
+            Expression::Spread { argument, .. } => {
+                self.emit("...");
+                self.gen_expression(argument);
             }
             Expression::Binary {
                 left,
@@ -580,9 +590,8 @@ impl CodeGen {
                 if *is_async {
                     self.emit("async ");
                 }
-                self.emit("(");
-                self.emit(&js_names(params));
-                self.emit(") => ");
+                self.gen_params(params);
+                self.emit(" => ");
                 match body {
                     // `() => ({ … })`: a bare `{` would start a block
                     ArrowBody::Expression(e) if matches!(**e, Expression::Object { .. }) => {
@@ -659,6 +668,35 @@ impl CodeGen {
             Expression::Delete { operand, .. } => {
                 self.emit("delete ");
                 self.gen_operand(operand);
+            }
+        }
+    }
+
+    fn gen_params(&mut self, params: &[Pattern]) {
+        self.emit("(");
+        for (i, param) in params.iter().enumerate() {
+            if i > 0 {
+                self.emit(", ");
+            }
+            self.gen_pattern(param);
+        }
+        self.emit(")");
+    }
+
+    fn gen_pattern(&mut self, pattern: &Pattern) {
+        match pattern {
+            Pattern::Identifier { name, span } => {
+                self.add_mapping(span.line, span.column);
+                self.emit(&js_name(name));
+            }
+            Pattern::Default { target, default } => {
+                self.gen_pattern(target);
+                self.emit(" = ");
+                self.gen_expression(default);
+            }
+            Pattern::Rest { argument } => {
+                self.emit("...");
+                self.gen_pattern(argument);
             }
         }
     }

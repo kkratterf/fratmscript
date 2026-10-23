@@ -576,4 +576,43 @@ na famiglie Pizzaiolo figlio 'e Persona {
         let err = compile("tien x = `a\nb\nc`\ntien y = = 1", Default::default()).unwrap_err();
         assert_eq!(err.line(), Some(4));
     }
+
+    #[test]
+    fn test_spread() {
+        assert_eq!(js("tien x = [...a, 1, ...b]"), "let x = [...a, 1, ...b];\n");
+        assert_eq!(js("tien x = { ...o, a: 1 }"), "let x = { ...o, a: 1 };\n");
+        assert_eq!(js("f(...args, ...[1])"), "f(...args, ...[1]);\n");
+        assert_eq!(
+            js("tien x = nu bell A(...args)"),
+            "let x = new A(...args);\n"
+        );
+    }
+
+    #[test]
+    fn test_rest_and_default_parameters() {
+        assert_eq!(
+            js("facc f(a, ...resto) { }"),
+            "function f(a, ...resto) {\n}\n"
+        );
+        assert_eq!(
+            js("facc f(a = 1, b = a + 1) { }"),
+            "function f(a = 1, b = (a + 1)) {\n}\n"
+        );
+        assert_eq!(
+            js("tien f = (a = 1, ...xs) => a"),
+            "let f = (a = 1, ...xs) => a;\n"
+        );
+        assert_eq!(
+            js("tien f = mo vir (...xs) => xs"),
+            "let f = async (...xs) => xs;\n"
+        );
+        assert!(js("na famiglie A { m(a = 1, ...r) { } }").contains("m(a = 1, ...r) {"));
+        let err = compile("facc f(...a, b) { }", Default::default()).unwrap_err();
+        assert!(err.to_string().contains("urdemo"), "{}", err);
+    }
+
+    #[test]
+    fn test_call_arguments_can_span_lines() {
+        assert_eq!(js("f(\n  1,\n  2\n)"), "f(1, 2);\n");
+    }
 }

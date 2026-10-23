@@ -18,7 +18,7 @@ pub enum Statement {
     },
     FunctionDecl {
         name: String,
-        params: Vec<String>,
+        params: Vec<Pattern>,
         body: Vec<Statement>,
         is_async: bool,
         span: Span,
@@ -100,7 +100,7 @@ pub struct ImportSpecifier {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClassMethod {
     pub name: String,
-    pub params: Vec<String>,
+    pub params: Vec<Pattern>,
     pub body: Vec<Statement>,
     pub is_async: bool,
     pub is_static: bool,
@@ -148,7 +148,12 @@ pub enum Expression {
         span: Span,
     },
     Object {
-        properties: Vec<(String, Expression)>,
+        properties: Vec<Property>,
+        span: Span,
+    },
+    /// `...argument` in arrays, calls and object literals
+    Spread {
+        argument: Box<Expression>,
         span: Span,
     },
     Binary {
@@ -192,7 +197,7 @@ pub enum Expression {
         span: Span,
     },
     ArrowFunction {
-        params: Vec<String>,
+        params: Vec<Pattern>,
         body: ArrowBody,
         is_async: bool,
         span: Span,
@@ -247,6 +252,7 @@ impl Expression {
             Expression::Array { span, .. } => *span,
             Expression::Template { span, .. } => *span,
             Expression::Object { span, .. } => *span,
+            Expression::Spread { span, .. } => *span,
             Expression::Binary { span, .. } => *span,
             Expression::Unary { span, .. } => *span,
             Expression::Assignment { span, .. } => *span,
@@ -264,6 +270,33 @@ impl Expression {
             Expression::Delete { span, .. } => *span,
         }
     }
+}
+
+/// A binding target: function parameters (and, later, declarations).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Pattern {
+    Identifier {
+        name: String,
+        span: Span,
+    },
+    /// `target = default`
+    Default {
+        target: Box<Pattern>,
+        default: Box<Expression>,
+    },
+    /// `...target`
+    Rest {
+        argument: Box<Pattern>,
+    },
+}
+
+/// An entry of an object literal.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Property {
+    /// `key: value`
+    KeyValue { key: String, value: Expression },
+    /// `...object`
+    Spread(Expression),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

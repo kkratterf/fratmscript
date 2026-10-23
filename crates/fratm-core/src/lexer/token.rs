@@ -265,6 +265,7 @@ pub enum TokenKind {
     Semicolon,
     Question,
     Arrow,
+    Ellipsis,
 
     // === Literals ===
     Identifier(String),
@@ -384,6 +385,7 @@ impl fmt::Display for TokenKind {
             TokenKind::Semicolon => write!(f, ";"),
             TokenKind::Question => write!(f, "?"),
             TokenKind::Arrow => write!(f, "=>"),
+            TokenKind::Ellipsis => write!(f, "..."),
             TokenKind::Identifier(s) => write!(f, "{}", s),
             TokenKind::String(s) => write!(f, "\"{}\"", s),
             TokenKind::Number(n) => write!(f, "{}", n),

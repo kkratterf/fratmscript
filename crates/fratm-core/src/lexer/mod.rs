@@ -172,6 +172,11 @@ impl<'a> Lexer<'a> {
                 '[' => self.make_token(TokenKind::LeftBracket),
                 ']' => self.make_token(TokenKind::RightBracket),
                 ',' => self.make_token(TokenKind::Comma),
+                '.' if self.peek() == Some('.') && self.peek_next() == Some('.') => {
+                    self.advance();
+                    self.advance();
+                    self.make_token(TokenKind::Ellipsis)
+                }
                 '.' => self.make_token(TokenKind::Dot),
                 ':' => self.make_token(TokenKind::Colon),
                 ';' => self.make_token(TokenKind::Semicolon),
