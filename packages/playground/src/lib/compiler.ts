@@ -1,6 +1,7 @@
 // Types for WASM module
 interface WasmModule {
   compile: (source: string, sourceMap: boolean) => CompileResult
+  format?: (source: string) => CompileResult
   version: () => string
   default: (input?: { module_or_path?: WebAssembly.Module | URL | string }) => Promise<void>
 }
@@ -89,5 +90,16 @@ export function compile(source: string): CompilationOutput {
     success: false,
     error: 'The compiler is not loaded',
     compileTime: performance.now() - startTime,
+  }
+}
+
+/** Formats source like `fratm fmt`; null when it does not compile. */
+export function formatSource(source: string): string | null {
+  if (!isWasmLoaded || !wasmModule?.format) return null
+  try {
+    const result = wasmModule.format(source)
+    return result.success ? result.code : null
+  } catch {
+    return null
   }
 }

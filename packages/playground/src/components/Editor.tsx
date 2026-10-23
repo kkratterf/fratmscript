@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import { EditorState, Compartment, Prec, StateEffect, StateField } from '@codemirror/state'
 import { EditorView, Decoration, type DecorationSet, keymap, highlightSpecialChars, drawSelection, highlightActiveLine, lineNumbers } from '@codemirror/view'
-import { defaultKeymap, indentWithTab } from '@codemirror/commands'
+import { defaultKeymap, indentWithTab, history, historyKeymap } from '@codemirror/commands'
 import { lintGutter, setDiagnostics, type Diagnostic } from '@codemirror/lint'
 import { HighlightStyle, syntaxHighlighting, StreamLanguage } from '@codemirror/language'
 import { tags } from '@lezer/highlight'
@@ -267,12 +267,16 @@ export interface EditorHandle {
   revealLine: (line: number, column?: number) => void
   /** Replaces the selection with text and focuses the editor */
   insertText: (text: string) => void
+  /** Replaces the whole document as one undoable change */
+  replaceAll: (text: string) => void
 }
 
 interface EditorProps {
   value: string
   onChange: (value: string) => void
   onRun: () => void
+  /** Called on Shift-Alt-F */
+  onFormat?: () => void
   diagnostics?: EditorDiagnostic[]
   /** Called with the 1-based line of the cursor when it moves */
   onCursorLineChange?: (line: number) => void
@@ -325,7 +329,7 @@ function toCodeMirror(doc: EditorState['doc'], diagnostics: EditorDiagnostic[]) 
 }
 
 export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
-  { value, onChange, onRun, diagnostics, onCursorLineChange, className },
+  { value, onChange, onRun, onFormat, diagnostics, onCursorLineChange, className },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -338,6 +342,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
   // The editor is created once, so read the latest callback through a ref
   const onRunRef = useRef(onRun)
   onRunRef.current = onRun
+  const onFormatRef = useRef(onFormat)
+  onFormatRef.current = onFormat
   const onCursorLineRef = useRef(onCursorLineChange)
   onCursorLineRef.current = onCursorLineChange
 
@@ -360,6 +366,19 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
       view.dispatch(view.state.replaceSelection(text), { scrollIntoView: true })
       view.focus()
     },
+    replaceAll(text) {
+      const view = viewRef.current
+      if (!view) return
+      const doc = view.state.doc
+      // Keep the cursor on the same line when the line count is unchanged
+      const head = view.state.selection.main.head
+      const line = doc.lineAt(head).number
+      view.dispatch({ changes: { from: 0, to: doc.length, insert: text } })
+      const next = view.state.doc
+      const target = next.line(Math.min(line, next.lines))
+      view.dispatch({ selection: { anchor: Math.min(target.from + (head - doc.line(line).from), target.to) } })
+      view.focus()
+    },
   }), [])
 
   // Run on Mod-Enter. Highest precedence so defaultKeymap's insertBlankLine
@@ -368,6 +387,12 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
     key: 'Mod-Enter',
     run: () => {
       onRunRef.current()
+      return true
+    },
+  }, {
+    key: 'Shift-Alt-f',
+    run: () => {
+      onFormatRef.current?.()
       return true
     },
   }]))
@@ -383,7 +408,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
         drawSelection(),
         EditorView.lineWrapping,
         runKeymap,
-        keymap.of([...defaultKeymap, indentWithTab]),
+        history(),
+        keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
         lintGutter(),
         errorLines,
         keywordHelp,

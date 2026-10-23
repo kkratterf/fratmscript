@@ -14,6 +14,11 @@ function isComposite(value: LogValue): value is Composite {
   return typeof value === 'object' && value !== null && !isSpecial(value)
 }
 
+/** Whether the value renders as an expandable tree (with its own chevron) */
+export function isExpandable(value: LogValue): boolean {
+  return isComposite(value)
+}
+
 function entriesOf(value: Composite): [string, LogValue][] {
   return Array.isArray(value) ? value.map((v, i) => [String(i), v]) : Object.entries(value)
 }

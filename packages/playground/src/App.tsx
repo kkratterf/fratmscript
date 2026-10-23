@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { AlignLeft } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { Editor, type EditorHandle, type EditorDiagnostic } from '@/components/Editor'
 import { OutputPanel } from '@/components/OutputPanel'
@@ -6,8 +7,11 @@ import { StatusBar } from '@/components/StatusBar'
 import { LoadingOverlay } from '@/components/LoadingOverlay'
 import { NativeSelect } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipTrigger, TooltipPopup } from '@/components/ui/tooltip'
 import { ToastProvider, toastManager } from '@/components/ui/toast'
 import { useCompiler } from '@/hooks/useCompiler'
+import { formatSource } from '@/lib/compiler'
 import { examples, defaultCode } from '@/lib/examples'
 import { SyntaxHelp } from '@/components/SyntaxHelp'
 import { MobileTabs, type MobileTab } from '@/components/MobileTabs'
@@ -109,6 +113,11 @@ function App() {
     ))
   }, [])
 
+  const handleFormat = useCallback(() => {
+    const formatted = formatSource(code)
+    if (formatted !== null && formatted !== code) editorRef.current?.replaceAll(formatted)
+  }, [code])
+
   const handleInsert = useCallback((text: string) => {
     setMobileTab('code')
     requestAnimationFrame(() => editorRef.current?.insertText(text))
@@ -202,6 +211,7 @@ function App() {
                 value={code}
                 onChange={handleCodeChange}
                 onRun={handleRun}
+                onFormat={handleFormat}
                 diagnostics={diagnostics}
                 onCursorLineChange={setCursorLine}
               />
@@ -232,6 +242,22 @@ function App() {
                   />
                   Auto-run
                 </label>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Format code"
+                        onClick={handleFormat}
+                        disabled={compiler.isLoading}
+                      >
+                        <AlignLeft className="size-4" />
+                      </Button>
+                    }
+                  />
+                  <TooltipPopup>Format code (Shift+Alt+F)</TooltipPopup>
+                </Tooltip>
                 <SyntaxHelp onInsert={handleInsert} />
               </div>
             </div>

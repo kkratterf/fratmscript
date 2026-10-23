@@ -3,7 +3,7 @@ import type { LogEntry } from '@/lib/runner'
 import type { PlaygroundError } from '@/hooks/useCompiler'
 import { CircleAlert, TriangleAlert, ChevronRight, Timer, Ban, Copy, Check, Link2 } from 'lucide-react'
 import { useState } from 'react'
-import { ValueTree } from '@/components/ValueTree'
+import { ValueTree, isExpandable } from '@/components/ValueTree'
 
 interface OutputPanelProps {
   jsOutput: string
@@ -202,7 +202,8 @@ export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, 
                   <span className="mt-0.5 shrink-0">
                     {log.type === 'warn' && <TriangleAlert className="w-3.5 h-3.5 text-warning" />}
                     {log.type === 'error' && <CircleAlert className="w-3.5 h-3.5 text-destructive" />}
-                    {log.type === 'log' && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
+                    {/* Expandable values bring their own chevron */}
+                    {log.type === 'log' && !isExpandable(log.args[0]) && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
                   </span>
                   {/* Log content */}
                   <span className={cn(
