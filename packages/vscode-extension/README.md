@@ -25,9 +25,10 @@ Evidenziazione completa per tutte le keywords napoletane:
 ### Language Server
 - **Autocompletamento** intelligente per tutte le keywords
 - **Hover documentation** con traduzioni JS
-- **Diagnostics** in tempo reale:
-  - Avvisi se usi keywords JavaScript invece di napoletane
-  - Errori per parentesi non bilanciate
+- **Diagnostics** in tempo reale dal compilatore vero (lo stesso di `fratm`, compilato in WebAssembly):
+  - Errori di sintassi e variabili dichiarate due volte, con riga e colonna
+  - Suggerimenti se usi keywords JavaScript invece di napoletane (no dint'e stringhe e dint'e commenti)
+- **Formattazione** (`Format Document`), uguale a `fratm fmt`: i commenti restano
 - **Semantic highlighting** per una migliore leggibilità
 
 ## Installazione
@@ -35,11 +36,16 @@ Evidenziazione completa per tutte le keywords napoletane:
 ### Da VSCode Marketplace
 Cerca "FratmScript" nel marketplace VSCode.
 
+### Da Open VSX
+Pe VSCodium e l'ati editor compatibili, cerca "FratmScript" ncopp a [open-vsx.org](https://open-vsx.org).
+
 ### Sviluppo locale
 ```bash
+(cd packages/fratmscript && npm run build)   # compilatore WASM (serve wasm-pack)
 cd packages/vscode-extension
-npm install
-npm run compile
+pnpm install
+pnpm compile
+pnpm test
 ```
 
 Poi premi `F5` in VSCode per lanciare l'extension host.

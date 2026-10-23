@@ -51,7 +51,7 @@ jobs:
           ./target/debug/fratm fmt --check examples/*.fratm
 
   npm-package:
-    name: npm package
+    name: npm package and VS Code extension
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -79,6 +79,19 @@ jobs:
           npm run build
           npm test
           npm pack --dry-run
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Build, test and package the VS Code extension
+        run: |
+          cd packages/vscode-extension
+          pnpm install --frozen-lockfile
+          pnpm compile
+          pnpm test
+          pnpm package
 
   playground:
     name: Playground build

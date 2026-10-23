@@ -58,6 +58,14 @@ jobs:
             exit 1
           fi
 
+      - name: Check the VS Code extension has the same version
+        run: |
+          ext_version=$(node -p "require('./packages/vscode-extension/package.json').version")
+          if [ "$ext_version" != "$VERSION" ]; then
+            echo "::error::packages/vscode-extension/package.json has version $ext_version, but the release asks for $VERSION"
+            exit 1
+          fi
+
       - name: Check the tag does not exist yet
         run: |
           if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
@@ -144,9 +152,46 @@ jobs:
           path: fratm-wasm-${{ env.TAG }}.tar.gz
           if-no-files-found: error
 
+  build-vscode:
+    name: Build the VS Code extension
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Build, test and package
+        run: |
+          (cd packages/fratmscript && npm run build)
+          cd packages/vscode-extension
+          pnpm install --frozen-lockfile
+          pnpm compile
+          pnpm test
+          pnpm exec vsce package --no-dependencies --out "$GITHUB_WORKSPACE/fratmscript-vscode-$TAG.vsix"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vscode
+          path: fratmscript-vscode-${{ env.TAG }}.vsix
+          if-no-files-found: error
+
   publish:
     name: Tag and publish the release
-    needs: [build-cli, build-wasm]
+    needs: [build-cli, build-wasm, build-vscode]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -220,3 +265,35 @@ jobs:
           tag=latest
           if [ "$PRERELEASE" = "true" ]; then tag=next; fi
           npm publish --provenance --access public --tag "$tag"
+
+  publish-vscode:
+    name: Publish the VS Code extension
+    needs: publish
+    runs-on: ubuntu-latest
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: vscode
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Publish to the VS Code Marketplace
+        run: |
+          if [ -z "$VSCE_PAT" ]; then
+            echo "::warning::VSCE_PAT is not set, so the extension was not published to the VS Code Marketplace"
+          else
+            npx --yes @vscode/vsce@3 publish --packagePath "fratmscript-vscode-$TAG.vsix"
+          fi
+
+      - name: Publish to Open VSX
+        run: |
+          if [ -z "$OVSX_PAT" ]; then
+            echo "::warning::OVSX_PAT is not set, so the extension was not published to Open VSX"
+          else
+            npx --yes ovsx@0 publish "fratmscript-vscode-$TAG.vsix" -p "$OVSX_PAT"
+          fi

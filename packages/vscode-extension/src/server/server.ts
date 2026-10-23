@@ -27,11 +27,14 @@ import {
   SemanticTokensBuilder,
   SemanticTokensLegend,
   SemanticTokensParams,
-  SemanticTokens
+  SemanticTokens,
+  DocumentFormattingParams,
+  TextEdit
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { KEYWORDS, KeywordInfo, getKeywordInfo, isKeyword } from './keywords';
+import { diagnose, formatSource } from './compiler';
 
 // Semantic token types e modifiers
 const tokenTypes = ['keyword', 'variable', 'function', 'class', 'string', 'number', 'operator', 'comment'];
@@ -83,6 +86,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
         triggerCharacters: ['.', ' ']
       },
       hoverProvider: true,
+      documentFormattingProvider: true,
       semanticTokensProvider: {
         legend,
         full: true
@@ -139,208 +143,36 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     return;
   }
 
-  const text = textDocument.getText();
-  const diagnostics: Diagnostic[] = [];
-
-  // Pattern per errori comuni
-  const patterns: Array<{
-    regex: RegExp;
-    message: string;
-    severity: DiagnosticSeverity;
-  }> = [
-    {
-      regex: /\bconst\b/g,
-      message: "Usa 'chist ... è' invece di 'const'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\blet\b/g,
-      message: "Usa 'tien' invece di 'let'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bfunction\b/g,
-      message: "Usa 'facc' invece di 'function'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\breturn\b/g,
-      message: "Usa 'piglie' invece di 'return'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bif\b/g,
-      message: "Usa 'si' invece di 'if'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\belse\b/g,
-      message: "Usa 'sinnò' invece di 'else'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bwhile\b/g,
-      message: "Usa 'mentre che' invece di 'while'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\btrue\b/g,
-      message: "Usa 'overo' invece di 'true'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bfalse\b/g,
-      message: "Usa 'sfòls' invece di 'false'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bnull\b/g,
-      message: "Usa 'nisciun' invece di 'null'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bundefined\b/g,
-      message: "Usa 'boh' invece di 'undefined'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bconsole\.log\b/g,
-      message: "Usa 'stamm a dì' invece di 'console.log'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bclass\b/g,
-      message: "Usa 'na famiglie' invece di 'class'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bnew\b/g,
-      message: "Usa 'nu bell' invece di 'new'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bthis\b/g,
-      message: "Usa 'stu cos' invece di 'this'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bimport\b/g,
-      message: "Usa 'chiamm' invece di 'import'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bexport\b/g,
-      message: "Usa 'mann for' invece di 'export'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\basync\b/g,
-      message: "Usa 'mo vir' invece di 'async'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bawait\b/g,
-      message: "Usa 'aspett' invece di 'await'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\btry\b/g,
-      message: "Usa 'pruvamm' invece di 'try'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bcatch\b/g,
-      message: "Usa 'e si schiatta' invece di 'catch'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bfinally\b/g,
-      message: "Usa 'aropp' invece di 'finally'",
-      severity: DiagnosticSeverity.Warning
-    },
-    {
-      regex: /\bthrow\b/g,
-      message: "Usa 'iett' invece di 'throw'",
-      severity: DiagnosticSeverity.Warning
-    }
-  ];
-
-  // Verifica parentesi non bilanciate
-  let braceCount = 0;
-  let parenCount = 0;
-  let bracketCount = 0;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    if (char === '{') braceCount++;
-    else if (char === '}') braceCount--;
-    else if (char === '(') parenCount++;
-    else if (char === ')') parenCount--;
-    else if (char === '[') bracketCount++;
-    else if (char === ']') bracketCount--;
-  }
-
-  if (braceCount !== 0) {
-    diagnostics.push({
-      severity: DiagnosticSeverity.Error,
-      range: {
-        start: textDocument.positionAt(0),
-        end: textDocument.positionAt(text.length)
-      },
-      message: braceCount > 0
-        ? `Mancano ${braceCount} parentesi graffe di chiusura '}'`
-        : `Ci sono ${-braceCount} parentesi graffe '}' in eccesso`,
-      source: 'fratmscript'
-    });
-  }
-
-  if (parenCount !== 0) {
-    diagnostics.push({
-      severity: DiagnosticSeverity.Error,
-      range: {
-        start: textDocument.positionAt(0),
-        end: textDocument.positionAt(text.length)
-      },
-      message: parenCount > 0
-        ? `Mancano ${parenCount} parentesi tonde di chiusura ')'`
-        : `Ci sono ${-parenCount} parentesi tonde ')' in eccesso`,
-      source: 'fratmscript'
-    });
-  }
-
-  if (bracketCount !== 0) {
-    diagnostics.push({
-      severity: DiagnosticSeverity.Error,
-      range: {
-        start: textDocument.positionAt(0),
-        end: textDocument.positionAt(text.length)
-      },
-      message: bracketCount > 0
-        ? `Mancano ${bracketCount} parentesi quadre di chiusura ']'`
-        : `Ci sono ${-bracketCount} parentesi quadre ']' in eccesso`,
-      source: 'fratmscript'
-    });
-  }
-
-  // Cerca pattern JavaScript (suggerimenti)
-  for (const pattern of patterns) {
-    let match;
-    while ((match = pattern.regex.exec(text)) !== null) {
-      const diagnostic: Diagnostic = {
-        severity: pattern.severity,
-        range: {
-          start: textDocument.positionAt(match.index),
-          end: textDocument.positionAt(match.index + match[0].length)
-        },
-        message: pattern.message,
-        source: 'fratmscript'
-      };
-      diagnostics.push(diagnostic);
-    }
+  let diagnostics: Diagnostic[];
+  try {
+    diagnostics = diagnose(textDocument.getText());
+  } catch (error) {
+    connection.console.error(`FratmScript: ${error}`);
+    diagnostics = [];
   }
 
   connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
+
+// === FORMATTING ===
+
+connection.onDocumentFormatting((params: DocumentFormattingParams): TextEdit[] => {
+  const document = documents.get(params.textDocument.uri);
+  if (!document) {
+    return [];
+  }
+  const text = document.getText();
+  const formatted = formatSource(text);
+  if (formatted === null || formatted === text) {
+    return [];
+  }
+  return [
+    TextEdit.replace(
+      { start: document.positionAt(0), end: document.positionAt(text.length) },
+      formatted
+    )
+  ];
+});
 
 // === AUTOCOMPLETAMENTO ===
 

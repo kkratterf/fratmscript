@@ -10,7 +10,8 @@
     { "include": "#constants" },
     { "include": "#operators" },
     { "include": "#functions" },
-    { "include": "#variables" }
+    { "include": "#variables" },
+    { "include": "#private" }
   ],
   "repository": {
     "comments": {
@@ -158,6 +159,11 @@
           "comment": "Console functions: stamm a dì (log), scrive (error), avvis (warn)",
           "name": "support.function.console.fratm",
           "match": "\\b(stamm|dì|di|scrive|avvis)\\b"
+        },
+        {
+          "comment": "Type checks: chè è (typeof), è uno (instanceof)",
+          "name": "keyword.operator.expression.fratm",
+          "match": "\\b(chè|uno|typeof|instanceof)\\b"
         }
       ]
     },
@@ -196,6 +202,26 @@
           "comment": "Arrow function",
           "name": "storage.type.function.arrow.fratm",
           "match": "=>"
+        },
+        {
+          "comment": "Compound assignment: ??=, ||=, &&=, **=",
+          "name": "keyword.operator.assignment.compound.fratm",
+          "match": "(\\?\\?=|\\|\\|=|&&=|\\*\\*=)"
+        },
+        {
+          "comment": "Optional chaining",
+          "name": "punctuation.accessor.optional.fratm",
+          "match": "\\?\\."
+        },
+        {
+          "comment": "Nullish coalescing and symbolic logic",
+          "name": "keyword.operator.logical.fratm",
+          "match": "(\\?\\?|&&|\\|\\||!(?!=))"
+        },
+        {
+          "comment": "Increment and decrement",
+          "name": "keyword.operator.increment.fratm",
+          "match": "(\\+\\+|--)"
         },
         {
           "comment": "Comparison operators",
@@ -249,6 +275,15 @@
           "comment": "Variable after tien",
           "name": "variable.other.readwrite.fratm",
           "match": "(?<=tien\\s+)([a-zA-Z_][a-zA-Z0-9_]*)"
+        }
+      ]
+    },
+    "private": {
+      "patterns": [
+        {
+          "comment": "Private class members: #nomme",
+          "name": "variable.other.private.fratm",
+          "match": "#[\\p{L}_$][\\p{L}\\p{N}_$]*"
         }
       ]
     }

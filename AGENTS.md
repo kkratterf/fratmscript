@@ -44,7 +44,7 @@ cd packages/playground && pnpm install --frozen-lockfile && pnpm build
 
 npm package (needs `wasm-pack`, Node 20): `cd packages/fratmscript && npm run build && npm test`.
 
-VS Code extension: `cd packages/vscode-extension && pnpm compile`.
+VS Code extension (needs the npm package's WASM build first): `cd packages/vscode-extension && pnpm install && pnpm compile && pnpm test`.
 
 `just` lists every shortcut (`just test`, `just lancia <file>`, `just examples-build`, ...).
 
@@ -105,7 +105,7 @@ Agent platforms that assign their own branch names (e.g. `claude/...`) are fine;
 
 - SemVer, tags `vX.Y.Z` (older `@0.1.0`-style tags are kept as they are).
 - Minor release = a version milestone, cut when all `P0` issues of that version label are closed and `main` is green. Patch release when a user-facing fix lands.
-- First a version-bump PR (`chore(release): vX.Y.Z`) that updates `[workspace.package] version` in `Cargo.toml` and `version` in `packages/playground/package.json` and `packages/fratmscript/package.json` (and the VS Code extension if it ships).
+- First a version-bump PR (`chore(release): vX.Y.Z`) that updates `[workspace.package] version` in `Cargo.toml` and `version` in `packages/playground/package.json`, `packages/fratmscript/package.json` and `packages/vscode-extension/package.json` (the release workflow checks all of them).
 - The release is created by the manual `release.yml` workflow (`workflow_dispatch`), which tags, builds the binaries and WASM package, and generates notes.
 - **No `CHANGELOG.md`.** The changelog lives only in GitHub Release notes.
 

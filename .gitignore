@@ -34,6 +34,8 @@ package-lock.json
 # Build outputs
 packages/playground/dist/
 packages/vscode-extension/out/
+packages/vscode-extension/dist/
+packages/vscode-extension/wasm/
 packages/vscode-extension/*.vsix
 examples/*.js
 examples/*.js.map

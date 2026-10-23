@@ -19,7 +19,7 @@ let client: LanguageClient;
 export function activate(context: ExtensionContext): void {
   // Path al modulo del server
   const serverModule = context.asAbsolutePath(
-    path.join('out', 'server', 'server.js')
+    path.join('dist', 'server.js')
   );
 
   // Opzioni di debug per il server

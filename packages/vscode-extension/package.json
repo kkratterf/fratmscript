@@ -2,17 +2,18 @@
   "name": "fratmscript-vscode",
   "displayName": "FratmScript",
   "description": "Syntax highlighting, snippets e Language Server per FratmScript - JavaScript in Napoletano",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "publisher": "fratmscript",
+  "icon": "images/icon.png",
   "author": "FratmScript Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fratmscript/fratmscript"
+    "url": "https://github.com/kkratterf/fratmscript"
   },
-  "homepage": "https://github.com/fratmscript/fratmscript#readme",
+  "homepage": "https://github.com/kkratterf/fratmscript/tree/main/packages/vscode-extension#readme",
   "bugs": {
-    "url": "https://github.com/fratmscript/fratmscript/issues"
+    "url": "https://github.com/kkratterf/fratmscript/issues"
   },
   "engines": {
     "vscode": "^1.74.0"
@@ -20,7 +21,8 @@
   "categories": [
     "Programming Languages",
     "Snippets",
-    "Linters"
+    "Linters",
+    "Formatters"
   ],
   "keywords": [
     "fratmscript",
@@ -32,7 +34,7 @@
     "italian",
     "dialect"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "languages": [
       {
@@ -83,8 +85,9 @@
   },
   "scripts": {
     "vscode:prepublish": "pnpm run compile",
-    "compile": "tsc -p ./",
+    "compile": "tsc -p ./ && node scripts/bundle.mjs",
     "watch": "tsc -watch -p ./",
+    "test": "node --test test/*.test.js",
     "lint": "eslint src --ext ts",
     "package": "vsce package --no-dependencies"
   },
@@ -94,6 +97,7 @@
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vscode/vsce": "^3.7.1",
+    "esbuild": "0.24.2",
     "eslint": "^8.0.0",
     "typescript": "^5.0.0"
   },
