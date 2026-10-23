@@ -28,6 +28,8 @@ const syntaxReference = [
     { fratm: 'facc', js: 'function', desc: 'Function declaration' },
     { fratm: 'piglie', js: 'return', desc: 'Return statement' },
     { fratm: 'mo vir facc', js: 'async function', desc: 'Async function' },
+    { fratm: '(a, b) => a + b', js: '(a, b) => a + b', desc: 'Arrow function' },
+    { fratm: 'mo vir (x) => …', js: 'async (x) => …', desc: 'Async arrow function' },
     { fratm: 'aspett', js: 'await', desc: 'Await expression' },
   ]},
   { category: 'Control Flow', items: [
@@ -54,6 +56,8 @@ const syntaxReference = [
     { fratm: 'e / pure', js: '&&', desc: 'Logical AND' },
     { fratm: 'o', js: '||', desc: 'Logical OR' },
     { fratm: 'no / manco', js: '!', desc: 'Logical NOT' },
+    { fratm: 'x += 1', js: 'x += 1', desc: 'Compound assignment (also -= *= /= %= **= ??= ||= &&=)' },
+    { fratm: 'i++ / i--', js: 'i++ / i--', desc: 'Increment / decrement' },
   ]},
   { category: 'Console', items: [
     { fratm: 'stamm a dì', js: 'console.log', desc: 'Log output' },

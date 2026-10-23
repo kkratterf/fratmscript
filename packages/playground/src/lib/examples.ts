@@ -76,9 +76,13 @@ stamm a dì(gennaro.saluta())
 stamm a dì("Categoria: " + Persona.categoria())`,
 
   async: `// Async/Await in FratmScript
+facc aspettaNuPoco(ms) {
+    piglie nu bell Promise((risolvi) => setTimeout(risolvi, ms))
+}
+
 mo vir facc caricaDati() {
     stamm a dì("Loading...")
-    // Simulates a delay
+    aspett aspettaNuPoco(1000)
     piglie "Data loaded!"
 }
 
@@ -87,8 +91,8 @@ mo vir facc main() {
     stamm a dì(risultato)
 }
 
-// Note: in this playground Promises are simulated
-stamm a dì("Async demo (simulated)")`,
+main()
+stamm a dì("This prints first: main() is still waiting")`,
 
   operatori: `// Logical Operators in FratmScript
 chist è a = overo

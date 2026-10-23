@@ -1,9 +1,7 @@
 // ============================================
 // Pomodor e Muzzarel
 // Tic Tac Toe in versione napoletana
-// Esecuzione:
-// 1) fratm build Games/Pomodor_e_Muzzarel/pomodor_e_muzzarel.fratm
-// 2) node Games/Pomodor_e_Muzzarel/pomodor_e_muzzarel.js
+// Esecuzione: fratm lancia examples/13_pomodor_e_muzzarel.fratm
 // ============================================
 
 tien readline = require("readline")

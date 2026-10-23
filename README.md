@@ -34,9 +34,7 @@ fratmscript/
 ├── packages/
 │   ├── vscode-extension/ # Syntax highlighting
 │   └── playground/       # Online editor
-├── examples/             # Example programs
-├── Games/                # Games written in FratmScript
-└── PersonalScripts/      # Utility scripts + launcher
+└── examples/             # Example programs
 ```
 
 ---
@@ -57,8 +55,6 @@ cargo build --release
 # REPL
 ./target/release/fratm repl
 ```
-
-Per una guida completa a esempi, giochi e script: **[Run Guide](RUN_EXAMPLES.md)**.
 
 ---
 
@@ -93,6 +89,10 @@ mo vir facc caricaDati() {   // async
     chist è dati = aspett fetch(url)
     piglie dati
 }
+
+chist è doppio = x => x * 2           // arrow functions
+chist è somma = (a, b) => a + b
+chist è carica = mo vir (url) => aspett fetch(url)
 ```
 
 ### Control Flow
@@ -118,6 +118,9 @@ e / o / no                   // && / || / !
 pure                         // && (alias for "e")
 manco                        // ! (alias for "no")
 !                            // ! (direct)
+&& / ||                      // also accepted
+x += 1  x -= 1  x *= 2       // also /=, %=, **=, ??=, ||=, &&=
+i++  i--  ++i  --i           // increment / decrement
 ```
 
 ### Classes
@@ -210,13 +213,13 @@ fermete                      // debugger
 | `leva` | `delete` | "remove" |
 | `fermete` | `debugger` | "stop" |
 
+Short keywords (`e`, `o`, `no`, `da`, `de`, `na`, `nu`, `mo`, `che`, `cos`, `caso`, `pure`, `for`, `leva`, `scrive`) are keywords only where their construct can start, so they also work as names: `e si schiatta (e)`, `tien o = 1`, `facc f(da, a)`. Names that are reserved in JavaScript are renamed in the output (`tien for = 1` → `let $for = 1`).
+
 ---
 
 ## Development
 
-Install `just` (Linux/macOS/Windows) and official guide:
-- [RUN_EXAMPLES.md](RUN_EXAMPLES.md#install-just-optional-but-recommended)
-- https://just.systems/man/en/
+Install `just`: https://just.systems/man/en/
 
 ```bash
 # Recommended task runner
@@ -275,16 +278,7 @@ Check the `examples/` folder for complete programs:
 10. `10_nuove_feature.fratm` - New features
 11. `11_oop_avanzato.fratm` - Inheritance, super and static methods
 12. `12_trycatch_validazione.fratm` - Try/catch and validation
-
----
-
-## Script Launcher
-
-You can launch extra scripts from one entrypoint:
-
-```bash
-fratm lancia PersonalScripts/run_personal_scripts.fratm
-```
+13. `13_pomodor_e_muzzarel.fratm` - Interactive tic-tac-toe in the terminal
 
 ---
 

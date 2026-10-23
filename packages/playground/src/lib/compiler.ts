@@ -8,6 +8,7 @@ interface WasmModule {
 interface CompileResult {
   success: boolean
   code: string
+  sourceMap?: string
   error?: string
   line?: number
   column?: number
@@ -63,6 +64,7 @@ function demoTranspile(source: string): string {
 export interface CompilationOutput {
   success: boolean
   code?: string
+  sourceMap?: string
   error?: string
   line?: number
   column?: number
@@ -76,20 +78,22 @@ export function compile(source: string): CompilationOutput {
 
   if (isWasmLoaded && wasmModule) {
     try {
-      const result = wasmModule.compile(source, false)
+      const result = wasmModule.compile(source, true)
       const compileTime = performance.now() - startTime
 
       if (result.success) {
         return {
           success: true,
           code: result.code,
+          sourceMap: result.sourceMap,
           compileTime,
           isDemo: false,
         }
       } else {
         return {
           success: false,
-          error: result.error,
+          // The position is shown separately, so drop the "Riga X, colonna Y: " prefix
+          error: result.line ? result.error?.replace(/^Riga \d+, colonna \d+: /, '') : result.error,
           line: result.line,
           column: result.column,
           suggestion: result.suggestion,
@@ -123,29 +127,5 @@ export function compile(source: string): CompilationOutput {
         isDemo: true,
       }
     }
-  }
-}
-
-export interface LogEntry {
-  type: 'log' | 'warn' | 'error'
-  args: unknown[]
-}
-
-export function executeCode(code: string): { logs: LogEntry[]; error?: string } {
-  const logs: LogEntry[] = []
-  const sandbox = {
-    console: {
-      log: (...args: unknown[]) => logs.push({ type: 'log', args }),
-      warn: (...args: unknown[]) => logs.push({ type: 'warn', args }),
-      error: (...args: unknown[]) => logs.push({ type: 'error', args }),
-    },
-  }
-
-  try {
-    const fn = new Function('console', code)
-    fn(sandbox.console)
-    return { logs }
-  } catch (e) {
-    return { logs, error: e instanceof Error ? e.message : 'Runtime error' }
   }
 }

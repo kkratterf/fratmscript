@@ -64,11 +64,17 @@ impl CodeGen {
 
     fn gen_statement(&mut self, stmt: &Statement) {
         match stmt {
-            Statement::VariableDecl { name, value, is_const, span, .. } => {
+            Statement::VariableDecl {
+                name,
+                value,
+                is_const,
+                span,
+                ..
+            } => {
                 self.write_indent();
                 self.add_mapping(span.line, span.column);
                 self.emit(if *is_const { "const " } else { "let " });
-                self.emit(name);
+                self.emit(&js_name(name));
                 if let Some(val) = value {
                     self.emit(" = ");
                     self.gen_expression(val);
@@ -76,17 +82,29 @@ impl CodeGen {
                 self.emit(";");
             }
 
-            Statement::FunctionDecl { name, params, body, is_async, span, .. } => {
+            Statement::FunctionDecl {
+                name,
+                params,
+                body,
+                is_async,
+                span,
+                ..
+            } => {
                 self.write_indent();
                 self.add_mapping(span.line, span.column);
-                if *is_async { self.emit("async "); }
+                if *is_async {
+                    self.emit("async ");
+                }
                 self.emit("function ");
-                self.emit(name);
+                self.emit(&js_name(name));
                 self.emit("(");
-                self.emit(&params.join(", "));
+                self.emit(&js_names(params));
                 self.emit(") {\n");
                 self.indent += 1;
-                for s in body { self.gen_statement(s); self.emit("\n"); }
+                for s in body {
+                    self.gen_statement(s);
+                    self.emit("\n");
+                }
                 self.indent -= 1;
                 self.write_indent();
                 self.emit("}");
@@ -96,18 +114,30 @@ impl CodeGen {
                 self.write_indent();
                 self.add_mapping(span.line, span.column);
                 self.emit("return");
-                if let Some(val) = value { self.emit(" "); self.gen_expression(val); }
+                if let Some(val) = value {
+                    self.emit(" ");
+                    self.gen_expression(val);
+                }
                 self.emit(";");
             }
 
-            Statement::If { condition, then_branch, else_branch, span, .. } => {
+            Statement::If {
+                condition,
+                then_branch,
+                else_branch,
+                span,
+                ..
+            } => {
                 self.write_indent();
                 self.add_mapping(span.line, span.column);
                 self.emit("if (");
                 self.gen_expression(condition);
                 self.emit(") {\n");
                 self.indent += 1;
-                for s in then_branch { self.gen_statement(s); self.emit("\n"); }
+                for s in then_branch {
+                    self.gen_statement(s);
+                    self.emit("\n");
+                }
                 self.indent -= 1;
                 self.write_indent();
                 self.emit("}");
@@ -121,70 +151,128 @@ impl CodeGen {
                     }
                     self.emit("{\n");
                     self.indent += 1;
-                    for s in else_body { self.gen_statement(s); self.emit("\n"); }
+                    for s in else_body {
+                        self.gen_statement(s);
+                        self.emit("\n");
+                    }
                     self.indent -= 1;
                     self.write_indent();
                     self.emit("}");
                 }
             }
 
-            Statement::While { condition, body, span, .. } => {
+            Statement::While {
+                condition,
+                body,
+                span,
+                ..
+            } => {
                 self.write_indent();
                 self.add_mapping(span.line, span.column);
                 self.emit("while (");
                 self.gen_expression(condition);
                 self.emit(") {\n");
                 self.indent += 1;
-                for s in body { self.gen_statement(s); self.emit("\n"); }
+                for s in body {
+                    self.gen_statement(s);
+                    self.emit("\n");
+                }
                 self.indent -= 1;
                 self.write_indent();
                 self.emit("}");
             }
 
-            Statement::For { init, condition, update, body, span, .. } => {
+            Statement::For {
+                init,
+                condition,
+                update,
+                body,
+                span,
+                ..
+            } => {
                 self.write_indent();
                 self.add_mapping(span.line, span.column);
                 self.emit("for (");
                 if let Some(i) = init {
                     match i.as_ref() {
-                        Statement::VariableDecl { name, value, is_const, .. } => {
+                        Statement::VariableDecl {
+                            name,
+                            value,
+                            is_const,
+                            ..
+                        } => {
                             self.emit(if *is_const { "const " } else { "let " });
-                            self.emit(name);
-                            if let Some(val) = value { self.emit(" = "); self.gen_expression(val); }
+                            self.emit(&js_name(name));
+                            if let Some(val) = value {
+                                self.emit(" = ");
+                                self.gen_expression(val);
+                            }
                         }
                         Statement::Expression { expression, .. } => self.gen_expression(expression),
                         _ => {}
                     }
                 }
                 self.emit("; ");
-                if let Some(c) = condition { self.gen_expression(c); }
+                if let Some(c) = condition {
+                    self.gen_expression(c);
+                }
                 self.emit("; ");
-                if let Some(u) = update { self.gen_expression(u); }
+                if let Some(u) = update {
+                    self.gen_expression(u);
+                }
                 self.emit(") {\n");
                 self.indent += 1;
-                for s in body { self.gen_statement(s); self.emit("\n"); }
+                for s in body {
+                    self.gen_statement(s);
+                    self.emit("\n");
+                }
                 self.indent -= 1;
                 self.write_indent();
                 self.emit("}");
             }
 
-            Statement::Break { .. } => { self.write_indent(); self.emit("break;"); }
-            Statement::Continue { .. } => { self.write_indent(); self.emit("continue;"); }
-            Statement::Debugger { .. } => { self.write_indent(); self.emit("debugger;"); }
+            Statement::Break { .. } => {
+                self.write_indent();
+                self.emit("break;");
+            }
+            Statement::Continue { .. } => {
+                self.write_indent();
+                self.emit("continue;");
+            }
+            Statement::Debugger { .. } => {
+                self.write_indent();
+                self.emit("debugger;");
+            }
 
-            Statement::TryCatch { try_body, catch_param, catch_body, span, .. } => {
+            Statement::TryCatch {
+                try_body,
+                catch_param,
+                catch_body,
+                span,
+                ..
+            } => {
                 self.write_indent();
                 self.add_mapping(span.line, span.column);
                 self.emit("try {\n");
                 self.indent += 1;
-                for s in try_body { self.gen_statement(s); self.emit("\n"); }
+                for s in try_body {
+                    self.gen_statement(s);
+                    self.emit("\n");
+                }
                 self.indent -= 1;
                 self.write_indent();
                 self.emit("} catch");
-                if let Some(param) = catch_param { self.emit(" ("); self.emit(param); self.emit(")"); }
+                if let Some(param) = catch_param {
+                    self.emit(" (");
+                    self.emit(&js_name(param));
+                    self.emit(")");
+                }
                 self.emit(" {\n");
                 self.indent += 1;
-                for s in catch_body { self.gen_statement(s); self.emit("\n"); }
+                for s in catch_body {
+                    self.gen_statement(s);
+                    self.emit("\n");
+                }
                 self.indent -= 1;
                 self.write_indent();
                 self.emit("}");
@@ -197,29 +285,46 @@ impl CodeGen {
                 self.emit(";");
             }
 
-            Statement::ClassDecl { name, super_class, methods, span, .. } => {
+            Statement::ClassDecl {
+                name,
+                super_class,
+                methods,
+                span,
+                ..
+            } => {
                 self.write_indent();
                 self.add_mapping(span.line, span.column);
                 self.emit("class ");
-                self.emit(name);
+                self.emit(&js_name(name));
                 if let Some(parent) = super_class {
                     self.emit(" extends ");
-                    self.emit(parent);
+                    self.emit(&js_name(parent));
                 }
                 self.emit(" {\n");
                 self.indent += 1;
                 for method in methods {
                     self.write_indent();
-                    if method.is_static { self.emit("static "); }
-                    if method.is_async { self.emit("async "); }
+                    if method.is_static {
+                        self.emit("static ");
+                    }
+                    if method.is_async {
+                        self.emit("async ");
+                    }
                     // Translate "costruttore" to JavaScript "constructor"
-                    let js_method_name = if method.name == "costruttore" { "constructor" } else { method.name.as_str() };
+                    let js_method_name = if method.name == "costruttore" {
+                        "constructor"
+                    } else {
+                        method.name.as_str()
+                    };
                     self.emit(js_method_name);
                     self.emit("(");
-                    self.emit(&method.params.join(", "));
+                    self.emit(&js_names(&method.params));
                     self.emit(") {\n");
                     self.indent += 1;
-                    for s in &method.body { self.gen_statement(s); self.emit("\n"); }
+                    for s in &method.body {
+                        self.gen_statement(s);
+                        self.emit("\n");
+                    }
                     self.indent -= 1;
                     self.write_indent();
                     self.emit("}\n");
@@ -229,17 +334,23 @@ impl CodeGen {
                 self.emit("}");
             }
 
-            Statement::Import { specifiers, source, .. } => {
+            Statement::Import {
+                specifiers, source, ..
+            } => {
                 self.write_indent();
                 self.emit("import { ");
-                let names: Vec<&str> = specifiers.iter().map(|s| s.local.as_str()).collect();
-                self.emit(&names.join(", "));
+                let names: Vec<String> = specifiers.iter().map(|s| s.local.clone()).collect();
+                self.emit(&js_names(&names));
                 self.emit(" } from \"");
                 self.emit(source);
                 self.emit("\";");
             }
 
-            Statement::Export { declaration, default_value, .. } => {
+            Statement::Export {
+                declaration,
+                default_value,
+                ..
+            } => {
                 self.write_indent();
                 if let Some(val) = default_value {
                     self.emit("export default ");
@@ -264,7 +375,10 @@ impl CodeGen {
                 self.write_indent();
                 self.emit("{\n");
                 self.indent += 1;
-                for s in statements { self.gen_statement(s); self.emit("\n"); }
+                for s in statements {
+                    self.gen_statement(s);
+                    self.emit("\n");
+                }
                 self.indent -= 1;
                 self.write_indent();
                 self.emit("}");
@@ -276,11 +390,14 @@ impl CodeGen {
         match expr {
             Expression::Identifier { name, span, .. } => {
                 self.add_mapping(span.line, span.column);
-                self.emit(name);
+                self.emit(&js_name(name));
             }
             Expression::Number { value, .. } => {
                 if *value == value.floor() && value.abs() < 1e15 {
                     self.emit(&(*value as i64).to_string());
+                } else if value.abs() >= 1e21 || value.abs() < 1e-6 {
+                    // Use exponent notation instead of hundreds of digits (`1e300`)
+                    self.emit(&format!("{:e}", value));
                 } else {
                     self.emit(&value.to_string());
                 }
@@ -307,7 +424,9 @@ impl CodeGen {
             Expression::Array { elements, .. } => {
                 self.emit("[");
                 for (i, elem) in elements.iter().enumerate() {
-                    if i > 0 { self.emit(", "); }
+                    if i > 0 {
+                        self.emit(", ");
+                    }
                     self.gen_expression(elem);
                 }
                 self.emit("]");
@@ -315,71 +434,154 @@ impl CodeGen {
             Expression::Object { properties, .. } => {
                 self.emit("{ ");
                 for (i, (key, value)) in properties.iter().enumerate() {
-                    if i > 0 { self.emit(", "); }
+                    if i > 0 {
+                        self.emit(", ");
+                    }
                     self.emit(key);
                     self.emit(": ");
                     self.gen_expression(value);
                 }
                 self.emit(" }");
             }
-            Expression::Binary { left, operator, right, .. } => {
+            Expression::Binary {
+                left,
+                operator,
+                right,
+                ..
+            } => {
                 self.emit("(");
-                self.gen_expression(left);
+                self.gen_operand(left);
                 self.emit(" ");
                 self.emit(operator.to_js());
                 self.emit(" ");
-                self.gen_expression(right);
+                self.gen_operand(right);
                 self.emit(")");
             }
-            Expression::Unary { operator, operand, .. } => {
+            Expression::Unary {
+                operator, operand, ..
+            } => {
                 self.emit(operator.to_js());
-                self.gen_expression(operand);
+                // `- -x` and `- --x` must not become `--x` / `---x`
+                let starts_with_minus = matches!(
+                    **operand,
+                    Expression::Unary {
+                        operator: UnaryOp::Negate,
+                        ..
+                    } | Expression::Update {
+                        operator: UpdateOp::Decrement,
+                        prefix: true,
+                        ..
+                    }
+                );
+                if matches!(operator, UnaryOp::Negate) && starts_with_minus {
+                    self.emit("(");
+                    self.gen_expression(operand);
+                    self.emit(")");
+                } else {
+                    self.gen_operand(operand);
+                }
             }
-            Expression::Assignment { target, value, .. } => {
+            Expression::Assignment {
+                target,
+                operator,
+                value,
+                ..
+            } => {
                 self.gen_expression(target);
-                self.emit(" = ");
+                self.emit(" ");
+                self.emit(operator.to_js());
+                self.emit(" ");
                 self.gen_expression(value);
             }
-            Expression::Call { callee, arguments, .. } => {
-                self.gen_expression(callee);
+            Expression::Update {
+                operator,
+                prefix,
+                argument,
+                ..
+            } => {
+                if *prefix {
+                    self.emit(operator.to_js());
+                }
+                self.gen_expression(argument);
+                if !*prefix {
+                    self.emit(operator.to_js());
+                }
+            }
+            Expression::Call {
+                callee, arguments, ..
+            } => {
+                self.gen_callee(callee);
                 self.emit("(");
                 for (i, arg) in arguments.iter().enumerate() {
-                    if i > 0 { self.emit(", "); }
+                    if i > 0 {
+                        self.emit(", ");
+                    }
                     self.gen_expression(arg);
                 }
                 self.emit(")");
             }
-            Expression::Member { object, property, computed, .. } => {
-                self.gen_expression(object);
+            Expression::Member {
+                object,
+                property,
+                computed,
+                ..
+            } => {
+                self.gen_callee(object);
                 if *computed {
                     self.emit("[");
                     self.gen_expression(property);
                     self.emit("]");
+                } else if let Expression::Identifier { name, span } = property.as_ref() {
+                    // Property names are never escaped: `x.for` is valid JS
+                    self.emit(".");
+                    self.add_mapping(span.line, span.column);
+                    self.emit(name);
                 } else {
                     self.emit(".");
                     self.gen_expression(property);
                 }
             }
-            Expression::New { callee, arguments, .. } => {
+            Expression::New {
+                callee, arguments, ..
+            } => {
                 self.emit("new ");
-                self.gen_expression(callee);
+                self.gen_callee(callee);
                 self.emit("(");
                 for (i, arg) in arguments.iter().enumerate() {
-                    if i > 0 { self.emit(", "); }
+                    if i > 0 {
+                        self.emit(", ");
+                    }
                     self.gen_expression(arg);
                 }
                 self.emit(")");
             }
-            Expression::ArrowFunction { params, body, .. } => {
+            Expression::ArrowFunction {
+                params,
+                body,
+                is_async,
+                ..
+            } => {
+                if *is_async {
+                    self.emit("async ");
+                }
                 self.emit("(");
-                self.emit(&params.join(", "));
+                self.emit(&js_names(params));
                 self.emit(") => ");
                 match body {
+                    // `() => ({ … })`: a bare `{` would start a block
+                    ArrowBody::Expression(e) if matches!(**e, Expression::Object { .. }) => {
+                        self.emit("(");
+                        self.gen_expression(e);
+                        self.emit(")");
+                    }
                     ArrowBody::Expression(e) => self.gen_expression(e),
                     ArrowBody::Block(stmts) => {
                         self.emit("{\n");
                         self.indent += 1;
-                        for s in stmts { self.gen_statement(s); self.emit("\n"); }
+                        for s in stmts {
+                            self.gen_statement(s);
+                            self.emit("\n");
+                        }
                         self.indent -= 1;
                         self.write_indent();
                         self.emit("}");
@@ -388,11 +590,16 @@ impl CodeGen {
             }
             Expression::Await { argument, .. } => {
                 self.emit("await ");
-                self.gen_expression(argument);
+                self.gen_operand(argument);
             }
-            Expression::Ternary { condition, consequent, alternate, .. } => {
+            Expression::Ternary {
+                condition,
+                consequent,
+                alternate,
+                ..
+            } => {
                 self.emit("(");
-                self.gen_expression(condition);
+                self.gen_operand(condition);
                 self.emit(" ? ");
                 self.gen_expression(consequent);
                 self.emit(" : ");
@@ -402,7 +609,9 @@ impl CodeGen {
             Expression::ConsoleLog { arguments, .. } => {
                 self.emit("console.log(");
                 for (i, arg) in arguments.iter().enumerate() {
-                    if i > 0 { self.emit(", "); }
+                    if i > 0 {
+                        self.emit(", ");
+                    }
                     self.gen_expression(arg);
                 }
                 self.emit(")");
@@ -410,7 +619,9 @@ impl CodeGen {
             Expression::ConsoleWarn { arguments, .. } => {
                 self.emit("console.warn(");
                 for (i, arg) in arguments.iter().enumerate() {
-                    if i > 0 { self.emit(", "); }
+                    if i > 0 {
+                        self.emit(", ");
+                    }
                     self.gen_expression(arg);
                 }
                 self.emit(")");
@@ -418,27 +629,135 @@ impl CodeGen {
             Expression::ConsoleError { arguments, .. } => {
                 self.emit("console.error(");
                 for (i, arg) in arguments.iter().enumerate() {
-                    if i > 0 { self.emit(", "); }
+                    if i > 0 {
+                        self.emit(", ");
+                    }
                     self.gen_expression(arg);
                 }
                 self.emit(")");
             }
             Expression::TypeOf { operand, .. } => {
                 self.emit("typeof ");
-                self.gen_expression(operand);
+                self.gen_operand(operand);
             }
             Expression::Delete { operand, .. } => {
                 self.emit("delete ");
-                self.gen_expression(operand);
+                self.gen_operand(operand);
             }
         }
     }
 
+    /// Operand of an operator: arrows and assignments bind looser than any
+    /// operator, so they need parentheses (`(x => x) || f`).
+    fn gen_operand(&mut self, expr: &Expression) {
+        if matches!(
+            expr,
+            Expression::ArrowFunction { .. } | Expression::Assignment { .. }
+        ) {
+            self.emit("(");
+            self.gen_expression(expr);
+            self.emit(")");
+        } else {
+            self.gen_expression(expr);
+        }
+    }
+
+    /// Callee or object of a member access: prefix operators need parentheses
+    /// too (`(await p).x`, `(() => 1)()`).
+    fn gen_callee(&mut self, expr: &Expression) {
+        let prefix = matches!(
+            expr,
+            Expression::Unary { .. }
+                | Expression::Await { .. }
+                | Expression::TypeOf { .. }
+                | Expression::Delete { .. }
+        );
+        if prefix {
+            self.emit("(");
+            self.gen_expression(expr);
+            self.emit(")");
+        } else {
+            self.gen_operand(expr);
+        }
+    }
+
     fn write_indent(&mut self) {
-        for _ in 0..self.indent { self.emit("  "); }
+        for _ in 0..self.indent {
+            self.emit("  ");
+        }
     }
 }
 
+/// JavaScript reserved words that FratmScript allows as names (`tien for = 1`).
+const JS_RESERVED: &[&str] = &[
+    "await",
+    "break",
+    "case",
+    "catch",
+    "class",
+    "const",
+    "continue",
+    "debugger",
+    "default",
+    "delete",
+    "do",
+    "else",
+    "enum",
+    "export",
+    "extends",
+    "false",
+    "finally",
+    "for",
+    "function",
+    "if",
+    "implements",
+    "import",
+    "in",
+    "instanceof",
+    "interface",
+    "let",
+    "new",
+    "null",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "return",
+    "static",
+    "super",
+    "switch",
+    "this",
+    "throw",
+    "true",
+    "try",
+    "typeof",
+    "var",
+    "void",
+    "while",
+    "with",
+    "yield",
+];
+
+/// Escapes a FratmScript name that is reserved in JS. `$` cannot appear in
+/// FratmScript identifiers, so `$for` never clashes with a user name.
+pub fn js_name(name: &str) -> std::borrow::Cow<'_, str> {
+    if JS_RESERVED.contains(&name) {
+        format!("${}", name).into()
+    } else {
+        name.into()
+    }
+}
+
+fn js_names(names: &[String]) -> String {
+    names
+        .iter()
+        .map(|n| js_name(n))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
 impl Default for CodeGen {
-    fn default() -> Self { Self::new(false) }
+    fn default() -> Self {
+        Self::new(false)
+    }
 }

@@ -2,7 +2,7 @@
 
 use clap::{Parser as ClapParser, Subcommand};
 use colored::*;
-use fratm_core::{compile, CompileOptions, errors};
+use fratm_core::{compile, errors, CompileOptions};
 use std::fs;
 use std::io::{self, BufRead, Write};
 use std::path::PathBuf;
@@ -47,7 +47,11 @@ fn main() {
     let cli = Cli::parse();
     match cli.command {
         Commands::Lancia { file, sourcemap } => run_file(&file, sourcemap),
-        Commands::Build { file, output, sourcemap } => build_file(&file, output, sourcemap),
+        Commands::Build {
+            file,
+            output,
+            sourcemap,
+        } => build_file(&file, output, sourcemap),
         Commands::Repl => run_repl(),
         Commands::Tokens { file } => show_tokens(&file),
         Commands::Ast { file } => show_ast(&file),
@@ -57,42 +61,76 @@ fn main() {
 fn run_file(path: &PathBuf, sourcemap: bool) {
     let source = match fs::read_to_string(path) {
         Ok(s) => s,
-        Err(e) => { eprintln!("{} {}", "Error: file not found:".red().bold(), e); std::process::exit(1); }
+        Err(e) => {
+            eprintln!("{} {}", "Error: file not found:".red().bold(), e);
+            std::process::exit(1);
+        }
     };
 
-    let options = CompileOptions { source_map: sourcemap, filename: Some(path.display().to_string()), minify: false };
+    let options = CompileOptions {
+        source_map: sourcemap,
+        filename: Some(path.display().to_string()),
+        minify: false,
+    };
 
     match compile(&source, options) {
         Ok(result) => {
             let script_dir = path.parent().unwrap_or_else(|| std::path::Path::new("."));
             let temp_path = script_dir.join(format!(".fratm_temp_{}.js", std::process::id()));
             let mut output = result.code;
-            if sourcemap { if let Some(sm) = &result.source_map { output.push_str("\n"); output.push_str(&sm.to_data_url()); } }
-            if let Err(e) = fs::write(&temp_path, &output) { eprintln!("{} {}", "Error: cannot write file:".red().bold(), e); std::process::exit(1); }
+            if sourcemap {
+                if let Some(sm) = &result.source_map {
+                    output.push('\n');
+                    output.push_str(&sm.to_data_url());
+                }
+            }
+            if let Err(e) = fs::write(&temp_path, &output) {
+                eprintln!("{} {}", "Error: cannot write file:".red().bold(), e);
+                std::process::exit(1);
+            }
             let cmd_status = Command::new("node").arg(&temp_path).status();
             let _ = fs::remove_file(&temp_path);
             match cmd_status {
                 Ok(status) => {
-                    if !status.success() { std::process::exit(status.code().unwrap_or(1)); }
+                    if !status.success() {
+                        std::process::exit(status.code().unwrap_or(1));
+                    }
                 }
-                Err(e) => { eprintln!("{} {}", "Error: Node.js failed:".red().bold(), e); std::process::exit(1); }
+                Err(e) => {
+                    eprintln!("{} {}", "Error: Node.js failed:".red().bold(), e);
+                    std::process::exit(1);
+                }
             }
         }
-        Err(e) => { print_error(&source, &e); std::process::exit(1); }
+        Err(e) => {
+            print_error(&source, &e);
+            std::process::exit(1);
+        }
     }
 }
 
 fn build_file(path: &PathBuf, output: Option<PathBuf>, sourcemap: bool) {
     let source = match fs::read_to_string(path) {
         Ok(s) => s,
-        Err(e) => { eprintln!("{} {}", "Error: file not found:".red().bold(), e); std::process::exit(1); }
+        Err(e) => {
+            eprintln!("{} {}", "Error: file not found:".red().bold(), e);
+            std::process::exit(1);
+        }
     };
 
-    let options = CompileOptions { source_map: sourcemap, filename: Some(path.display().to_string()), minify: false };
+    let options = CompileOptions {
+        source_map: sourcemap,
+        filename: Some(path.display().to_string()),
+        minify: false,
+    };
 
     match compile(&source, options) {
         Ok(result) => {
-            let out_path = output.unwrap_or_else(|| { let mut p = path.clone(); p.set_extension("js"); p });
+            let out_path = output.unwrap_or_else(|| {
+                let mut p = path.clone();
+                p.set_extension("js");
+                p
+            });
             let mut output_content = result.code;
             if sourcemap {
                 if let Some(sm) = &result.source_map {
@@ -100,32 +138,69 @@ fn build_file(path: &PathBuf, output: Option<PathBuf>, sourcemap: bool) {
                     if let Err(e) = fs::write(&map_path, sm.to_json_pretty()) {
                         eprintln!("{} {}", "Warning: cannot write source map:".yellow(), e);
                     } else {
-                        output_content.push_str(&format!("\n//# sourceMappingURL={}", map_path.file_name().unwrap().to_string_lossy()));
+                        output_content.push_str(&format!(
+                            "\n//# sourceMappingURL={}",
+                            map_path.file_name().unwrap().to_string_lossy()
+                        ));
                         println!("  {} {}", "Source map:".dimmed(), map_path.display());
                     }
                 }
             }
-            if let Err(e) = fs::write(&out_path, &output_content) { eprintln!("{} {}", "Error: cannot write file:".red().bold(), e); std::process::exit(1); }
-            println!("{} {} → {}", errors::success_message().green().bold(), path.display(), out_path.display());
+            if let Err(e) = fs::write(&out_path, &output_content) {
+                eprintln!("{} {}", "Error: cannot write file:".red().bold(), e);
+                std::process::exit(1);
+            }
+            println!(
+                "{} {} → {}",
+                errors::success_message().green().bold(),
+                path.display(),
+                out_path.display()
+            );
         }
-        Err(e) => { print_error(&source, &e); std::process::exit(1); }
+        Err(e) => {
+            print_error(&source, &e);
+            std::process::exit(1);
+        }
     }
 }
 
 fn run_repl() {
-    println!("{}", "🤌 FratmScript REPL - Write JavaScript the way it should be".cyan().bold());
-    println!("{}", format!("   Version {} - Type 'exit' to quit\n", fratm_core::version()).dimmed());
+    println!(
+        "{}",
+        "🤌 FratmScript REPL - Write JavaScript the way it should be"
+            .cyan()
+            .bold()
+    );
+    println!(
+        "{}",
+        format!(
+            "   Version {} - Type 'exit' to quit\n",
+            fratm_core::version()
+        )
+        .dimmed()
+    );
     let stdin = io::stdin();
     let mut accumulated = String::new();
     loop {
-        let prompt = if accumulated.is_empty() { "fratm> " } else { "  ...> " };
+        let prompt = if accumulated.is_empty() {
+            "fratm> "
+        } else {
+            "  ...> "
+        };
         print!("{}", prompt.green());
         io::stdout().flush().unwrap();
         let mut line = String::new();
-        if stdin.lock().read_line(&mut line).is_err() { break; }
+        if stdin.lock().read_line(&mut line).is_err() {
+            break;
+        }
         let trimmed = line.trim();
-        if trimmed == "esci" || trimmed == "exit" { println!("{}", "Goodbye! 👋".cyan()); break; }
-        if trimmed.is_empty() { continue; }
+        if trimmed == "esci" || trimmed == "exit" {
+            println!("{}", "Goodbye! 👋".cyan());
+            break;
+        }
+        if trimmed.is_empty() {
+            continue;
+        }
         accumulated.push_str(&line);
         match compile(&accumulated, Default::default()) {
             Ok(result) => {
@@ -137,8 +212,12 @@ fn run_repl() {
                     if let Ok(output) = Command::new("node").arg(&temp_path).output() {
                         let stdout = String::from_utf8_lossy(&output.stdout);
                         let stderr = String::from_utf8_lossy(&output.stderr);
-                        if !stdout.is_empty() { print!("{}", stdout); }
-                        if !stderr.is_empty() { eprint!("{}", stderr.red()); }
+                        if !stdout.is_empty() {
+                            print!("{}", stdout);
+                        }
+                        if !stderr.is_empty() {
+                            eprint!("{}", stderr.red());
+                        }
                     }
                 }
                 accumulated.clear();
@@ -155,21 +234,50 @@ fn run_repl() {
 }
 
 fn show_tokens(path: &PathBuf) {
-    let source = match fs::read_to_string(path) { Ok(s) => s, Err(e) => { eprintln!("{} {}", "Error: file not found:".red().bold(), e); std::process::exit(1); } };
+    let source = match fs::read_to_string(path) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("{} {}", "Error: file not found:".red().bold(), e);
+            std::process::exit(1);
+        }
+    };
     let mut lexer = fratm_core::lexer::Lexer::new(&source);
     let tokens = lexer.tokenize();
     println!("{}", "Tokens:".cyan().bold());
-    for token in tokens { println!("  {:20} @ {}:{}", format!("{:?}", token.kind).yellow(), token.span.line.to_string().dimmed(), token.span.column.to_string().dimmed()); }
+    for token in tokens {
+        println!(
+            "  {:20} @ {}:{}",
+            format!("{:?}", token.kind).yellow(),
+            token.span.line.to_string().dimmed(),
+            token.span.column.to_string().dimmed()
+        );
+    }
 }
 
 fn show_ast(path: &PathBuf) {
-    let source = match fs::read_to_string(path) { Ok(s) => s, Err(e) => { eprintln!("{} {}", "Error: file not found:".red().bold(), e); std::process::exit(1); } };
+    let source = match fs::read_to_string(path) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("{} {}", "Error: file not found:".red().bold(), e);
+            std::process::exit(1);
+        }
+    };
     let mut lexer = fratm_core::lexer::Lexer::new(&source);
     let tokens = lexer.tokenize();
     let mut parser = fratm_core::parser::Parser::new(tokens);
     match parser.parse() {
-        Ok(program) => { println!("{}", "AST:".cyan().bold()); println!("{}", serde_json::to_string_pretty(&program).unwrap_or_default()); }
-        Err(errors) => { for e in errors { println!("{} {}", "✗".red().bold(), e.message.red()); } }
+        Ok(program) => {
+            println!("{}", "AST:".cyan().bold());
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&program).unwrap_or_default()
+            );
+        }
+        Err(errors) => {
+            for e in errors {
+                println!("{} {}", "✗".red().bold(), e.message.red());
+            }
+        }
     }
 }
 
@@ -182,10 +290,16 @@ fn print_error(source: &str, error: &fratm_core::errors::CompileError) {
             eprintln!("  {} │ {}", line_num.to_string().dimmed(), line);
             if let Some(col) = error.column() {
                 let pointer = " ".repeat(col.saturating_sub(1)) + "^";
-                eprintln!("  {} │ {}", " ".repeat(line_num.to_string().len()), pointer.red());
+                eprintln!(
+                    "  {} │ {}",
+                    " ".repeat(line_num.to_string().len()),
+                    pointer.red()
+                );
             }
         }
     }
-    if let Some(suggestion) = errors::get_suggestion(error) { eprintln!("\n{}", suggestion.yellow()); }
+    if let Some(suggestion) = errors::get_suggestion(error) {
+        eprintln!("\n{}", suggestion.yellow());
+    }
     eprintln!("\n{}", errors::random_encouragement().dimmed());
 }

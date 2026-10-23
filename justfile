@@ -43,6 +43,7 @@ examples-build:
   cargo run -p fratm-cli -- build examples/10_nuove_feature.fratm
   cargo run -p fratm-cli -- build examples/11_oop_avanzato.fratm
   cargo run -p fratm-cli -- build examples/12_trycatch_validazione.fratm
+  cargo run -p fratm-cli -- build examples/13_pomodor_e_muzzarel.fratm
 
 # Launch all examples (`examples/*.fratm`).
 examples-lancia:
@@ -68,13 +69,9 @@ wasm:
   cd crates/fratm-wasm; wasm-pack build --target web --out-dir ../../packages/playground/public/pkg
 
 # Start playground dev server.
-playground-dev:
+playground-dev: wasm
   cd packages/playground; pnpm dev
 
 # Build VSCode extension sources.
 vscode-build:
   cd packages/vscode-extension; pnpm compile
-
-# Open personal scripts launcher menu.
-personal-lancia:
-  cargo run -p fratm-cli -- lancia PersonalScripts/run_personal_scripts.fratm

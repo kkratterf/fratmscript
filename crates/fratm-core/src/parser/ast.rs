@@ -1,7 +1,7 @@
 //! Abstract Syntax Tree definitions
 
 use crate::lexer::Span;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Program {
@@ -45,10 +45,16 @@ pub enum Statement {
         body: Vec<Statement>,
         span: Span,
     },
-    Break { span: Span },
-    Continue { span: Span },
+    Break {
+        span: Span,
+    },
+    Continue {
+        span: Span,
+    },
     /// debugger statement - "fermete"
-    Debugger { span: Span },
+    Debugger {
+        span: Span,
+    },
     TryCatch {
         try_body: Vec<Statement>,
         catch_param: Option<String>,
@@ -103,16 +109,42 @@ pub struct ClassMethod {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Expression {
-    Identifier { name: String, span: Span },
-    Number { value: f64, span: Span },
-    String { value: String, span: Span },
-    Boolean { value: bool, span: Span },
-    Null { span: Span },
-    Undefined { span: Span },
-    This { span: Span },
-    Super { span: Span },
-    Array { elements: Vec<Expression>, span: Span },
-    Object { properties: Vec<(String, Expression)>, span: Span },
+    Identifier {
+        name: String,
+        span: Span,
+    },
+    Number {
+        value: f64,
+        span: Span,
+    },
+    String {
+        value: String,
+        span: Span,
+    },
+    Boolean {
+        value: bool,
+        span: Span,
+    },
+    Null {
+        span: Span,
+    },
+    Undefined {
+        span: Span,
+    },
+    This {
+        span: Span,
+    },
+    Super {
+        span: Span,
+    },
+    Array {
+        elements: Vec<Expression>,
+        span: Span,
+    },
+    Object {
+        properties: Vec<(String, Expression)>,
+        span: Span,
+    },
     Binary {
         left: Box<Expression>,
         operator: BinaryOp,
@@ -126,7 +158,15 @@ pub enum Expression {
     },
     Assignment {
         target: Box<Expression>,
+        operator: AssignOp,
         value: Box<Expression>,
+        span: Span,
+    },
+    /// `++x`, `x--`
+    Update {
+        operator: UpdateOp,
+        prefix: bool,
+        argument: Box<Expression>,
         span: Span,
     },
     Call {
@@ -148,6 +188,7 @@ pub enum Expression {
     ArrowFunction {
         params: Vec<String>,
         body: ArrowBody,
+        is_async: bool,
         span: Span,
     },
     Await {
@@ -202,6 +243,7 @@ impl Expression {
             Expression::Binary { span, .. } => *span,
             Expression::Unary { span, .. } => *span,
             Expression::Assignment { span, .. } => *span,
+            Expression::Update { span, .. } => *span,
             Expression::Call { span, .. } => *span,
             Expression::Member { span, .. } => *span,
             Expression::New { span, .. } => *span,
@@ -225,10 +267,23 @@ pub enum ArrowBody {
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum BinaryOp {
-    Add, Subtract, Multiply, Divide, Modulo, Power,
-    Equal, StrictEqual, NotEqual, StrictNotEqual,
-    LessThan, GreaterThan, LessEqual, GreaterEqual,
-    And, Or,
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Modulo,
+    Power,
+    Equal,
+    StrictEqual,
+    NotEqual,
+    StrictNotEqual,
+    LessThan,
+    GreaterThan,
+    LessEqual,
+    GreaterEqual,
+    And,
+    Or,
+    InstanceOf,
 }
 
 impl BinaryOp {
@@ -250,6 +305,53 @@ impl BinaryOp {
             BinaryOp::GreaterEqual => ">=",
             BinaryOp::And => "&&",
             BinaryOp::Or => "||",
+            BinaryOp::InstanceOf => "instanceof",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub enum AssignOp {
+    Assign,
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Modulo,
+    Power,
+    Nullish,
+    Or,
+    And,
+}
+
+impl AssignOp {
+    pub fn to_js(&self) -> &'static str {
+        match self {
+            AssignOp::Assign => "=",
+            AssignOp::Add => "+=",
+            AssignOp::Subtract => "-=",
+            AssignOp::Multiply => "*=",
+            AssignOp::Divide => "/=",
+            AssignOp::Modulo => "%=",
+            AssignOp::Power => "**=",
+            AssignOp::Nullish => "??=",
+            AssignOp::Or => "||=",
+            AssignOp::And => "&&=",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub enum UpdateOp {
+    Increment,
+    Decrement,
+}
+
+impl UpdateOp {
+    pub fn to_js(&self) -> &'static str {
+        match self {
+            UpdateOp::Increment => "++",
+            UpdateOp::Decrement => "--",
         }
     }
 }

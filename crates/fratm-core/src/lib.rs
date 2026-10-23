@@ -77,16 +77,16 @@
 //! // Error: "Doppo 'chist' ce vo' 'è'! Scrivi 'chist è' pe fà 'na costante."
 //! ```
 
-pub mod lexer;
-pub mod parser;
 pub mod codegen;
 pub mod errors;
+pub mod lexer;
+pub mod parser;
 pub mod sourcemap;
 
+use codegen::CodeGen;
 use errors::CompileError;
 use lexer::Lexer;
 use parser::Parser;
-use codegen::CodeGen;
 use sourcemap::SourceMap;
 
 /// Compilation options to customize the transpiler behavior.
@@ -200,7 +200,8 @@ pub fn compile(source: &str, options: CompileOptions) -> Result<CompileResult, C
     let tokens = lexer.tokenize();
 
     // Check for lexer errors
-    let lex_errors: Vec<_> = tokens.iter()
+    let lex_errors: Vec<_> = tokens
+        .iter()
         .filter_map(|t| {
             if let lexer::TokenKind::Invalid(msg) = &t.kind {
                 Some(CompileError::LexerError {
@@ -309,8 +310,219 @@ na famiglie Pizzaiolo figlio 'e Persona {
     }
 
     #[test]
+    fn test_de_and_opate_are_plain_identifiers() {
+        let result = compile("tien de = 1\ntien opate = de", Default::default()).unwrap();
+        assert!(result.code.contains("let de = 1;"));
+        assert!(result.code.contains("let opate = de;"));
+    }
+
+    #[test]
     fn test_single_quote_string_still_works() {
         let result = compile("chist è a = 'e'\nstamm a dì(a)", Default::default()).unwrap();
         assert!(result.code.contains("const a = \"e\";"));
+    }
+
+    fn js(source: &str) -> String {
+        compile(source, Default::default()).unwrap().code
+    }
+
+    #[test]
+    fn test_typeof_compiles_to_one_expression() {
+        assert_eq!(js("tien x = chè è a"), "let x = typeof a;\n");
+        assert_eq!(js("tien x = typeof a"), "let x = typeof a;\n");
+        assert_eq!(
+            js("tien x = chè è a == \"number\""),
+            "let x = (typeof a == \"number\");\n"
+        );
+    }
+
+    #[test]
+    fn test_instanceof_compiles_to_one_expression() {
+        assert_eq!(js("tien x = a è uno B"), "let x = (a instanceof B);\n");
+        assert_eq!(js("tien x = a instanceof B"), "let x = (a instanceof B);\n");
+    }
+
+    #[test]
+    fn test_number_literals() {
+        assert_eq!(js("tien x = 0x1F"), "let x = 31;\n");
+        assert_eq!(js("tien x = 0b101 + 0o17"), "let x = (5 + 15);\n");
+        assert_eq!(js("tien x = 1e3 + 2.5E-3"), "let x = (1000 + 0.0025);\n");
+        assert_eq!(js("tien x = 1_000_000"), "let x = 1000000;\n");
+        assert_eq!(js("tien x = 1e300"), "let x = 1e300;\n");
+    }
+
+    #[test]
+    fn test_malformed_numbers_are_errors() {
+        for src in [
+            "tien x = 1_",
+            "tien x = 1__0",
+            "tien x = 0x",
+            "tien x = 1e",
+            "tien x = 3abc",
+            "tien x = 0x1G",
+            "tien x = 0123",
+        ] {
+            assert!(
+                compile(src, Default::default()).is_err(),
+                "{} should not compile",
+                src
+            );
+        }
+    }
+
+    #[test]
+    fn test_double_negation_is_not_decrement() {
+        assert_eq!(js("tien x = - -n"), "let x = -(-n);\n");
+    }
+
+    #[test]
+    fn test_juxtaposed_expressions_are_errors() {
+        // Used to compile silently into several statements
+        for src in ["tien x = a b", "stamm a dì(1) stamm a dì(2)", "piglie a b"] {
+            let err = compile(src, Default::default()).unwrap_err();
+            assert!(err.to_string().contains("già fernuta"), "{}: {}", src, err);
+            assert!(
+                errors::get_suggestion(&err).unwrap().contains("';'"),
+                "{}",
+                src
+            );
+        }
+    }
+
+    #[test]
+    fn test_semicolons_separate_statements() {
+        assert_eq!(js("tien a = 1; tien b = 2;"), "let a = 1;\nlet b = 2;\n");
+        assert!(js("facc f() { piglie; }").contains("return;"));
+    }
+
+    #[test]
+    fn test_short_keywords_are_names_where_no_construct_starts() {
+        assert!(js("pruvamm { } e si schiatta (e) { stamm a dì(e) }")
+            .contains("} catch (e) {\n  console.log(e);"));
+        assert_eq!(js("tien o = 1"), "let o = 1;\n");
+        assert_eq!(
+            js("facc f(da, a) { piglie da }"),
+            "function f(da, a) {\n  return da;\n}\n"
+        );
+        for name in [
+            "e", "o", "no", "da", "de", "na", "nu", "mo", "che", "cos", "caso", "pure", "leva",
+            "scrive",
+        ] {
+            assert_eq!(
+                js(&format!("tien {n} = 1\nstamm a dì({n})", n = name)),
+                format!("let {n} = 1;\nconsole.log({n});\n", n = name)
+            );
+        }
+    }
+
+    #[test]
+    fn test_short_keywords_keep_their_meaning_in_context() {
+        assert_eq!(js("tien x = a e b o c"), "let x = ((a && b) || c);\n");
+        assert_eq!(js("tien x = no a"), "let x = !a;\n");
+        assert_eq!(js("tien x = no e no"), "let x = (no && no);\n");
+        assert_eq!(js("tien x = leva a.b"), "let x = delete a.b;\n");
+        assert_eq!(js("tien x = nu bell A()"), "let x = new A();\n");
+        assert_eq!(js("scrive a dì(1)"), "console.error(1);\n");
+        assert!(js("na famiglie A { }").starts_with("class A {"));
+    }
+
+    #[test]
+    fn test_js_reserved_names_are_escaped_but_properties_are_not() {
+        assert_eq!(
+            js("tien for = 1\nstamm a dì(for)"),
+            "let $for = 1;\nconsole.log($for);\n"
+        );
+        assert_eq!(
+            js("facc f(class) { piglie class }"),
+            "function f($class) {\n  return $class;\n}\n"
+        );
+        assert_eq!(
+            js("tien x = o.for + { si: 1, for: 2 }.si"),
+            "let x = (o.for + { si: 1, for: 2 }.si);\n"
+        );
+    }
+
+    #[test]
+    fn test_arrow_functions() {
+        assert_eq!(js("tien f = () => 1"), "let f = () => 1;\n");
+        assert_eq!(
+            js("tien f = (a, b) => a + b"),
+            "let f = (a, b) => (a + b);\n"
+        );
+        assert_eq!(js("tien f = x => x"), "let f = (x) => x;\n");
+        assert_eq!(
+            js("tien f = (a) => { piglie a }"),
+            "let f = (a) => {\n  return a;\n};\n"
+        );
+        assert_eq!(
+            js("tien f = mo vir (x) => aspett g(x)"),
+            "let f = async (x) => await g(x);\n"
+        );
+        assert_eq!(js("tien f = mo vir x => x"), "let f = async (x) => x;\n");
+        assert_eq!(
+            js("xs.map((v, i) => v * i)"),
+            "xs.map((v, i) => (v * i));\n"
+        );
+        assert_eq!(
+            js("tien f = () => ({ a: 1 })"),
+            "let f = () => ({ a: 1 });\n"
+        );
+        assert_eq!(js("tien f = (e) => e"), "let f = (e) => e;\n");
+        // A parenthesized expression is still an expression
+        assert_eq!(js("tien x = (a) + 1"), "let x = (a + 1);\n");
+    }
+
+    #[test]
+    fn test_low_precedence_operands_are_parenthesized() {
+        assert_eq!(js("tien x = (() => 7)()"), "let x = (() => 7)();\n");
+        assert_eq!(
+            js("tien x = (aspett p).valore"),
+            "let x = (await p).valore;\n"
+        );
+        assert_eq!(js("tien x = (no a).b"), "let x = (!a).b;\n");
+    }
+
+    #[test]
+    fn test_compound_assignment() {
+        for op in ["+=", "-=", "*=", "/=", "%=", "**=", "??=", "||=", "&&="] {
+            assert_eq!(js(&format!("x {} 2", op)), format!("x {} 2;\n", op));
+            assert_eq!(
+                js(&format!("a.b[0] {} 2", op)),
+                format!("a.b[0] {} 2;\n", op)
+            );
+        }
+        assert_eq!(js("a = b += 1"), "a = b += 1;\n");
+    }
+
+    #[test]
+    fn test_increment_and_decrement() {
+        assert_eq!(js("i++"), "i++;\n");
+        assert_eq!(js("--i"), "--i;\n");
+        assert_eq!(js("stu cos.n++"), "this.n++;\n");
+        assert_eq!(js("tien x = ++a[0]"), "let x = ++a[0];\n");
+        assert_eq!(
+            js("pe (tien i = 0; i < 3; i++) { }"),
+            "for (let i = 0; (i < 3); i++) {\n}\n"
+        );
+        assert_eq!(js("tien x = - --i"), "let x = -(--i);\n");
+        assert_eq!(js("tien x = a - -b"), "let x = (a - -b);\n");
+    }
+
+    #[test]
+    fn test_symbolic_logical_operators() {
+        assert_eq!(js("tien x = a || b && !c"), "let x = (a || (b && !c));\n");
+    }
+
+    #[test]
+    fn test_invalid_assignment_targets_are_errors() {
+        for src in ["1 = 2", "f() += 1", "++1", "(a + b)++", "tien x = 1 = 2"] {
+            let err = compile(src, Default::default()).unwrap_err();
+            assert!(
+                err.to_string().contains("nun se pò assegnà"),
+                "{}: {}",
+                src,
+                err
+            );
+        }
     }
 }

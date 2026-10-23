@@ -2,8 +2,8 @@
 //!
 //! All errors are in Neapolitan dialect! 🤌
 
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use serde::{Serialize, Deserialize};
 
 /// Main compilation error type
 #[derive(Debug, Error, Clone, Serialize, Deserialize)]
@@ -14,18 +14,16 @@ pub enum CompileError {
         line: usize,
         column: usize,
     },
-    
+
     #[error("Riga {line}, colonna {column}: {msg}", msg = napoletanize_error(message))]
     ParseError {
         message: String,
         line: usize,
         column: usize,
     },
-    
+
     #[error("Errore interno: {message}")]
-    CodeGenError {
-        message: String,
-    },
+    CodeGenError { message: String },
 }
 
 impl CompileError {
@@ -36,7 +34,7 @@ impl CompileError {
             CompileError::CodeGenError { .. } => None,
         }
     }
-    
+
     pub fn column(&self) -> Option<usize> {
         match self {
             CompileError::LexerError { column, .. } => Some(*column),
@@ -82,7 +80,8 @@ pub fn napoletanize_error(message: &str) -> String {
         return "Doppo 'pe' ce vo' 'ogni'! Scrivi 'pe ogni'.".to_string();
     }
     if message.contains("Aspettavo 'vir'") {
-        return "Doppo 'mo' ce vo' 'vir'! Scrivi 'mo vir facc' pe 'na funzione asincrona.".to_string();
+        return "Doppo 'mo' ce vo' 'vir'! Scrivi 'mo vir facc' pe 'na funzione asincrona."
+            .to_string();
     }
     if message.contains("Aspettavo 'bell'") {
         return "Doppo 'nu' ce vo' 'bell'! Scrivi 'nu bell' pe creà n'oggetto nuovo.".to_string();
@@ -99,10 +98,26 @@ pub fn napoletanize_error(message: &str) -> String {
     if message.contains("Aspettavo 'dì'") {
         return "Doppo 'stamm a' ce vo' 'dì'! Scrivi 'stamm a dì' pe stampà.".to_string();
     }
+    if message.contains("after the end of the statement") {
+        let found = message.split('\'').nth(1).unwrap_or("");
+        return format!(
+            "Ccà ce sta '{}' ma l'istruzione era già fernuta! Va' a capo o miette ';'.",
+            found
+        );
+    }
+    if message.contains("Invalid assignment target") {
+        return "Ccà nun se pò assegnà niente! Ce vo' 'na variabile o 'na proprietà, tipo 'x' o 'stu cos.nome'.".to_string();
+    }
+    if message.starts_with("Invalid number") {
+        return format!(
+            "Stu nummero nun se capisce: {}",
+            message.trim_start_matches("Invalid number: ")
+        );
+    }
     if message.contains("expression") || message.contains("espressione") {
         return "Ma che staje scrivenn?! Ccà ce vo' 'na espressione!".to_string();
     }
-    
+
     // Default: return with some Napoletano flair
     format!("Uè, c'è nu problema: {}", message)
 }
@@ -113,7 +128,10 @@ pub fn napoletanize_error(message: &str) -> String {
 pub fn get_suggestion(error: &CompileError) -> Option<String> {
     match error {
         CompileError::ParseError { message, .. } => {
-            if message.contains("'}'") {
+            // Checked first: the message quotes the offending token, which may be `stamm`, `}`...
+            if message.contains("after the end of the statement") {
+                Some("💡 Scrive n'istruzione pe riga, o separale cu ';'".to_string())
+            } else if message.contains("'}'") {
                 Some("💡 Conta 'e parentesi graffe: ogni '{' adda avè 'o suo '}'".to_string())
             } else if message.contains("')'") {
                 Some("💡 Conta 'e parentesi tonne: ogni '(' adda avè 'o suo ')'".to_string())

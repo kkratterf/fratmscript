@@ -2,7 +2,7 @@
 //!
 //! Implements Source Map v3 specification for debugging support.
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// A source map following the v3 specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,7 +69,10 @@ impl SourceMap {
     pub fn to_data_url(&self) -> String {
         let json = self.to_json();
         let encoded = base64_encode(&json);
-        format!("//# sourceMappingURL=data:application/json;base64,{}", encoded)
+        format!(
+            "//# sourceMappingURL=data:application/json;base64,{}",
+            encoded
+        )
     }
 }
 
@@ -104,7 +107,13 @@ impl SourceMapBuilder {
     }
 
     /// Add a mapping from generated position to source position
-    pub fn add_mapping(&mut self, gen_line: usize, gen_col: usize, src_line: usize, src_col: usize) {
+    pub fn add_mapping(
+        &mut self,
+        gen_line: usize,
+        gen_col: usize,
+        src_line: usize,
+        src_col: usize,
+    ) {
         // Ensure we have enough lines
         while self.segments.len() <= gen_line {
             self.segments.push(vec![]);
@@ -127,10 +136,14 @@ impl SourceMapBuilder {
         src_col: usize,
         name: &str,
     ) {
-        let name_idx = self.names.iter().position(|n| n == name).unwrap_or_else(|| {
-            self.names.push(name.to_string());
-            self.names.len() - 1
-        });
+        let name_idx = self
+            .names
+            .iter()
+            .position(|n| n == name)
+            .unwrap_or_else(|| {
+                self.names.push(name.to_string());
+                self.names.len() - 1
+            });
 
         while self.segments.len() <= gen_line {
             self.segments.push(vec![]);

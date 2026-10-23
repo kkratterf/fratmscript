@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react'
-import { EditorState, Compartment } from '@codemirror/state'
-import { EditorView, keymap, highlightSpecialChars, drawSelection, highlightActiveLine, lineNumbers } from '@codemirror/view'
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
+import { EditorState, Compartment, Prec, StateEffect, StateField } from '@codemirror/state'
+import { EditorView, Decoration, type DecorationSet, keymap, highlightSpecialChars, drawSelection, highlightActiveLine, lineNumbers } from '@codemirror/view'
 import { defaultKeymap, indentWithTab } from '@codemirror/commands'
+import { lintGutter, setDiagnostics, type Diagnostic } from '@codemirror/lint'
 import { HighlightStyle, syntaxHighlighting, StreamLanguage } from '@codemirror/language'
 import { tags } from '@lezer/highlight'
 import { useTheme } from 'next-themes'
@@ -134,6 +135,19 @@ const darkTheme = EditorView.theme({
   '.cm-scroller': {
     overflow: 'auto',
   },
+  '.cm-lintRange-error': {
+    backgroundImage: 'none',
+    textDecoration: 'underline wavy #f87171',
+    textUnderlineOffset: '3px',
+  },
+  '.cm-errorLine': {
+    backgroundColor: 'rgba(248, 113, 113, 0.12)',
+  },
+  '.cm-tooltip-lint': {
+    backgroundColor: '#171717',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    color: '#e5e7eb',
+  },
 }, { dark: true })
 
 // Light theme for CodeMirror using COSS palette
@@ -178,12 +192,34 @@ const lightTheme = EditorView.theme({
   '.cm-scroller': {
     overflow: 'auto',
   },
+  '.cm-lintRange-error': {
+    backgroundImage: 'none',
+    textDecoration: 'underline wavy #dc2626',
+    textUnderlineOffset: '3px',
+  },
+  '.cm-errorLine': {
+    backgroundColor: 'rgba(220, 38, 38, 0.08)',
+  },
 }, { dark: false })
+
+export interface EditorDiagnostic {
+  /** 1-based */
+  line: number
+  /** 1-based; when missing the whole line is marked */
+  column?: number
+  message: string
+}
+
+export interface EditorHandle {
+  /** Moves the cursor to a 1-based line/column and focuses the editor */
+  revealLine: (line: number, column?: number) => void
+}
 
 interface EditorProps {
   value: string
   onChange: (value: string) => void
   onRun: () => void
+  diagnostics?: EditorDiagnostic[]
   className?: string
 }
 
@@ -191,7 +227,51 @@ interface EditorProps {
 const themeCompartment = new Compartment()
 const highlightCompartment = new Compartment()
 
-export function Editor({ value, onChange, onRun, className }: EditorProps) {
+// Line background for lines with an error
+const errorLineDecoration = Decoration.line({ class: 'cm-errorLine' })
+const setErrorLines = StateEffect.define<number[]>()
+const errorLines = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+  update(deco, tr) {
+    deco = deco.map(tr.changes)
+    for (const effect of tr.effects) {
+      if (effect.is(setErrorLines)) {
+        const lines = [...new Set(effect.value)].sort((a, b) => a - b)
+        deco = Decoration.set(lines.map(pos => errorLineDecoration.range(pos)))
+      }
+    }
+    return deco
+  },
+  provide: field => EditorView.decorations.from(field),
+})
+
+function toCodeMirror(doc: EditorState['doc'], diagnostics: EditorDiagnostic[]) {
+  const result: Diagnostic[] = []
+  const lineStarts: number[] = []
+  for (const d of diagnostics) {
+    if (d.line < 1 || d.line > doc.lines) continue
+    const line = doc.line(d.line)
+    lineStarts.push(line.from)
+    let from = line.from
+    let to = line.to
+    if (d.column !== undefined) {
+      // Underline the word at the column, or the last character when the
+      // error points past the end of the line.
+      from = Math.min(line.from + Math.max(d.column - 1, 0), line.to)
+      const rest = line.text.slice(from - line.from)
+      const word = rest.match(/^[\p{L}\p{N}_$]+/u)?.[0] ?? rest.slice(0, 1)
+      to = from + word.length
+      if (to === from && from > line.from) from -= 1
+    }
+    result.push({ from, to, severity: 'error', message: d.message })
+  }
+  return { result, lineStarts }
+}
+
+export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
+  { value, onChange, onRun, diagnostics, className },
+  ref,
+) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
   const { resolvedTheme } = useTheme()
@@ -199,15 +279,34 @@ export function Editor({ value, onChange, onRun, className }: EditorProps) {
   // Determine if dark mode
   const isDark = resolvedTheme === 'dark'
 
-  // Create run keybinding
-  const runKeymap = keymap.of([{
+  // The editor is created once, so read the latest callback through a ref
+  const onRunRef = useRef(onRun)
+  onRunRef.current = onRun
+
+  useImperativeHandle(ref, () => ({
+    revealLine(lineNumber, column) {
+      const view = viewRef.current
+      if (!view) return
+      const doc = view.state.doc
+      const line = doc.line(Math.min(Math.max(lineNumber, 1), doc.lines))
+      const pos = Math.min(line.from + Math.max((column ?? 1) - 1, 0), line.to)
+      view.dispatch({
+        selection: { anchor: pos },
+        effects: EditorView.scrollIntoView(pos, { y: 'center' }),
+      })
+      view.focus()
+    },
+  }), [])
+
+  // Run on Mod-Enter. Highest precedence so defaultKeymap's insertBlankLine
+  // binding for the same key never sees it.
+  const runKeymap = Prec.highest(keymap.of([{
     key: 'Mod-Enter',
     run: () => {
-      onRun()
+      onRunRef.current()
       return true
-    }
-  }])
-
+    },
+  }]))
   useEffect(() => {
     if (!containerRef.current) return
 
@@ -219,8 +318,10 @@ export function Editor({ value, onChange, onRun, className }: EditorProps) {
         highlightSpecialChars(),
         drawSelection(),
         EditorView.lineWrapping,
-        keymap.of([...defaultKeymap, indentWithTab]),
         runKeymap,
+        keymap.of([...defaultKeymap, indentWithTab]),
+        lintGutter(),
+        errorLines,
         fratmScriptLanguage,
         highlightCompartment.of(syntaxHighlighting(isDark ? darkHighlighting : lightHighlighting)),
         themeCompartment.of(isDark ? darkTheme : lightTheme),
@@ -272,10 +373,19 @@ export function Editor({ value, onChange, onRun, className }: EditorProps) {
     }
   }, [value])
 
+  // Show errors inline: underline, gutter marker, hover message, line tint
+  useEffect(() => {
+    const view = viewRef.current
+    if (!view) return
+    const { result, lineStarts } = toCodeMirror(view.state.doc, diagnostics ?? [])
+    view.dispatch(setDiagnostics(view.state, result))
+    view.dispatch({ effects: setErrorLines.of(lineStarts) })
+  }, [diagnostics])
+
   return (
     <div
       ref={containerRef}
       className={cn('w-full h-full', className)}
     />
   )
-}
+})

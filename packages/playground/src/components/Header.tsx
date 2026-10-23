@@ -1,11 +1,17 @@
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipPopup } from '@/components/ui/tooltip'
+import { Play, Square } from 'lucide-react'
 
 interface HeaderProps {
   onRun: () => void
+  onStop: () => void
   onShare: () => void
-  isCompiling: boolean
+  isRunning: boolean
+  disabled: boolean
 }
+
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
+const runShortcut = isMac ? '⌘↵' : 'Ctrl+↵'
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -31,14 +37,14 @@ function XIcon({ className }: { className?: string }) {
   )
 }
 
-export function Header({ onRun, onShare, isCompiling }: HeaderProps) {
+export function Header({ onRun, onStop, onShare, isRunning, disabled }: HeaderProps) {
   return (
-    <header className="flex flex-wrap justify-between items-center gap-4 bg-card px-4 py-3 border-border border-b">
-      <div className="flex items-center gap-3">
-        <h1 className="font-bold text-primary text-xl">FratmScript 🤌🏻</h1>
+    <header className="flex justify-between items-center gap-3 bg-card px-4 py-3 border-border border-b">
+      <div className="flex items-center gap-3 min-w-0">
+        <h1 className="font-bold text-primary text-lg sm:text-xl truncate">FratmScript 🤌🏻</h1>
       </div>
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center gap-3 shrink-0">
+        <div className="hidden sm:flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger
               render={
@@ -89,9 +95,25 @@ export function Header({ onRun, onShare, isCompiling }: HeaderProps) {
           </Tooltip>
         </div>
         <div className="flex items-center gap-1.5">
-          <Button onClick={onRun} disabled={isCompiling}>
-            Run
-          </Button>
+          {isRunning ? (
+            <Button variant="destructive" onClick={onStop}>
+              <Square className="size-3.5 fill-current" />
+              Stop
+            </Button>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button onClick={onRun} disabled={disabled}>
+                    <Play className="size-3.5 fill-current" />
+                    Run
+                    <kbd className="hidden sm:inline opacity-70 ml-1 font-sans text-xs">{runShortcut}</kbd>
+                  </Button>
+                }
+              />
+              <TooltipPopup>Run code ({runShortcut})</TooltipPopup>
+            </Tooltip>
+          )}
           <Button variant="outline" onClick={onShare}>
             Share
           </Button>

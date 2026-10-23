@@ -1,6 +1,6 @@
 // ============================================
 // Example 4: Loops
-// mentre che (while), pe (for)
+// mentre che (while), pe (for), ++ and +=
 // ============================================
 
 // While loop - mentre che
@@ -8,19 +8,19 @@ stamm a dì("=== Neapolitan Countdown ===")
 tien countdown = 5
 mentre che (countdown > 0) {
     stamm a dì(countdown + "...")
-    countdown = countdown - 1
+    countdown--
 }
 stamm a dì("🎆 Happy New Year!")
 
 // For loop - pe (ogni is optional)
 stamm a dì("\n=== Multiplication Table of 7 ===")
-pe (tien i = 1; i <= 10; i = i + 1) {
+pe (tien i = 1; i <= 10; i++) {
     stamm a dì("7 x " + i + " = " + (7 * i))
 }
 
 // Break - rompe
 stamm a dì("\n=== Find the number (break) ===")
-pe (tien n = 1; n <= 100; n = n + 1) {
+pe (tien n = 1; n <= 100; n++) {
     si (n == 42) {
         stamm a dì("Found it! The number is " + n)
         rompe
@@ -29,7 +29,7 @@ pe (tien n = 1; n <= 100; n = n + 1) {
 
 // Continue - salta
 stamm a dì("\n=== Odd numbers (continue) ===")
-pe (tien j = 1; j <= 10; j = j + 1) {
+pe (tien j = 1; j <= 10; j++) {
     si (j % 2 == 0) {
         salta  // Skip even numbers
     }
@@ -38,10 +38,10 @@ pe (tien j = 1; j <= 10; j = j + 1) {
 
 // Nested loops
 stamm a dì("\n=== Pattern (nested loops) ===")
-pe (tien riga = 1; riga <= 5; riga = riga + 1) {
+pe (tien riga = 1; riga <= 5; riga++) {
     tien stelle = ""
-    pe (tien col = 1; col <= riga; col = col + 1) {
-        stelle = stelle + "⭐"
+    pe (tien col = 1; col <= riga; col++) {
+        stelle += "⭐"
     }
     stamm a dì(stelle)
 }
