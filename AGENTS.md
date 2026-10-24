@@ -21,7 +21,8 @@ FratmScript is a Neapolitan-flavoured language that transpiles to JavaScript.
 ## Language of the project
 
 - **Code, comments, doc comments, commit messages, PR titles and PR descriptions: English.**
-- FratmScript keywords, examples, playground UI copy and user-facing compiler error messages stay in Neapolitan/Italian. That is the product, not a style choice.
+- FratmScript keywords, examples and user-facing compiler and runtime error messages stay in Neapolitan/Italian. That is the product, not a style choice.
+- Playground UI copy is English by default, with a Neapolitan version the user switches to (EN/NAP in the header). Every UI string lives in `packages/playground/src/lib/i18n.tsx` in both languages, and tour lessons carry both texts in `src/lib/lessons.ts`.
 - When you touch a file that has Italian comments, translate the comments you edit; do not rewrite unrelated ones in the same PR.
 
 ## Build and test

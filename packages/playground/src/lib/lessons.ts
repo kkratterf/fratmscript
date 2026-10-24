@@ -6,26 +6,31 @@
 // solution prints exactly its .out file; the playground uses the .out file
 // to tell when the exercise is done.
 
+import type { Lang } from '@/lib/i18n'
+
 const starters = import.meta.glob('../scola/*.fratm', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
 const outputs = import.meta.glob('../scola/*.out', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
 
-export interface Lesson {
-  /** File name without extension, e.g. `01_ue_munno` */
-  id: string
+export interface LessonText {
   title: string
   /** Paragraphs; `code` in backticks is shown as code */
   body: string[]
   /** What to change in the code */
   task: string
+}
+
+export interface Lesson {
+  /** File name without extension, e.g. `01_ue_munno` */
+  id: string
+  /** Title, explanation and exercise in each UI language */
+  text: Record<Lang, LessonText>
   starter: string
   solution: string
   /** Console lines the solution prints */
   expected: string[]
 }
 
-type LessonText = Pick<Lesson, 'title' | 'body' | 'task'>
-
-const TEXTS: Record<string, LessonText> = {
+const NAP_TEXTS: Record<string, LessonText> = {
   '01_ue_munno': {
     title: 'Uè, munno!',
     body: [
@@ -130,24 +135,129 @@ const TEXTS: Record<string, LessonText> = {
   },
 }
 
+const EN_TEXTS: Record<string, LessonText> = {
+  '01_ue_munno': {
+    title: 'Hello, world!',
+    body: [
+      'Welcome to the tour! Here you learn FratmScript: JavaScript written the way it should be, in Neapolitan.',
+      'The editor is below; the result appears on the right, in the console (on a phone, in the Console tab). Every time you change the code, the program runs again.',
+      '`stamm a dì(…)` prints whatever you put between the parentheses. It is JavaScript\'s `console.log`.',
+      'If you misspell a word, the compiler tells you in Neapolitan and suggests the right one. Try writing `stama` instead of `stamm`.',
+    ],
+    task: 'Print "Uè, Napule!" instead of "Uè, munno!".',
+  },
+  '02_variabili': {
+    title: 'chist è and tien',
+    body: [
+      '`chist è` declares a constant: a value that never changes (`const`).',
+      '`tien` declares a variable that can change (`let`). To increase it there are `+= 1` and `++`.',
+      '`stamm a dì` accepts several values separated by commas and prints them on the same line.',
+    ],
+    task: 'Gennaro eats another pizza: increase `pizze` by one before printing, so the output is "Gennaro 3".',
+  },
+  '03_si_sinno': {
+    title: 'si and sinnò',
+    body: [
+      '`si (condition) { … }` runs the block only if the condition is true (`if`).',
+      '`sinnò { … }` is what happens when it is not (`else`). For more cases: `sinnò si (…) { … }`.',
+      'To compare: `<`, `>`, `<=`, `>=`, `==`, `!=`. To combine: `e`, `o`, `no`.',
+    ],
+    task: 'Add a `sinnò` that prints "Bonasera!" and set `ora` to 20.',
+  },
+  '04_loop': {
+    title: 'pe and mentre che',
+    body: [
+      '`pe (tien i = 1; i <= 3; i++) { … }` repeats the block while counting (`for`).',
+      '`mentre che (condition) { … }` repeats as long as the condition is true (`while`). Careful not to write a loop that never ends: the playground stops it after a short while.',
+    ],
+    task: 'Make the first loop count from 1 to 5, and remove the second loop.',
+  },
+  '05_funzioni': {
+    title: 'facc and piglie',
+    body: [
+      '`facc name(parameters) { … }` creates a function (`function`).',
+      '`piglie value` is `return`: the function stops and gives that value back to its caller.',
+    ],
+    task: 'Write a function `doppio(n)` that returns `n * 2`, and print `doppio(21)` below the greeting.',
+  },
+  '06_frecce_e_template': {
+    title: 'Arrows and templates',
+    body: [
+      'For a short function there is the arrow: `chist è doppio = n => n * 2`. With more parameters: `(a, b) => a + b`.',
+      'A string between backticks (`` ` ``) is a template: everything inside `${…}` is computed and put into the text.',
+    ],
+    task: 'With an arrow `prezzo = n => n * 6` and a template, print "3 pizze costano 18 euro".',
+  },
+  '07_liste': {
+    title: 'Lists',
+    body: [
+      'A list is written between square brackets: `["margherita", "marinara"]`. `lista[0]` is the first element, `lista.length` how many there are.',
+      '`pe ogni (chist è x dint lista) { … }` goes through the elements one by one (`for…of`).',
+      'All JavaScript methods work: `map`, `filter`, `join`, `toUpperCase`…',
+    ],
+    task: 'Print each pizza in upper case (`pizza.toUpperCase()`), one per line, with no other lines.',
+  },
+  '08_oggetti': {
+    title: 'Objects',
+    body: [
+      'An object groups several named values: `{ nome: "Margherita", prezzo: 6 }`. You read them with `pizza.nome`.',
+      'Destructuring takes several fields in one go: `chist è { nome, prezzo } = pizza`.',
+    ],
+    task: 'Take `nome` and `prezzo` with destructuring and print "Margherita: 6 euro".',
+  },
+  '09_classi': {
+    title: 'na famiglie',
+    body: [
+      '`na famiglie Name { … }` creates a class. The `costruttore` sets up the object, and `stu cos` is the object itself (`this`).',
+      '`nu bell Name(…)` creates a new object (`new`). With `figlio \'e` a class inherits from another one (`extends`).',
+    ],
+    task: 'Add a method `presentati()` that returns "Songo " + the name, and print only `gennaro.presentati()`.',
+  },
+  '10_errori': {
+    title: 'pruvamm and si schiatta',
+    body: [
+      '`iett nu bell Error("…")` throws an error (`throw`).',
+      '`pruvamm { … } e si schiatta (errore) { … }` catches the error and lets you carry on (`try/catch`). With `aropp { … }` you add code that always runs (`finally`).',
+      'If nothing catches an error, the playground shows it in Neapolitan, with its line.',
+    ],
+    task: 'In `dividi`, if `b` is zero throw an `Error("Nun se divide pe zero!")`, and in the `schiatta` block print only `errore.message`.',
+  },
+  '11_async': {
+    title: 'mo vir and aspett',
+    body: [
+      '`mo vir facc` creates an asynchronous function (`async`): it can wait for things that take time, like a network request.',
+      '`aspett promise` waits for a Promise to finish (`await`). Here `aspetta(500)` waits half a second.',
+    ],
+    task: 'After the `aspett`, print "Pronta!".',
+  },
+  '12_vedimm': {
+    title: 'vedimm',
+    body: [
+      '`vedimm (value) { caso …: … }` picks one of many cases (`switch`). `rompe` leaves it (`break`), and `predefinit` is the case for everything else (`default`).',
+      'You finished the tour! Now you can try the examples, read the syntax reference with the ? button, or write your own program.',
+    ],
+    task: 'Add a `caso "dummeneca"` that prints "Ragù!" and set `giorno` to "dummeneca".',
+  },
+}
+
 function lessonId(path: string): string {
   return path.split('/').pop()!.replace(/\.(soluzione\.)?fratm$|\.out$/g, '')
 }
 
-export const lessons: Lesson[] = Object.keys(TEXTS)
+export const lessons: Lesson[] = Object.keys(NAP_TEXTS)
   .sort()
   .map(id => {
     const starter = starters[`../scola/${id}.fratm`]
     const solution = starters[`../scola/${id}.soluzione.fratm`]
     const out = outputs[`../scola/${id}.out`]
-    if (starter === undefined || solution === undefined || out === undefined) {
+    if (starter === undefined || solution === undefined || out === undefined || !EN_TEXTS[id]) {
       throw new Error(`Lesson ${id} is missing a file`)
     }
-    return { id, ...TEXTS[id], starter, solution, expected: out.replace(/\n$/, '').split('\n') }
+    return { id, text: { en: EN_TEXTS[id], nap: NAP_TEXTS[id] }, starter, solution, expected: out.replace(/\n$/, '').split('\n') }
   })
 
 // Every lesson file has its text, and the other way round
 if (import.meta.env.DEV) {
   const ids = new Set(Object.keys(starters).concat(Object.keys(outputs)).map(lessonId))
-  for (const id of ids) if (!TEXTS[id]) console.warn(`Lesson ${id} has no text in lessons.ts`)
+  for (const id of ids) if (!NAP_TEXTS[id]) console.warn(`Lesson ${id} has no text in lessons.ts`)
 }

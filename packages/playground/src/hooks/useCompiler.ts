@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { loadWasm, compile, isCompilerLoaded } from '@/lib/compiler'
 import { runInWorker, SYNC_TIME_LIMIT_MS, TOTAL_TIME_LIMIT_MS, type LogEntry, type RunEnd } from '@/lib/runner'
 import { parseSourceMap, originalPosition, sourceLinePerGeneratedLine } from '@/lib/sourcemap'
+import type { Message } from '@/lib/i18n'
 
 export type PlaygroundError =
   | { kind: 'compile'; message: string; line?: number; column?: number; suggestion?: string }
   | { kind: 'runtime'; name: string; message: string; line?: number; column?: number }
-  | { kind: 'timeout'; message: string }
-  | { kind: 'load'; message: string }
+  | { kind: 'timeout'; seconds: number }
+  | { kind: 'load' }
 
 interface CompilerState {
   isLoading: boolean
@@ -19,10 +20,11 @@ interface CompilerState {
   consoleLogs: LogEntry[]
   errors: PlaygroundError[]
   /** Muted note shown under the console (stopped, truncated, …) */
-  notice: string
-  compileTime: string
+  notice: Message | null
+  /** Compile time in milliseconds of the last run */
+  compileTime: number | null
   status: 'loading' | 'ready' | 'compiling' | 'running' | 'error'
-  statusText: string
+  statusText: Message
 }
 
 export function useCompiler() {
@@ -30,14 +32,14 @@ export function useCompiler() {
     isLoading: true,
     isWasmLoaded: false,
     version: '0.1.0',
-    jsOutput: '// Press "Run" to compile',
+    jsOutput: '',
     jsLineMap: [],
     consoleLogs: [],
     errors: [],
-    notice: '',
-    compileTime: '',
+    notice: null,
+    compileTime: null,
     status: 'loading',
-    statusText: 'Loading...',
+    statusText: { key: 'status.loading' },
   })
 
   const stopRef = useRef<(() => void) | null>(null)
@@ -51,11 +53,8 @@ export function useCompiler() {
         isWasmLoaded: loaded,
         version: version || '0.1.0',
         status: loaded ? 'ready' : 'error',
-        statusText: loaded ? 'WASM loaded' : 'Compiler failed to load',
-        errors: loaded ? [] : [{
-          kind: 'load',
-          message: 'The FratmScript compiler could not be downloaded. Check your connection and reload the page.',
-        }],
+        statusText: { key: loaded ? 'status.ready' : 'status.loadFailed' },
+        errors: loaded ? [] : [{ kind: 'load' }],
       }))
     })
     return () => stopRef.current?.()
@@ -68,12 +67,11 @@ export function useCompiler() {
     const runId = ++runIdRef.current
 
     const result = compile(source)
-    const compileTime = `Compiled in ${result.compileTime.toFixed(1)}ms`
 
     if (!result.success || !result.code) {
       setState(prev => ({
         ...prev,
-        jsOutput: '// Compilation error',
+        jsOutput: '',
         jsLineMap: [],
         consoleLogs: [],
         errors: [{
@@ -84,10 +82,10 @@ export function useCompiler() {
           column: result.column,
           suggestion: result.suggestion,
         }],
-        notice: '',
-        compileTime: `${result.compileTime.toFixed(1)}ms`,
+        notice: null,
+        compileTime: result.compileTime,
         status: 'error',
-        statusText: 'Compilation error',
+        statusText: { key: 'status.compileError' },
       }))
       return
     }
@@ -104,10 +102,10 @@ export function useCompiler() {
       jsLineMap: sourceMap ? sourceLinePerGeneratedLine(sourceMap) : [],
       consoleLogs: [],
       errors: [],
-      notice: '',
-      compileTime,
+      notice: null,
+      compileTime: result.compileTime,
       status: 'running',
-      statusText: 'Running...',
+      statusText: { key: 'status.running' },
     }))
 
     // Console output can arrive in bursts: flush it once per frame.
@@ -128,7 +126,7 @@ export function useCompiler() {
       },
       onTruncated: limit => {
         if (runId !== runIdRef.current) return
-        setState(prev => ({ ...prev, notice: `Console output truncated after ${limit} messages.` }))
+        setState(prev => ({ ...prev, notice: { key: 'notice.truncated', params: { limit } } }))
       },
       onError: err => {
         if (runId !== runIdRef.current) return
@@ -147,14 +145,11 @@ export function useCompiler() {
           const errors = [...prev.errors]
           let notice = prev.notice
           if (reason === 'sync-timeout') {
-            errors.push({
-              kind: 'timeout',
-              message: `The code ran for more than ${SYNC_TIME_LIMIT_MS / 1000}s without finishing, so it was stopped. Is there an infinite loop?`,
-            })
+            errors.push({ kind: 'timeout', seconds: SYNC_TIME_LIMIT_MS / 1000 })
           } else if (reason === 'async-timeout') {
-            notice = `Stopped after ${TOTAL_TIME_LIMIT_MS / 1000}s: timers or promises were still pending.`
+            notice = { key: 'notice.asyncTimeout', params: { seconds: TOTAL_TIME_LIMIT_MS / 1000 } }
           } else if (reason === 'stopped') {
-            notice = 'Execution stopped.'
+            notice = { key: 'notice.stopped' }
           }
           const failed = errors.length > 0
           return {
@@ -162,11 +157,13 @@ export function useCompiler() {
             errors,
             notice,
             status: failed ? 'error' : 'ready',
-            statusText: failed
-              ? (errors.some(e => e.kind === 'timeout') ? 'Execution timed out' : 'Runtime error')
-              : reason === 'completed'
-                ? 'Done'
-                : 'Stopped',
+            statusText: {
+              key: failed
+                ? (errors.some(e => e.kind === 'timeout') ? 'status.timeout' : 'status.runtimeError')
+                : reason === 'completed'
+                  ? 'status.done'
+                  : 'status.stopped',
+            },
           }
         })
       },
@@ -179,7 +176,7 @@ export function useCompiler() {
   }, [])
 
   const clearConsole = useCallback(() => {
-    setState(prev => ({ ...prev, consoleLogs: [], notice: '' }))
+    setState(prev => ({ ...prev, consoleLogs: [], notice: null }))
   }, [])
 
   return {

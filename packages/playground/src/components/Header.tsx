@@ -2,6 +2,8 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipPopup } from '@/components/ui/tooltip'
 import { GraduationCap, Play, Square } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { LanguageToggle } from '@/components/LanguageToggle'
+import { useI18n } from '@/lib/i18n'
 
 interface HeaderProps {
   onRun: () => void
@@ -41,6 +43,7 @@ function XIcon({ className }: { className?: string }) {
 }
 
 export function Header({ onRun, onStop, onShare, onTour, tourActive, isRunning, disabled }: HeaderProps) {
+  const { t } = useI18n()
   return (
     <header className="flex justify-between items-center gap-3 bg-card px-4 py-3 border-border border-b">
       <div className="flex items-center gap-3 min-w-0">
@@ -55,15 +58,16 @@ export function Header({ onRun, onStop, onShare, onTour, tourActive, isRunning, 
                 size="sm"
                 onClick={onTour}
                 aria-pressed={tourActive}
-                aria-label="'A scola 'e FratmScript"
+                aria-label={t('header.tourLabel')}
               >
                 <GraduationCap className="size-4" />
-                <span className="hidden sm:inline">Scola</span>
+                <span className="hidden sm:inline">{t('header.tour')}</span>
               </Button>
             }
           />
-          <TooltipPopup>{tourActive ? "Esci d'a scola" : "'A scola 'e FratmScript: impara passo passo"}</TooltipPopup>
+          <TooltipPopup>{t(tourActive ? 'header.tourExit' : 'header.tourOpen')}</TooltipPopup>
         </Tooltip>
+        <LanguageToggle />
         <ThemeToggle />
         <div className="hidden sm:flex items-center gap-1">
           <Tooltip>
@@ -74,13 +78,13 @@ export function Header({ onRun, onStop, onShare, onTour, tourActive, isRunning, 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:bg-accent p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="View on GitHub"
+                  aria-label={t('header.github')}
                 >
                   <GitHubIcon className="size-4" />
                 </a>
               }
             />
-            <TooltipPopup>Star this repo 🤌🏻</TooltipPopup>
+            <TooltipPopup>{t('header.githubTip')}</TooltipPopup>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger
@@ -96,7 +100,7 @@ export function Header({ onRun, onStop, onShare, onTour, tourActive, isRunning, 
                 </a>
               }
             />
-            <TooltipPopup>Made with love by @kkratter 🤍</TooltipPopup>
+            <TooltipPopup>{t('header.linkedinTip')}</TooltipPopup>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger
@@ -112,14 +116,14 @@ export function Header({ onRun, onStop, onShare, onTour, tourActive, isRunning, 
                 </a>
               }
             />
-            <TooltipPopup>Follow for updates 👀</TooltipPopup>
+            <TooltipPopup>{t('header.xTip')}</TooltipPopup>
           </Tooltip>
         </div>
         <div className="flex items-center gap-1.5">
           {isRunning ? (
             <Button variant="destructive" onClick={onStop}>
               <Square className="size-3.5 fill-current" />
-              Stop
+              {t('header.stop')}
             </Button>
           ) : (
             <Tooltip>
@@ -127,16 +131,16 @@ export function Header({ onRun, onStop, onShare, onTour, tourActive, isRunning, 
                 render={
                   <Button onClick={onRun} disabled={disabled}>
                     <Play className="size-3.5 fill-current" />
-                    Run
+                    {t('header.run')}
                     <kbd className="hidden sm:inline opacity-70 ml-1 font-sans text-xs">{runShortcut}</kbd>
                   </Button>
                 }
               />
-              <TooltipPopup>Run code ({runShortcut})</TooltipPopup>
+              <TooltipPopup>{t('header.runTip', { shortcut: runShortcut })}</TooltipPopup>
             </Tooltip>
           )}
           <Button variant="outline" onClick={onShare}>
-            Share
+            {t('header.share')}
           </Button>
         </div>
       </div>

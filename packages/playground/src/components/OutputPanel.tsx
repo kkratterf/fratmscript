@@ -5,12 +5,13 @@ import { CircleAlert, TriangleAlert, ChevronRight, Timer, Ban, Copy, Check, Link
 import { useState } from 'react'
 import { ValueTree, isExpandable } from '@/components/ValueTree'
 import { translateRuntimeError } from '@/lib/compiler'
+import { useI18n, type Message, type MessageKey } from '@/lib/i18n'
 
 interface OutputPanelProps {
   jsOutput: string
   consoleLogs: LogEntry[]
   errors: PlaygroundError[]
-  notice: string
+  notice: Message | null
   isRunning: boolean
   onErrorClick: (line: number, column?: number) => void
   onClearConsole: () => void
@@ -24,11 +25,11 @@ interface OutputPanelProps {
   stale?: boolean
 }
 
-const ERROR_TITLES: Record<PlaygroundError['kind'], string> = {
-  compile: 'Compilation error',
-  runtime: 'Runtime error',
-  timeout: 'Execution timed out',
-  load: 'Compiler not available',
+const ERROR_TITLES: Record<PlaygroundError['kind'], MessageKey> = {
+  compile: 'error.compile',
+  runtime: 'error.runtime',
+  timeout: 'error.timeout',
+  load: 'error.load',
 }
 
 /**
@@ -42,6 +43,7 @@ function MappedJs({ code, lineMap, cursorLine, onLineClick }: {
   cursorLine: number
   onLineClick: (line: number) => void
 }) {
+  const { t } = useI18n()
   const lines = code.replace(/\n$/, '').split('\n')
   // Unmapped lines (closing braces) belong to the nearest mapped line above
   let owner: number | null = null
@@ -60,7 +62,7 @@ function MappedJs({ code, lineMap, cursorLine, onLineClick }: {
               src === cursorLine && 'bg-primary/10',
             )}
           >
-            <span className="w-6 text-muted-foreground/60 text-xs text-right select-none shrink-0" title={src !== null ? `From line ${src}` : undefined}>
+            <span className="w-6 text-muted-foreground/60 text-xs text-right select-none shrink-0" title={src !== null ? t('output.fromLine', { line: src }) : undefined}>
               {lineMap[i] ?? ''}
             </span>
             <span className="flex-1 min-w-0">{text || ' '}</span>
@@ -96,6 +98,7 @@ function SectionAction({ onClick, disabled, pressed, icon, label }: {
 }
 
 function CopyButton({ text }: { text: string }) {
+  const { t } = useI18n()
   const [copied, setCopied] = useState(false)
   const copy = () => {
     navigator.clipboard.writeText(text).then(() => {
@@ -106,9 +109,9 @@ function CopyButton({ text }: { text: string }) {
   return (
     <SectionAction
       onClick={copy}
-      disabled={!text || text.startsWith('// ')}
+      disabled={!text}
       icon={copied ? <Check className="size-3" /> : <Copy className="size-3" />}
-      label={copied ? 'Copied' : 'Copy JS'}
+      label={t(copied ? 'output.copied' : 'output.copyJs')}
     />
   )
 }
@@ -116,7 +119,14 @@ function CopyButton({ text }: { text: string }) {
 function ErrorCard({ error, onErrorClick }: { error: PlaygroundError; onErrorClick: OutputPanelProps['onErrorClick'] }) {
   const line = error.kind === 'compile' || error.kind === 'runtime' ? error.line : undefined
   const column = error.kind === 'compile' || error.kind === 'runtime' ? error.column : undefined
-  const message = error.kind === 'runtime' ? translateRuntimeError(error.name, error.message) : error.message
+  const { t } = useI18n()
+  const message = error.kind === 'runtime'
+    ? translateRuntimeError(error.name, error.message)
+    : error.kind === 'timeout'
+      ? t('error.timeoutMessage', { seconds: error.seconds })
+      : error.kind === 'load'
+        ? t('error.loadMessage')
+        : error.message
   const Icon = error.kind === 'timeout' ? Timer : CircleAlert
 
   return (
@@ -125,7 +135,7 @@ function ErrorCard({ error, onErrorClick }: { error: PlaygroundError; onErrorCli
         <Icon className="mt-0.5 w-5 h-5 text-destructive shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="mb-1 font-medium text-destructive/80 text-xs uppercase tracking-wider">
-            {ERROR_TITLES[error.kind]}
+            {t(ERROR_TITLES[error.kind])}
           </div>
           <div className="font-semibold text-destructive break-words">
             {message}
@@ -136,7 +146,7 @@ function ErrorCard({ error, onErrorClick }: { error: PlaygroundError; onErrorCli
               onClick={() => onErrorClick(line, column)}
               className="mt-1 text-muted-foreground hover:text-foreground text-sm underline underline-offset-2 decoration-dotted cursor-pointer"
             >
-              Line {line}{column !== undefined && `, column ${column}`}
+              {column !== undefined ? t('output.lineColumn', { line, column }) : t('output.line', { line })}
             </button>
           )}
         </div>
@@ -154,6 +164,7 @@ function ErrorCard({ error, onErrorClick }: { error: PlaygroundError; onErrorCli
 }
 
 export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, onErrorClick, onClearConsole, jsLineMap, cursorLine, show = 'all', stale = false }: OutputPanelProps) {
+  const { t } = useI18n()
   const [mapLines, setMapLines] = useState(false)
   const canMap = jsLineMap.some(line => line !== null)
   const showConsole = show !== 'js'
@@ -161,7 +172,7 @@ export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, 
   return (
     <div
       className={cn('flex flex-col h-full transition-opacity duration-200', stale && 'opacity-60')}
-      title={stale ? 'The code changed since this output was produced' : undefined}
+      title={stale ? t('output.stale') : undefined}
     >
       {/* Errors first: they are what you need to see */}
       {showConsole && errors.length > 0 && (
@@ -178,14 +189,14 @@ export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, 
           <div className="flex justify-between items-center mb-3">
             <h3 className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider">
               <span className={cn('bg-info rounded-full w-2 h-2', isRunning && 'animate-pulse')} />
-              Console
-              {isRunning && <span className="normal-case tracking-normal">running…</span>}
+              {t('output.console')}
+              {isRunning && <span className="normal-case tracking-normal">{t('output.running')}</span>}
             </h3>
             <SectionAction
               onClick={onClearConsole}
               disabled={consoleLogs.length === 0 && !notice}
               icon={<Ban className="size-3" />}
-              label="Clear"
+              label={t('output.clear')}
             />
           </div>
           <div className="bg-card/50 border border-border rounded-md overflow-hidden font-mono text-sm">
@@ -225,12 +236,12 @@ export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, 
               ))
             ) : (
               <div className="px-3 py-4 text-muted-foreground/50 text-center">
-                {isRunning ? 'Waiting for output…' : 'No console output'}
+                {t(isRunning ? 'output.waiting' : 'output.empty')}
               </div>
             )}
             {notice && (
               <div className="px-3 py-1.5 border-border/50 border-t text-muted-foreground text-xs italic">
-                {notice}
+                {t(notice.key, notice.params)}
               </div>
             )}
           </div>
@@ -243,7 +254,7 @@ export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, 
           <div className="flex justify-between items-center mb-3">
             <h3 className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider">
               <span className="bg-success rounded-full w-2 h-2" />
-              Generated JavaScript
+              {t('output.js')}
             </h3>
             <div className="flex items-center gap-1">
               <SectionAction
@@ -251,7 +262,7 @@ export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, 
                 disabled={!canMap}
                 pressed={mapLines}
                 icon={<Link2 className="size-3" />}
-                label="Map lines"
+                label={t('output.mapLines')}
               />
               <CopyButton text={jsOutput} />
             </div>
@@ -260,7 +271,7 @@ export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, 
             <MappedJs code={jsOutput} lineMap={jsLineMap} cursorLine={cursorLine} onLineClick={onErrorClick} />
           ) : (
             <pre className="bg-card/50 p-3 border border-border rounded-md font-mono text-foreground/90 text-sm break-words leading-relaxed whitespace-pre-wrap">
-              {jsOutput || <span className="text-muted-foreground/50">// Run code to see output</span>}
+              {jsOutput || <span className="text-muted-foreground/50">{t('output.jsPlaceholder')}</span>}
             </pre>
           )}
         </section>

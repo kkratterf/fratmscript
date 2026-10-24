@@ -21,6 +21,7 @@ import { buildShareUrl, readSharedCode, loadSavedCode, saveCode } from '@/lib/sh
 import { lessons } from '@/lib/lessons'
 import { LessonPanel } from '@/components/LessonPanel'
 import type { LogValue } from '@/lib/runner'
+import { useI18n } from '@/lib/i18n'
 
 const EXAMPLE_TITLES: Record<string, string> = Object.fromEntries(
   exampleList.map(example => [example.id, `${example.id}.fratm`]),
@@ -96,6 +97,7 @@ function App() {
   const [code, setCode] = useState(initial.code)
   const [selectedExample, setSelectedExample] = useState(initial.example)
   const compiler = useCompiler()
+  const { t } = useI18n()
   const editorRef = useRef<EditorHandle>(null)
   const isRunning = compiler.status === 'running'
   const isMobile = useMediaQuery('(max-width: 767px)')
@@ -224,18 +226,18 @@ function App() {
 
     navigator.clipboard.writeText(url).then(() => {
       toastManager.add({
-        title: 'Link copied!',
-        description: 'Share this link with others to share your code.',
+        title: t('share.copied'),
+        description: t('share.copiedDesc'),
         type: 'success',
       })
     }).catch(() => {
       toastManager.add({
-        title: 'Copy failed',
+        title: t('share.failed'),
         description: url,
         type: 'error',
       })
     })
-  }, [code])
+  }, [code, t])
 
   const handleExampleChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const name = e.target.value
@@ -297,7 +299,7 @@ function App() {
             <div className="flex justify-between items-center bg-card px-4 py-2.5 border-border border-b shrink-0">
               <span className="font-medium text-muted-foreground text-sm truncate">
                 {lesson ? `scola/${lesson.id}.fratm` : EXAMPLE_TITLES[selectedExample] ?? 'main.fratm'}
-                {selectedExample === 'custom' && <span className="ml-1.5 text-xs">(edited)</span>}
+                {selectedExample === 'custom' && <span className="ml-1.5 text-xs">{t('editor.edited')}</span>}
               </span>
               <Badge className="px-1 font-mono" variant="outline">{compiler.version}</Badge>
             </div>
@@ -316,14 +318,14 @@ function App() {
             {/* Sticky examples bar */}
             <div className="flex items-center justify-between gap-2 bg-card px-4 py-2.5 border-border border-t shrink-0">
               <div className={cn('flex items-center gap-3 min-w-0', lesson && 'invisible')}>
-                <label className="text-muted-foreground text-xs">Examples:</label>
+                <label className="text-muted-foreground text-xs">{t('editor.examples')}</label>
                 <NativeSelect
                   value={selectedExample}
                   onChange={handleExampleChange}
                   className="w-44 sm:w-52"
                 >
-                  <option value="">-- Choose an example --</option>
-                  {selectedExample === 'custom' && <option value="custom" disabled>Custom code</option>}
+                  <option value="">{t('editor.chooseExample')}</option>
+                  {selectedExample === 'custom' && <option value="custom" disabled>{t('editor.custom')}</option>}
                   {exampleList.map(example => (
                     <option key={example.id} value={example.id}>{example.title}</option>
                   ))}
@@ -337,7 +339,7 @@ function App() {
                     onChange={handleAutoRunChange}
                     className="accent-primary size-3.5"
                   />
-                  Auto-run
+                  {t('editor.autoRun')}
                 </label>
                 <Tooltip>
                   <TooltipTrigger
@@ -345,7 +347,7 @@ function App() {
                       <Button
                         variant="outline"
                         size="icon-sm"
-                        aria-label="Format code"
+                        aria-label={t('editor.format')}
                         onClick={handleFormat}
                         disabled={compiler.isLoading}
                       >
@@ -353,7 +355,7 @@ function App() {
                       </Button>
                     }
                   />
-                  <TooltipPopup>Format code (Shift+Alt+F)</TooltipPopup>
+                  <TooltipPopup>{t('editor.formatTip')}</TooltipPopup>
                 </Tooltip>
                 <SyntaxHelp onInsert={handleInsert} />
               </div>
@@ -371,7 +373,7 @@ function App() {
           >
             {/* Sticky output header */}
             <div className="hidden md:flex items-center bg-card px-4 py-2.5 border-border border-b shrink-0">
-              <span className="font-medium text-foreground text-sm">Output</span>
+              <span className="font-medium text-foreground text-sm">{t('output.title')}</span>
             </div>
             {/* Scrollable output content */}
             <div className="flex-1 bg-background min-h-0 overflow-auto">
@@ -396,9 +398,9 @@ function App() {
         <StatusBar
           status={isStale && !isRunning ? 'stale' : compiler.status}
           statusText={isStale && !isRunning
-            ? (autoRun ? 'Code changed, updating…' : 'Code changed: output is out of date, press Run')
-            : compiler.statusText}
-          compileTime={compiler.compileTime}
+            ? t(autoRun ? 'status.staleAuto' : 'status.staleManual')
+            : t(compiler.statusText.key, compiler.statusText.params)}
+          compileTime={compiler.compileTime === null ? '' : t('status.compiledIn', { ms: compiler.compileTime.toFixed(1) })}
         />
       </div>
     </ToastProvider>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n, type Lang } from '@/lib/i18n'
 import {
   Dialog,
   DialogTrigger,
@@ -21,103 +22,106 @@ function HelpIcon({ className }: { className?: string }) {
   )
 }
 
+type Localized = Record<Lang, string>
+
 interface SyntaxItem {
   fratm: string
   js: string
-  desc: string
+  desc: Localized
   /** Text inserted on click, when it differs from `fratm` */
   insert?: string
 }
 
-const syntaxReference: { category: string; items: SyntaxItem[] }[] = [
-  { category: 'Variables', items: [
-    { fratm: 'chist è', js: 'const', desc: 'Constant declaration', insert: 'chist è ' },
-    { fratm: 'tien', js: 'let', desc: 'Variable declaration' },
-    { fratm: 'tien x = 1, y = 2', js: 'let x = 1, y = 2', desc: 'Several declarations' },
+const syntaxReference: { category: Localized; items: SyntaxItem[] }[] = [
+  { category: { en: 'Variables', nap: 'Variabili' }, items: [
+    { fratm: 'chist è', js: 'const', desc: { en: 'Constant declaration', nap: 'Costante: nun cagna maje' }, insert: 'chist è ' },
+    { fratm: 'tien', js: 'let', desc: { en: 'Variable declaration', nap: 'Variabile ca pò cagnà' } },
+    { fratm: 'tien x = 1, y = 2', js: 'let x = 1, y = 2', desc: { en: 'Several declarations', nap: "Cchiù variabili int'na botta" } },
   ]},
-  { category: 'Functions', items: [
-    { fratm: 'facc', js: 'function', desc: 'Function declaration' },
-    { fratm: 'piglie', js: 'return', desc: 'Return statement' },
-    { fratm: 'mo vir facc', js: 'async function', desc: 'Async function' },
-    { fratm: 'facc* f() { caccia 1 }', js: 'function* f() { yield 1 }', desc: 'Generator' },
-    { fratm: 'caccia* altri()', js: 'yield* altri()', desc: 'Delegate to another generator' },
-    { fratm: '(a, b) => a + b', js: '(a, b) => a + b', desc: 'Arrow function' },
-    { fratm: 'mo vir (x) => …', js: 'async (x) => …', desc: 'Async arrow function', insert: 'mo vir (x) => ' },
-    { fratm: 'facc f(a = 1, ...resto)', js: 'function f(a = 1, ...resto)', desc: 'Default and rest parameters' },
-    { fratm: '[...a]  { ...o }  f(...xs)', js: '[...a]  { ...o }  f(...xs)', desc: 'Spread', insert: '...' },
-    { fratm: 'chist è { a, b: x, ...r } = o', js: 'const { a, b: x, ...r } = o', desc: 'Object destructuring' },
-    { fratm: 'tien [primo, ...ato] = xs', js: 'let [primo, ...ato] = xs', desc: 'Array destructuring' },
-    { fratm: '{ nome, [k]: v, saluta() { } }', js: '{ nome, [k]: v, saluta() { } }', desc: 'Object shorthand, computed keys, methods', insert: '{ }' },
-    { fratm: 'aspett', js: 'await', desc: 'Await expression' },
+  { category: { en: 'Functions', nap: 'Funzioni' }, items: [
+    { fratm: 'facc', js: 'function', desc: { en: 'Function declaration', nap: 'Funzione' } },
+    { fratm: 'piglie', js: 'return', desc: { en: 'Return statement', nap: "Dà 'o valore e esce d'a funzione" } },
+    { fratm: 'mo vir facc', js: 'async function', desc: { en: 'Async function', nap: 'Funzione asincrona' } },
+    { fratm: 'facc* f() { caccia 1 }', js: 'function* f() { yield 1 }', desc: { en: 'Generator', nap: 'Generatore' } },
+    { fratm: 'caccia* altri()', js: 'yield* altri()', desc: { en: 'Delegate to another generator', nap: "Passa a n'ato generatore" } },
+    { fratm: '(a, b) => a + b', js: '(a, b) => a + b', desc: { en: 'Arrow function', nap: 'Funzione a freccia' } },
+    { fratm: 'mo vir (x) => …', js: 'async (x) => …', desc: { en: 'Async arrow function', nap: 'Freccia asincrona' }, insert: 'mo vir (x) => ' },
+    { fratm: 'facc f(a = 1, ...resto)', js: 'function f(a = 1, ...resto)', desc: { en: 'Default and rest parameters', nap: "Parametri cu valore 'e default e resto" } },
+    { fratm: '[...a]  { ...o }  f(...xs)', js: '[...a]  { ...o }  f(...xs)', desc: { en: 'Spread', nap: "Spanne 'e elementi" }, insert: '...' },
+    { fratm: 'chist è { a, b: x, ...r } = o', js: 'const { a, b: x, ...r } = o', desc: { en: 'Object destructuring', nap: "Destructuring 'e n'oggetto" } },
+    { fratm: 'tien [primo, ...ato] = xs', js: 'let [primo, ...ato] = xs', desc: { en: 'Array destructuring', nap: "Destructuring 'e na lista" } },
+    { fratm: '{ nome, [k]: v, saluta() { } }', js: '{ nome, [k]: v, saluta() { } }', desc: { en: 'Object shorthand, computed keys, methods', nap: 'Oggetti: nomme curte, chiave calcolate, metodi' }, insert: '{ }' },
+    { fratm: 'aspett', js: 'await', desc: { en: 'Await expression', nap: 'Aspetta na promise' } },
   ]},
-  { category: 'Control Flow', items: [
-    { fratm: 'si', js: 'if', desc: 'If condition' },
-    { fratm: 'sinnò', js: 'else', desc: 'Else branch' },
-    { fratm: 'vedimm (x) { caso 1: … predefinit: … }', js: 'switch (x) { case 1: … default: … }', desc: 'Switch', insert: 'vedimm (x) {\n  caso 1:\n    rompe\n  predefinit:\n}' },
-    { fratm: 'mentre che', js: 'while', desc: 'While loop' },
-    { fratm: 'primm fa { } mentre che (c)', js: 'do { } while (c)', desc: 'Do...while loop' },
-    { fratm: 'pe', js: 'for', desc: 'For loop' },
-    { fratm: 'pe ogni (chist è x dint xs)', js: 'for (const x of xs)', desc: 'For...of loop' },
-    { fratm: "pe ogni (tien k 'ncopp o)", js: 'for (let k in o)', desc: 'For...in loop' },
-    { fratm: 'pe aspett (… dint …)', js: 'for await (… of …)', desc: 'Async iteration', insert: 'pe aspett (chist è x dint xs) { }' },
-    { fratm: 'rompe', js: 'break', desc: 'Break loop' },
-    { fratm: 'salta', js: 'continue', desc: 'Continue loop' },
+  { category: { en: 'Control Flow', nap: 'Cuntrollo' }, items: [
+    { fratm: 'si', js: 'if', desc: { en: 'If condition', nap: "Si 'a condizione è vera" } },
+    { fratm: 'sinnò', js: 'else', desc: { en: 'Else branch', nap: "Sinnò: quanno nun è vero" } },
+    { fratm: 'vedimm (x) { caso 1: … predefinit: … }', js: 'switch (x) { case 1: … default: … }', desc: { en: 'Switch', nap: 'Sceglie tra cchiù casi' }, insert: 'vedimm (x) {\n  caso 1:\n    rompe\n  predefinit:\n}' },
+    { fratm: 'mentre che', js: 'while', desc: { en: 'While loop', nap: 'Ripete fino a quanno è vero' } },
+    { fratm: 'primm fa { } mentre che (c)', js: 'do { } while (c)', desc: { en: 'Do...while loop', nap: "Fa primma, po' ripete" } },
+    { fratm: 'pe', js: 'for', desc: { en: 'For loop', nap: 'Ripete cuntanno' } },
+    { fratm: 'pe ogni (chist è x dint xs)', js: 'for (const x of xs)', desc: { en: 'For...of loop', nap: "Passa 'e elementi uno a uno" } },
+    { fratm: "pe ogni (tien k 'ncopp o)", js: 'for (let k in o)', desc: { en: 'For...in loop', nap: "Passa 'e chiave 'e n'oggetto" } },
+    { fratm: 'pe aspett (… dint …)', js: 'for await (… of …)', desc: { en: 'Async iteration', nap: "Passa 'e elementi aspettanno" }, insert: 'pe aspett (chist è x dint xs) { }' },
+    { fratm: 'rompe', js: 'break', desc: { en: 'Break loop', nap: "Esce d'o ciclo" } },
+    { fratm: 'salta', js: 'continue', desc: { en: 'Continue loop', nap: "Zompa a 'o giro appriesso" } },
   ]},
-  { category: 'Classes', items: [
-    { fratm: 'na famiglie', js: 'class', desc: 'Class declaration' },
-    { fratm: 'nu bell', js: 'new', desc: 'New instance' },
-    { fratm: 'stu cos', js: 'this', desc: 'This reference' },
-    { fratm: 'costruttore', js: 'constructor', desc: 'Constructor method' },
-    { fratm: 'damme x() { }', js: 'get x() { }', desc: 'Getter' },
-    { fratm: 'miette x(v) { }', js: 'set x(v) { }', desc: 'Setter' },
-    { fratm: 'conteggio = 0  #segreto', js: 'conteggio = 0  #segreto', desc: 'Fields and private members' },
+  { category: { en: 'Classes', nap: 'Classi' }, items: [
+    { fratm: 'na famiglie', js: 'class', desc: { en: 'Class declaration', nap: 'Classe' } },
+    { fratm: 'nu bell', js: 'new', desc: { en: 'New instance', nap: 'Oggetto nuovo' } },
+    { fratm: 'stu cos', js: 'this', desc: { en: 'This reference', nap: "L'oggetto stesso" } },
+    { fratm: 'costruttore', js: 'constructor', desc: { en: 'Constructor method', nap: "Prepara l'oggetto" } },
+    { fratm: 'damme x() { }', js: 'get x() { }', desc: { en: 'Getter', nap: 'Getter' } },
+    { fratm: 'miette x(v) { }', js: 'set x(v) { }', desc: { en: 'Setter', nap: 'Setter' } },
+    { fratm: 'conteggio = 0  #segreto', js: 'conteggio = 0  #segreto', desc: { en: 'Fields and private members', nap: 'Campi e membri privati' } },
   ]},
-  { category: 'Values', items: [
-    { fratm: 'overo', js: 'true', desc: 'Boolean true' },
-    { fratm: 'sfòls', js: 'false', desc: 'Boolean false' },
-    { fratm: 'nisciun', js: 'null', desc: 'Null value' },
-    { fratm: 'boh', js: 'undefined', desc: 'Undefined value' },
-    { fratm: '`Uè ${nome}!`', js: '`Uè ${nome}!`', desc: 'Template literal' },
-    { fratm: '/ab+/gi', js: '/ab+/gi', desc: 'Regex literal' },
+  { category: { en: 'Values', nap: 'Valori' }, items: [
+    { fratm: 'overo', js: 'true', desc: { en: 'Boolean true', nap: 'Vero' } },
+    { fratm: 'sfòls', js: 'false', desc: { en: 'Boolean false', nap: 'Falso' } },
+    { fratm: 'nisciun', js: 'null', desc: { en: 'Null value', nap: 'Niente' } },
+    { fratm: 'boh', js: 'undefined', desc: { en: 'Undefined value', nap: 'Nun definito' } },
+    { fratm: '`Uè ${nome}!`', js: '`Uè ${nome}!`', desc: { en: 'Template literal', nap: 'Template' } },
+    { fratm: '/ab+/gi', js: '/ab+/gi', desc: { en: 'Regex literal', nap: 'Espressione regolare' } },
   ]},
-  { category: 'Operators', items: [
-    { fratm: 'e / pure', js: '&&', desc: 'Logical AND', insert: 'e' },
-    { fratm: 'o', js: '||', desc: 'Logical OR' },
-    { fratm: 'no / manco', js: '!', desc: 'Logical NOT', insert: 'no ' },
-    { fratm: 'x += 1', js: 'x += 1', desc: 'Compound assignment (also -= *= /= %= **= ??= ||= &&=)' },
-    { fratm: 'i++ / i--', js: 'i++ / i--', desc: 'Increment / decrement', insert: 'i++' },
-    { fratm: 'a ?? b', js: 'a ?? b', desc: 'Nullish coalescing' },
-    { fratm: 'a?.b  a?.[k]  f?.()', js: 'a?.b  a?.[k]  f?.()', desc: 'Optional chaining' },
+  { category: { en: 'Operators', nap: 'Operatori' }, items: [
+    { fratm: 'e / pure', js: '&&', desc: { en: 'Logical AND', nap: 'E' }, insert: 'e' },
+    { fratm: 'o', js: '||', desc: { en: 'Logical OR', nap: 'O' } },
+    { fratm: 'no / manco', js: '!', desc: { en: 'Logical NOT', nap: 'No' }, insert: 'no ' },
+    { fratm: 'x += 1', js: 'x += 1', desc: { en: 'Compound assignment (also -= *= /= %= **= ??= ||= &&=)', nap: 'Assegnazione composta (pure -= *= /= %= **= ??= ||= &&=)' } },
+    { fratm: 'i++ / i--', js: 'i++ / i--', desc: { en: 'Increment / decrement', nap: "Aumenta / scala 'e uno" }, insert: 'i++' },
+    { fratm: 'a ?? b', js: 'a ?? b', desc: { en: 'Nullish coalescing', nap: "Valore 'e riserva si è nisciun o boh" } },
+    { fratm: 'a?.b  a?.[k]  f?.()', js: 'a?.b  a?.[k]  f?.()', desc: { en: 'Optional chaining', nap: 'Accesso sicuro' } },
   ]},
-  { category: 'Console', items: [
-    { fratm: 'stamm a dì', js: 'console.log', desc: 'Log output', insert: 'stamm a dì()' },
-    { fratm: 'avvis a dì', js: 'console.warn', desc: 'Warning output' },
-    { fratm: 'scrive a dì', js: 'console.error', desc: 'Error output' },
+  { category: { en: 'Console', nap: 'Console' }, items: [
+    { fratm: 'stamm a dì', js: 'console.log', desc: { en: 'Log output', nap: 'Stampa' }, insert: 'stamm a dì()' },
+    { fratm: 'avvis a dì', js: 'console.warn', desc: { en: 'Warning output', nap: "Stampa n'avviso" } },
+    { fratm: 'scrive a dì', js: 'console.error', desc: { en: 'Error output', nap: "Stampa n'errore" } },
   ]},
-  { category: 'Error Handling', items: [
-    { fratm: 'pruvamm', js: 'try', desc: 'Try block' },
-    { fratm: 'e si schiatta', js: 'catch', desc: 'Catch block' },
-    { fratm: 'aropp', js: 'finally', desc: 'Always runs after try/catch' },
-    { fratm: 'iett', js: 'throw', desc: 'Throw error' },
+  { category: { en: 'Error Handling', nap: 'Errori' }, items: [
+    { fratm: 'pruvamm', js: 'try', desc: { en: 'Try block', nap: 'Prova' } },
+    { fratm: 'e si schiatta', js: 'catch', desc: { en: 'Catch block', nap: "Acchiappa l'errore" } },
+    { fratm: 'aropp', js: 'finally', desc: { en: 'Always runs after try/catch', nap: 'Gira sempe doppo try/catch' } },
+    { fratm: 'iett', js: 'throw', desc: { en: 'Throw error', nap: "Lancia n'errore" } },
   ]},
-  { category: 'Modules', items: [
-    { fratm: 'chiamm ... da', js: 'import ... from', desc: 'Import module', insert: 'chiamm {  } da ""' },
-    { fratm: 'mann for', js: 'export', desc: 'Export' },
+  { category: { en: 'Modules', nap: 'Moduli' }, items: [
+    { fratm: 'chiamm ... da', js: 'import ... from', desc: { en: 'Import module', nap: 'Chiamma nu modulo' }, insert: 'chiamm {  } da ""' },
+    { fratm: 'mann for', js: 'export', desc: { en: 'Export', nap: 'Esporta' } },
   ]},
 ]
 
-function matches(item: SyntaxItem, query: string) {
+function matches(item: SyntaxItem, query: string, lang: Lang) {
   const q = query.trim().toLowerCase()
-  return !q || [item.fratm, item.js, item.desc].some(text => text.toLowerCase().includes(q))
+  return !q || [item.fratm, item.js, item.desc[lang]].some(text => text.toLowerCase().includes(q))
 }
 
 export function SyntaxHelp({ onInsert }: { onInsert: (text: string) => void }) {
+  const { lang, t } = useI18n()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
 
   const sections = useMemo(() => syntaxReference
-    .map(section => ({ ...section, items: section.items.filter(item => matches(item, query)) }))
-    .filter(section => section.items.length > 0), [query])
+    .map(section => ({ ...section, items: section.items.filter(item => matches(item, query, lang)) }))
+    .filter(section => section.items.length > 0), [query, lang])
 
   const insert = (item: SyntaxItem) => {
     setOpen(false)
@@ -128,16 +132,16 @@ export function SyntaxHelp({ onInsert }: { onInsert: (text: string) => void }) {
     <Dialog open={open} onOpenChange={(next) => { setOpen(next); if (!next) setQuery('') }}>
       <DialogTrigger
         render={
-          <Button variant="outline" size="icon-sm" aria-label="Syntax Help">
+          <Button variant="outline" size="icon-sm" aria-label={t('syntax.button')}>
             <HelpIcon className="size-3.5" />
           </Button>
         }
       />
       <DialogPopup className="flex flex-col max-w-2xl max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle>FratmScript syntax reference</DialogTitle>
+          <DialogTitle>{t('syntax.title')}</DialogTitle>
           <DialogDescription>
-            Neapolitan dialect to JavaScript translation. Click a row to insert it in the editor.
+            {t('syntax.description')}
           </DialogDescription>
           <div className="relative mt-3">
             <Search className="top-1/2 left-2.5 absolute size-4 text-muted-foreground -translate-y-1/2 pointer-events-none" />
@@ -145,8 +149,8 @@ export function SyntaxHelp({ onInsert }: { onInsert: (text: string) => void }) {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search: if, stamm, console…"
-              aria-label="Search the syntax reference"
+              placeholder={t('syntax.search')}
+              aria-label={t('syntax.searchLabel')}
               className="bg-secondary py-1.5 pr-3 pl-8 border border-input rounded-lg focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 w-full text-sm"
               autoFocus
             />
@@ -154,18 +158,18 @@ export function SyntaxHelp({ onInsert }: { onInsert: (text: string) => void }) {
         </DialogHeader>
         <DialogPanel className="space-y-6">
           {sections.length === 0 && (
-            <p className="py-6 text-muted-foreground text-sm text-center">Nothing matches “{query}”.</p>
+            <p className="py-6 text-muted-foreground text-sm text-center">{t('syntax.nothing', { query })}</p>
           )}
           {sections.map((section) => (
-            <div key={section.category}>
-              <h3 className="mb-2 font-semibold text-foreground text-sm">{section.category}</h3>
+            <div key={section.category.en}>
+              <h3 className="mb-2 font-semibold text-foreground text-sm">{section.category[lang]}</h3>
               <div className="border rounded-md overflow-hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
                       <th className="px-3 py-2 font-medium text-muted-foreground text-left">FratmScript</th>
                       <th className="px-3 py-2 font-medium text-muted-foreground text-left">JavaScript</th>
-                      <th className="hidden sm:table-cell px-3 py-2 font-medium text-muted-foreground text-left">Description</th>
+                      <th className="hidden sm:table-cell px-3 py-2 font-medium text-muted-foreground text-left">{t('syntax.description.column')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -180,13 +184,13 @@ export function SyntaxHelp({ onInsert }: { onInsert: (text: string) => void }) {
                             type="button"
                             className="font-mono text-left cursor-pointer"
                             onClick={(e) => { e.stopPropagation(); insert(item) }}
-                            aria-label={`Insert ${item.fratm}`}
+                            aria-label={t('syntax.insert', { code: item.fratm })}
                           >
                             {item.fratm}
                           </button>
                         </td>
                         <td className="px-3 py-2 font-mono text-muted-foreground">{item.js}</td>
-                        <td className="hidden sm:table-cell px-3 py-2 text-muted-foreground">{item.desc}</td>
+                        <td className="hidden sm:table-cell px-3 py-2 text-muted-foreground">{item.desc[lang]}</td>
                       </tr>
                     ))}
                   </tbody>

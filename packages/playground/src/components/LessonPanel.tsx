@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button'
 import { NativeSelect } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import type { Lesson } from '@/lib/lessons'
+import { useI18n } from '@/lib/i18n'
 import { ChevronLeft, ChevronRight, CircleCheck, Lightbulb, RotateCcw, X } from 'lucide-react'
 import { Fragment } from 'react'
 
@@ -37,26 +38,28 @@ function RichText({ text }: { text: string }) {
 }
 
 export function LessonPanel({ lessons, index, completed, onSelect, onExit, onReset, onShowSolution }: LessonPanelProps) {
+  const { lang, t } = useI18n()
   const lesson = lessons[index]
+  const text = lesson.text[lang]
   const done = completed.has(lesson.id)
   const isLast = index === lessons.length - 1
 
   return (
-    <section aria-label="Lezione" className="flex flex-col bg-card border-border border-b max-h-[60%] md:max-h-[55%] shrink-0">
+    <section aria-label={t('lesson.label')} className="flex flex-col bg-card border-border border-b max-h-[60%] md:max-h-[55%] shrink-0">
       <div className="flex justify-between items-center gap-2 px-4 pt-3 shrink-0">
         <NativeSelect
-          aria-label="Indice d'e lezioni"
+          aria-label={t('lesson.index')}
           value={String(index)}
           onChange={e => onSelect(Number(e.target.value))}
           className="w-60 max-w-[80%]"
         >
           {lessons.map((l, i) => (
             <option key={l.id} value={i}>
-              {completed.has(l.id) ? '✓ ' : ''}{i + 1}. {l.title}
+              {completed.has(l.id) ? '✓ ' : ''}{i + 1}. {l.text[lang].title}
             </option>
           ))}
         </NativeSelect>
-        <Button variant="ghost" size="icon-sm" aria-label="Esci d'a scola" onClick={onExit}>
+        <Button variant="ghost" size="icon-sm" aria-label={t('lesson.exit')} onClick={onExit}>
           <X className="size-4" />
         </Button>
       </div>
@@ -64,9 +67,9 @@ export function LessonPanel({ lessons, index, completed, onSelect, onExit, onRes
       <div className="flex-1 space-y-2 px-4 py-3 min-h-0 overflow-auto text-sm leading-relaxed">
         <h2 className="font-semibold text-base text-foreground">
           <span className="mr-1.5 text-muted-foreground">{index + 1}/{lessons.length}</span>
-          {lesson.title}
+          {text.title}
         </h2>
-        {lesson.body.map((paragraph, i) => (
+        {text.body.map((paragraph, i) => (
           <p key={i} className="text-muted-foreground"><RichText text={paragraph} /></p>
         ))}
       </div>
@@ -81,38 +84,38 @@ export function LessonPanel({ lessons, index, completed, onSelect, onExit, onRes
         <p className="font-medium text-foreground">
           {done ? (
             <span className="inline-flex items-center gap-1.5 text-green-700 dark:text-green-400">
-              <CircleCheck className="size-4" /> Bravo! 🤌
+              <CircleCheck className="size-4" /> {t('lesson.done')}
             </span>
           ) : (
-            'Esercizio'
+            t('lesson.exercise')
           )}
         </p>
-        <p className="mt-1 text-muted-foreground"><RichText text={lesson.task} /></p>
+        <p className="mt-1 text-muted-foreground"><RichText text={text.task} /></p>
         {!done && (
           <p className="mt-1 text-muted-foreground text-xs">
-            'A console adda stampà: <code className="font-mono">{lesson.expected.join(' ⏎ ')}</code>
+            {t('lesson.expected')} <code className="font-mono">{lesson.expected.join(' ⏎ ')}</code>
           </p>
         )}
       </div>
 
       <div className="flex justify-between items-center gap-2 px-4 pb-3 shrink-0">
         <div className="flex gap-1">
-          <Button variant="ghost" size="sm" onClick={onReset} title="Torna al codice iniziale" aria-label="Ricomincia">
-            <RotateCcw className="size-3.5" /> <span className="hidden sm:inline">Ricomincia</span>
+          <Button variant="ghost" size="sm" onClick={onReset} title={t('lesson.resetTip')} aria-label={t('lesson.reset')}>
+            <RotateCcw className="size-3.5" /> <span className="hidden sm:inline">{t('lesson.reset')}</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={onShowSolution} title="Mostra la soluzione" aria-label="Soluzione">
-            <Lightbulb className="size-3.5" /> <span className="hidden sm:inline">Soluzione</span>
+          <Button variant="ghost" size="sm" onClick={onShowSolution} title={t('lesson.solutionTip')} aria-label={t('lesson.solution')}>
+            <Lightbulb className="size-3.5" /> <span className="hidden sm:inline">{t('lesson.solution')}</span>
           </Button>
         </div>
         <div className="flex gap-1">
-          <Button variant="outline" size="sm" disabled={index === 0} onClick={() => onSelect(index - 1)} aria-label="Lezione precedente">
+          <Button variant="outline" size="sm" disabled={index === 0} onClick={() => onSelect(index - 1)} aria-label={t('lesson.previous')}>
             <ChevronLeft className="size-4" />
           </Button>
           {isLast ? (
-            <Button size="sm" onClick={onExit}>Fernuto</Button>
+            <Button size="sm" onClick={onExit}>{t('lesson.finish')}</Button>
           ) : (
             <Button size="sm" variant={done ? 'default' : 'outline'} onClick={() => onSelect(index + 1)}>
-              Appriesso <ChevronRight className="size-4" />
+              {t('lesson.next')} <ChevronRight className="size-4" />
             </Button>
           )}
         </div>
