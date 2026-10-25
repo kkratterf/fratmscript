@@ -393,6 +393,7 @@ aspett aspetta(10)
 | `ripeti(volte, fa)` | call `fa(0)` ... `fa(volte - 1)` |
 | `aspetta(ms)` | Promise resolved after `ms` milliseconds |
 | ``gomorra`…` `` | SQL query in Neapolitan (next section) |
+| `apri_db(file = ":memory:")` | SQLite database on `node:sqlite` (Node 22.13+; next section) |
 
 ## GomorraSQL: SQL queries
 
@@ -435,6 +436,27 @@ stamm a dì(gomorra`facimm 'a tavula pizze (id INTEGER PRIMARY KEY, nomme TEXT, 
 - Other words pass through as SQL: column names, `COUNT(*)`, `PRIMARY KEY`, `RETURNING id`.
 - Table and column names cannot be `${…}`; one statement per query, no `;`.
 - `gomorra` only works as a tag right before a template.
+
+`apri_db` runs the queries on SQLite (Node's built-in `node:sqlite`, Node 22.13 or newer, nothing to
+install). It accepts a `gomorra` query or plain SQL with `?` followed by the values.
+
+```fratm
+chiamm { apri_db, gomorra } da "fratm"
+
+chist è db = apri_db()   // in memory; apri_db("pizzeria.db") for a file
+db.esegui(gomorra`facimm 'a tavula pizze (id INTEGER PRIMARY KEY, nomme TEXT, prezzo REAL)`)
+chist è r = db.esegui(gomorra`nzipp 'ngoppa pizze nomme, prezzo chist ${"Margherita"}, ${5}`)
+stamm a dì(r.cambiate, r.ultimo_id)
+stamm a dì(db.ripiglia(gomorra`ripigliammo nomme, prezzo mmiez 'a pizze arò prezzo < ${10}`))
+stamm a dì(db.ripiglia_uno(gomorra`ripigliammo nomme mmiez 'a pizze arò id = ${1}`))
+stamm a dì(db.ripiglia("SELECT COUNT(*) AS n FROM pizze WHERE prezzo > ?", 3))
+db.chiude()
+```
+
+- `ripiglia` → list of row objects, `ripiglia_uno` → first row or `nisciun`, `esegui` →
+  `{ cambiate, ultimo_id }`, `chiude()` closes.
+- The methods are synchronous; `aspett db.ripiglia(…)` also works (and stays right if the driver
+  becomes async). In the browser or the playground `apri_db` throws: it needs Node.
 
 ## Reading errors
 

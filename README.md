@@ -386,6 +386,7 @@ chiamm { a_caso, mischia, quanti, aspetta } da "fratm"
 | `ripeti(volte, fa)` | calls `fa(0)`, `fa(1)`, … `volte` times |
 | `aspetta(ms)` | a Promise that resolves after `ms` milliseconds: `aspett aspetta(1000)` |
 | ``gomorra`…` `` | a GomorraSQL query, see below |
+| `apri_db(file)` | opens a SQLite database (Node 22.13+), see below |
 
 ### GomorraSQL: SQL in Neapolitan
 
@@ -421,6 +422,28 @@ chist è care = gomorra`
 | `zumpanno` | `OFFSET` | `iamme bello ia'`, `sfaccimm` | `COMMIT`, `ROLLBACK` |
 
 Strings in a query go in `"…"`. Other words pass through as SQL: column names, `COUNT(*)`, `PRIMARY KEY`, `RETURNING`. A query may span lines and use parentheses, and `nzipp 'ngoppa pizze nomme, prezzo chist ${a}, ${b}` gets the parentheses SQL needs.
+
+#### A database with `apri_db`
+
+`apri_db("pizzeria.db")` opens a SQLite file with Node's built-in `node:sqlite` (Node 22.13 or newer, no npm package); `apri_db()` keeps the data in memory. It takes `gomorra` queries or plain SQL with `?` and its values.
+
+```fratm
+chiamm { apri_db, gomorra } da "fratm"
+
+chist è db = apri_db("pizzeria.db")
+db.esegui(gomorra`facimm 'a tavula pizze (id INTEGER PRIMARY KEY, nomme TEXT, prezzo REAL)`)
+db.esegui(gomorra`nzipp 'ngoppa pizze nomme, prezzo chist ${"Margherita"}, ${5}`)
+chist è care = aspett db.ripiglia(gomorra`ripigliammo nomme mmiez 'a pizze arò prezzo > ${4}`)
+```
+
+| Method | Returns |
+|--------|---------|
+| `db.ripiglia(q)` | every row, as a list of objects |
+| `db.ripiglia_uno(q)` | the first row, or `nisciun` |
+| `db.esegui(q)` | `{ cambiate, ultimo_id }`: rows changed, id of the last inserted row |
+| `db.chiude()` | closes the database |
+
+The methods are synchronous; writing `aspett` in front of them is fine and keeps the code working if a future driver is asynchronous. In the browser and on older Node, `apri_db` throws an error that says so.
 
 The keywords come from [GomorraSQL](https://github.com/aurasphere/gomorra-sql) by Donato Rimenti (MIT), a Java translator over JDBC; FratmScript ports its dialect to JavaScript and adds ordering, limits, grouping and tables.
 
@@ -568,6 +591,7 @@ Check the `examples/` folder for complete programs:
 15. `15_libreria.fratm` - The `fratm` library: `a_caso`, `mischia`, `quanti`, `aspetta`…
 16. `16_pizzeria_jsx.fratm` - A React component written with JSX
 17. `17_gomorra.fratm` - GomorraSQL: SQL queries in Neapolitan with bound parameters
+18. `18_magazzino.fratm` - A SQLite database with `apri_db` and `gomorra` (Node 22.13+)
 
 ---
 

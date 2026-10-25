@@ -1351,6 +1351,19 @@ na famiglie Pizzaiolo figlio 'e Persona {
     }
 
     #[test]
+    fn test_apri_db_loads_sqlite_only_when_called() {
+        let code = js("chiamm { apri_db } da \"fratm\"\nchist è db = apri_db()");
+        // A static import of node:sqlite would break the module in the browser
+        assert!(!code.contains("import"), "{}", code);
+        assert!(
+            code.starts_with("const apri_db = (file = \":memory:\") => { const sqlite = globalThis.process?.getBuiltinModule?.(\"node:sqlite\");"),
+            "{}",
+            code
+        );
+        assert!(code.ends_with("const db = apri_db();\n"), "{}", code);
+    }
+
+    #[test]
     fn test_gomorra_errors_point_into_the_query() {
         let error = compile(
             "chiamm { gomorra } da \"fratm\"\nchist è q = gomorra`ripigliammo nomme\n  mmiez 'a pizze arò`",

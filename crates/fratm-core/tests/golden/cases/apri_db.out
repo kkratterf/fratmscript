@@ -1,0 +1,8 @@
+{ cambiate: 1, ultimo_id: 1 }
+{ cambiate: 1, ultimo_id: 2 }
+[ { nomme: 'Assunta' }, { nomme: 'Gennaro' } ]
+{ quanti: 2 }
+null
+[ { nomme: 'Assunta' } ]
+{ cambiate: 1, ultimo_id: 2 }
+apri_db vo' Node 22.13 o cchiù nuovo (node:sqlite): int'o browser nun se pò aprì nu database

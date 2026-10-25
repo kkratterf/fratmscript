@@ -45,6 +45,13 @@ pub const HELPERS: &[(&str, &str, &str)] = &[
         "(ms) => new Promise((risolvi) => setTimeout(risolvi, ms))",
         "na Promise ca se risolve doppo ms millisecondi: aspett aspetta(1000)",
     ),
+    // node:sqlite is loaded when the database opens, so importing apri_db
+    // never breaks a module in the browser or on an older Node
+    (
+        "apri_db",
+        "(file = \":memory:\") => { const sqlite = globalThis.process?.getBuiltinModule?.(\"node:sqlite\"); if (!sqlite) throw new Error(\"apri_db vo' Node 22.13 o cchiù nuovo (node:sqlite): int'o browser nun se pò aprì nu database\"); const db = new sqlite.DatabaseSync(file); const prepara = (q, valori) => typeof q === \"string\" ? [db.prepare(q), valori] : [db.prepare(q.sql), q.params]; return { ripiglia: (q, ...valori) => { const [s, p] = prepara(q, valori); return s.all(...p).map((riga) => ({ ...riga })); }, ripiglia_uno: (q, ...valori) => { const [s, p] = prepara(q, valori); const riga = s.get(...p); return riga === undefined ? null : { ...riga }; }, esegui: (q, ...valori) => { const [s, p] = prepara(q, valori); const r = s.run(...p); return { cambiate: Number(r.changes), ultimo_id: Number(r.lastInsertRowid) }; }, chiude: () => db.close() }; }",
+        "apre nu database SQLite (node:sqlite, Node 22.13+): db.ripiglia(q), db.ripiglia_uno(q), db.esegui(q), db.chiude()",
+    ),
     // The compiler translates each gomorra`…` and passes the SQL here
     (
         "gomorra",

@@ -1,0 +1,51 @@
+// ============================================
+// Example 18: 'O magazzino
+// apri_db + gomorra: a SQLite database with queries in Neapolitan.
+// Needs Node 22.13 or newer (node:sqlite, no npm package).
+// ============================================
+
+chiamm { apri_db, gomorra } da "fratm"
+
+// apri_db("pizzeria.db") keeps the data in a file; without a name it lives in memory
+chist è db = apri_db()
+
+db.esegui(gomorra`
+    facimm 'a tavula pizze (
+        id INTEGER PRIMARY KEY,
+        nomme TEXT NOT NULL,
+        prezzo REAL
+    )
+`)
+
+chist è menù = [["Margherita", 5], ["Marinara", 4], ["Diavola", 7.5], ["Capricciosa", 8]]
+pe ogni (chist è [nomme, prezzo] dint menù) {
+    db.esegui(gomorra`nzipp 'ngoppa pizze nomme, prezzo chist ${nomme}, ${prezzo}`)
+}
+
+// The methods are synchronous today; with aspett the code also works with an async driver
+mo vir facc menùCaro(minimo) {
+    piglie aspett db.ripiglia(gomorra`
+        ripigliammo nomme, prezzo mmiez 'a pizze
+        arò prezzo >= ${minimo}
+        mettimmo in fila pe prezzo a scennere
+    `)
+}
+
+mo vir facc main() {
+    pe ogni (chist è pizza dint aspett menùCaro(6)) {
+        stamm a dì(`${pizza.nomme}: ${pizza.prezzo} euro`)
+    }
+
+    chist è cambio = db.esegui(gomorra`rifacimm pizze accunza prezzo accussì prezzo + 1 arò nomme = ${"Marinara"}`)
+    stamm a dì("Pizze cagnate:", cambio.cambiate)
+
+    chist è marinara = db.ripiglia_uno(gomorra`ripigliammo prezzo mmiez 'a pizze arò nomme = ${"Marinara"}`)
+    stamm a dì("'A marinara mo costa", marinara.prezzo)
+
+    chist è nisciuna = db.ripiglia_uno(gomorra`ripigliammo id mmiez 'a pizze arò nomme = ${"Hawaiana"}`)
+    stamm a dì("Hawaiana:", nisciuna)
+
+    db.chiude()
+}
+
+main()

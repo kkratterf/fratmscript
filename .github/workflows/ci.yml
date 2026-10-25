@@ -32,6 +32,12 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
 
+      # The golden tests run the generated JS; apri_db needs node:sqlite (Node 22.13+)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Format
         run: cargo fmt --all --check
 

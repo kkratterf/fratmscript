@@ -1,0 +1,21 @@
+chiamm { apri_db, gomorra } da "fratm"
+
+chist è db = apri_db(":memory:")
+db.esegui(gomorra`facimm 'a tavula clienti (id INTEGER PRIMARY KEY, nomme TEXT, pizze INTEGER)`)
+stamm a dì(db.esegui(gomorra`nzipp 'ngoppa clienti nomme, pizze chist ${"Gennaro"}, ${3}`))
+stamm a dì(db.esegui(gomorra`nzipp 'ngoppa clienti nomme, pizze chist ${"Assunta"}, ${5}`))
+stamm a dì(db.ripiglia(gomorra`ripigliammo nomme mmiez 'a clienti arò pizze > ${2} mettimmo in fila pe pizze a scennere`))
+stamm a dì(db.ripiglia_uno(gomorra`ripigliammo COUNT(*) comme quanti mmiez 'a clienti`))
+stamm a dì(db.ripiglia_uno(gomorra`ripigliammo nomme mmiez 'a clienti arò id = ${99}`))
+// Plain SQL with ? works too
+stamm a dì(db.ripiglia("SELECT nomme FROM clienti WHERE pizze = ?", 5))
+stamm a dì(db.esegui(gomorra`facimm na' strage mmiez 'a clienti arò pizze < ${4}`))
+db.chiude()
+
+// Without node:sqlite (old Node, the browser) the error says why
+process.getBuiltinModule = boh
+pruvamm {
+    apri_db()
+} e si schiatta (e) {
+    stamm a dì(e.message)
+}
