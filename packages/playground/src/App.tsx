@@ -381,13 +381,13 @@ function App() {
               </div>
               {/* Sticky examples bar */}
               <div className={cn('flex flex-wrap items-center justify-between gap-x-2 gap-y-2 bg-card px-4 py-2.5 border-border border-t shrink-0', embed && 'hidden')}>
-                <div className={cn('flex items-center gap-3 min-w-0', lesson && 'invisible')}>
+                <div className={cn('flex items-center gap-3 min-w-0', lesson && 'invisible max-md:hidden')}>
                   <label htmlFor="example-picker" className="text-muted-foreground text-xs">{t('editor.examples')}</label>
                   <NativeSelect
                     id="example-picker"
                     value={selectedExample}
                     onChange={handleExampleChange}
-                    className="w-44 sm:w-52"
+                    className="w-56"
                   >
                     <option value="">{t('editor.chooseExample')}</option>
                     {selectedExample === 'custom' && <option value="custom" disabled>{t('editor.custom')}</option>}

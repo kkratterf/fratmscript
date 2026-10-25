@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipPopup } from '@/components/ui/tooltip'
-import { BookOpen, CodeXml, ExternalLink, GraduationCap, Play, Square } from 'lucide-react'
+import { BookOpen, CodeXml, ExternalLink, GraduationCap, Play, Share2, Square } from 'lucide-react'
 import { ThemeSelect } from '@/components/ThemeSelect'
 import { LanguageSelect } from '@/components/LanguageSelect'
 import { useI18n } from '@/lib/i18n'
@@ -52,7 +52,7 @@ export function Header({ onRun, onStop, onShare, onEmbed, onTour, tourActive, on
     <header className="flex flex-col gap-2 bg-card px-4 py-3 border-border border-b">
       <div className="flex justify-between items-center gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <h1 className="font-bold text-primary text-lg sm:text-xl truncate">FratmScript 🤌🏻</h1>
+          <h1 className="font-bold text-primary text-lg sm:text-xl truncate">FratmScript<span className="max-[399px]:hidden"> 🤌🏻</span></h1>
         </div>
         <div className="flex items-center gap-1 sm:gap-3 shrink-0">
           <Tooltip>
@@ -165,8 +165,10 @@ export function Header({ onRun, onStop, onShare, onEmbed, onTour, tourActive, on
                 {t('header.stop')}
               </Button>
             </div>
-            <Button variant="outline" onClick={onShare}>
-              {t('header.share')}
+            {/* Icon only on phones, so the logo is not cut off */}
+            <Button variant="outline" onClick={onShare} aria-label={t('header.share')} className="max-sm:px-2.5">
+              <Share2 className="size-4 sm:hidden" />
+              <span className="hidden sm:inline">{t('header.share')}</span>
             </Button>
             <Tooltip>
               <TooltipTrigger

@@ -45,13 +45,15 @@ export function LessonPanel({ lessons, index, completed, onSelect, onExit, onRes
   const isLast = index === lessons.length - 1
 
   return (
-    <section aria-label={t('lesson.label')} className="flex flex-col bg-card border-border border-b max-h-[60%] md:max-h-[55%] shrink-0">
+    // On phones the whole panel scrolls within 40% of the tab, so the editor
+    // keeps most of the screen; on wider screens only the lesson text scrolls.
+    <section aria-label={t('lesson.label')} className="flex flex-col bg-card border-border border-b max-h-[40%] max-md:overflow-auto md:max-h-[55%] shrink-0">
       <div className="flex justify-between items-center gap-2 px-4 pt-3 shrink-0">
         <NativeSelect
           aria-label={t('lesson.index')}
           value={String(index)}
           onChange={e => onSelect(Number(e.target.value))}
-          className="w-60 max-w-[80%]"
+          className="w-60"
         >
           {lessons.map((l, i) => (
             <option key={l.id} value={i}>
@@ -64,7 +66,7 @@ export function LessonPanel({ lessons, index, completed, onSelect, onExit, onRes
         </Button>
       </div>
 
-      <div className="flex-1 space-y-2 px-4 py-3 min-h-0 overflow-auto text-sm leading-relaxed">
+      <div className="space-y-2 px-4 py-3 text-sm leading-relaxed shrink-0 md:flex-1 md:shrink md:min-h-0 md:overflow-auto">
         <h2 className="font-semibold text-base text-foreground">
           <span className="mr-1.5 text-muted-foreground">{index + 1}/{lessons.length}</span>
           {text.title}
