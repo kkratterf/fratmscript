@@ -1,0 +1,20 @@
+chiamm { useState } da "react"
+
+mann for predefinit facc Menu() {
+    tien [pizze, setPizze] = useState(["Margherita", "Marinara"])
+
+    facc aggiungi() {
+        chist è nova = `Pizza ${pizze.length + 1}`
+        stamm a dì("Aggiunta:", nova)
+        setPizze([...pizze, nova])
+    }
+
+    piglie (
+        <main>
+            <ul>
+                {pizze.map((pizza) => <li key={pizza}>{pizza}</li>)}
+            </ul>
+            <button onClick={aggiungi}>Aggiungi</button>
+        </main>
+    )
+}

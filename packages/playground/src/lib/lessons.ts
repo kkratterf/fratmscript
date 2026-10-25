@@ -138,9 +138,18 @@ const NAP_TEXTS: Record<string, LessonText> = {
       "`apri_db()` apre nu database SQLite: sta già int'a libreria `fratm`, nun serve installà niente. Int'o playground 'o database sta int'a memoria; cu Node se pò salvà ncopp'a nu file.",
       "Miette `gomorra` primma 'e na template string e scrive 'a query in napoletano (GomorraSQL): `ripigliammo … mmiez 'a …` è `SELECT … FROM …`, `arò` è `WHERE`, `mettimmo in fila pe` è `ORDER BY`. 'O compilatore 'a traduce e te dice si è sbagliata.",
       "Nu valore miso cu `${…}` passa comme parametro, maie mmiez 'o testo d'a query: accussì nisciuno te pò fà na SQL injection.",
-      'Hê fernuto \'a scola! Mo puoi pruvà \'e esempi, leggere \'a guida d\'a sintassi cu \'o tasto ? o scrivere \'o programma tuoio.',
     ],
     task: "Nzipp na Marinara a 4 euro e stampa sulo 'e pizze ca costano meno 'e 6 euro, d'a cchiù economica: `arò prezzo < ${6} mettimmo in fila pe prezzo`.",
+  },
+  '14_componenti': {
+    title: 'nu componente React',
+    body: [
+      "Nu componente React è na funzione ca piglie 'e props e torna JSX: HTML scritto int'o codice. Cu `mann for predefinit facc` 'o playground 'o disegna int'a preview, e 'o React s'o piglia isso.",
+      "`useState` tene nu valore ca cagna: `tien [pizze, setPizze] = useState([…])`. Quanno chiamme `setPizze(…)` cu na lista nova, 'o componente se ridisegna.",
+      "`onClick={aggiungi}` chiamma na funzione quanno se clicca 'o bottone. Ccà `aggiungi` stampa int'a console e mette na pizza nova.",
+      'Hê fernuto \'a scola! Mo puoi pruvà \'e esempi, leggere \'a guida d\'a sintassi cu \'o tasto ? o scrivere \'o programma tuoio.',
+    ],
+    task: "Aggiungi nu bottone \"Leva\" ca stampa \"Levata:\" cu l'urdema pizza (`pizze.at(-1)`) e 'a leva (`pizze.slice(0, -1)`). Po' clicca na vota \"Aggiungi\" e na vota \"Leva\".",
   },
 }
 
@@ -252,9 +261,18 @@ const IT_TEXTS: Record<string, LessonText> = {
       "`apri_db()` apre un database SQLite: è già nella libreria `fratm`, non serve installare niente. Nel playground il database vive in memoria; con Node si può salvare su un file.",
       "Metti `gomorra` davanti a una template string e scrivi la query in napoletano (GomorraSQL): `ripigliammo … mmiez 'a …` è `SELECT … FROM …`, `arò` è `WHERE`, `mettimmo in fila pe` è `ORDER BY`. Il compilatore la traduce e ti dice se è sbagliata.",
       "Un valore messo con `${…}` passa come parametro, mai dentro il testo della query: così nessuno può farti una SQL injection.",
-      'Hai finito il tour! Ora puoi provare gli esempi, leggere la guida alla sintassi con il tasto ? o scrivere il tuo programma.',
     ],
     task: "Inserisci una Marinara a 4 euro e stampa solo le pizze che costano meno di 6 euro, dalla più economica: `arò prezzo < ${6} mettimmo in fila pe prezzo`.",
+  },
+  '14_componenti': {
+    title: 'nu componente React',
+    body: [
+      "Un componente React è una funzione che riceve le props e restituisce JSX: HTML scritto nel codice. Con `mann for predefinit facc` il playground lo disegna nell'anteprima, e React lo carica da solo.",
+      "`useState` tiene un valore che cambia: `tien [pizze, setPizze] = useState([…])`. Quando chiami `setPizze(…)` con una lista nuova, il componente si ridisegna.",
+      "`onClick={aggiungi}` chiama una funzione quando si clicca il bottone. Qui `aggiungi` stampa nella console e aggiunge una pizza nuova.",
+      'Hai finito il tour! Ora puoi provare gli esempi, leggere la guida alla sintassi con il tasto ? o scrivere il tuo programma.',
+    ],
+    task: "Aggiungi un bottone \"Leva\" che stampa \"Levata:\" con l'ultima pizza (`pizze.at(-1)`) e la toglie (`pizze.slice(0, -1)`). Poi clicca una volta \"Aggiungi\" e una volta \"Leva\".",
   },
 }
 
@@ -366,9 +384,18 @@ const EN_TEXTS: Record<string, LessonText> = {
       "`apri_db()` opens a SQLite database: it is already in the `fratm` library, nothing to install. In the playground the database lives in memory; with Node it can be saved to a file.",
       "Put `gomorra` in front of a template string and write the query in Neapolitan (GomorraSQL): `ripigliammo … mmiez 'a …` is `SELECT … FROM …`, `arò` is `WHERE`, `mettimmo in fila pe` is `ORDER BY`. The compiler translates it and tells you when it is wrong.",
       "A value put in with `${…}` goes in as a parameter, never inside the query text: that way nobody can pull a SQL injection on you.",
-      'You finished the tour! Now you can try the examples, read the syntax reference with the ? button, or write your own program.',
     ],
     task: "Insert a Marinara at 4 euro and print only the pizzas that cost less than 6 euro, cheapest first: `arò prezzo < ${6} mettimmo in fila pe prezzo`.",
+  },
+  '14_componenti': {
+    title: 'nu componente React',
+    body: [
+      "A React component is a function that takes props and returns JSX: HTML written in the code. With `mann for predefinit facc` the playground draws it in the preview, and loads React by itself.",
+      "`useState` holds a value that changes: `tien [pizze, setPizze] = useState([…])`. When you call `setPizze(…)` with a new list, the component draws itself again.",
+      "`onClick={aggiungi}` calls a function when the button is clicked. Here `aggiungi` prints to the console and adds a new pizza.",
+      'You finished the tour! Now you can try the examples, read the syntax reference with the ? button, or write your own program.',
+    ],
+    task: "Add a \"Leva\" button that prints \"Levata:\" with the last pizza (`pizze.at(-1)`) and removes it (`pizze.slice(0, -1)`). Then click \"Aggiungi\" once and \"Leva\" once.",
   },
 }
 

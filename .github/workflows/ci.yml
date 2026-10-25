@@ -59,13 +59,26 @@ jobs:
       - name: Check the playground tour lessons
         run: |
           cd packages/playground/src/scola
-          ../../../../target/debug/fratm check *.fratm
-          ../../../../target/debug/fratm fmt --check *.fratm
+          fratm=../../../../target/debug/fratm
+          $fratm check *.fratm
+          $fratm fmt --check *.fratm
+          # Component lessons run in jsdom with every button clicked once
+          # (.github/scripts/react-lesson.mjs); React matches the playground preview
+          react_dir=$(mktemp -d)
+          (cd "$react_dir" && npm init -y > /dev/null && npm install --no-audit --no-fund react@19.1.1 react-dom@19.1.1 jsdom@26.1.0 > /dev/null)
+          run() {
+            if grep -q 'da "react"' "$1"; then
+              $fratm build "$1" -o "$react_dir/lesson.mjs" > /dev/null
+              node ../../../../.github/scripts/react-lesson.mjs "$react_dir/lesson.mjs"
+            else
+              $fratm lancia "$1"
+            fi
+          }
           for solution in *.soluzione.fratm; do
             lesson="${solution%.soluzione.fratm}"
             # The solution prints exactly the expected output, the starter does not
-            diff -u "$lesson.out" <(../../../../target/debug/fratm lancia "$solution")
-            if diff -q "$lesson.out" <(../../../../target/debug/fratm lancia "$lesson.fratm") > /dev/null; then
+            diff -u "$lesson.out" <(run "$solution")
+            if diff -q "$lesson.out" <(run "$lesson.fratm") > /dev/null; then
               echo "::error file=packages/playground/src/scola/$lesson.fratm::the starter already prints the expected output"
               exit 1
             fi
