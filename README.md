@@ -120,6 +120,7 @@ fratm fmt <files...>                # Format files in place (comments kept)
 fratm fmt --check <files...>        # Fail if a file is not formatted
 fratm repl                          # Interactive REPL
 fratm guida                         # Language reference for AI agents
+fratm mcp                           # MCP server for AI agents (stdio)
 fratm tokens <file>                 # Debug: show tokens
 fratm ast <file>                    # Debug: show AST
 ```

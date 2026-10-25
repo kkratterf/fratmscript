@@ -328,6 +328,7 @@ fratm build main.fratm [-o out.js]      write JavaScript (--stdout prints it)
 fratm check a.fratm b.fratm             report errors, write nothing
 fratm fmt main.fratm                    format in place (--check to only report)
 fratm guida                             print this reference (alias: reference)
+fratm mcp                               MCP server on stdio (see below)
 ```
 
 For programs and agents: `check`, `build` and `lancia` take `--json` and print one JSON object
@@ -339,6 +340,11 @@ program from stdin, and `lancia --timeout <seconds>` to stop programs that do no
 echo 'stamm a dì(1 + 1)' | fratm lancia --json -
 {"errors":[],"exitCode":0,"ok":true,"runtimeError":null,"stderr":"","stdout":"2\n"}
 ```
+
+`fratm mcp` is a Model Context Protocol server with the tools `fratm_reference`, `fratm_check`,
+`fratm_compile`, `fratm_run` (10 s timeout by default) and `fratm_format`; each takes `source`
+or `path`. Add it to Claude Code with `claude mcp add fratm -- fratm mcp`, or to any MCP client
+as the command `fratm` with the argument `mcp`.
 
 Install the CLI: `curl -fsSL https://raw.githubusercontent.com/kkratterf/fratmscript/main/install.sh | sh`
 (macOS/Linux) or `cargo install --git https://github.com/kkratterf/fratmscript fratm-cli`.

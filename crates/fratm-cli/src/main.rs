@@ -11,6 +11,7 @@ use std::process::Command;
 use std::time::Duration;
 
 mod esegui;
+mod mcp;
 mod nuovo;
 
 #[derive(ClapParser)]
@@ -63,6 +64,8 @@ enum Commands {
     /// Print the FratmScript language reference for AI agents
     #[command(name = "guida", alias = "reference")]
     Guida,
+    /// Run a Model Context Protocol server on stdio, for AI agents
+    Mcp,
     /// Format .fratm files in place
     Fmt {
         #[arg(required = true)]
@@ -106,6 +109,7 @@ fn main() {
         } => build_file(&file, output, sourcemap, stdout, json),
         Commands::Check { files, json } => check_files(&files, json),
         Commands::Guida => print!("{}", GUIDA),
+        Commands::Mcp => mcp::serve(),
         Commands::Fmt { files, check } => format_files(&files, check),
         Commands::Nuovo { dir, semplice } => new_project(&dir, semplice),
         Commands::Repl => run_repl(),
