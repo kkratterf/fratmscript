@@ -116,7 +116,7 @@ Or, with no build step at all, in any HTML page:
 FratmScript is ready for coding agents (Claude Code, Cursor, Codex, Copilot...), both to discover it and to write it correctly:
 
 - **Reference for LLMs**: [`llms.txt`](https://kkratterf.github.io/fratmscript/llms.txt) and the full [`llms-full.txt`](https://kkratterf.github.io/fratmscript/llms-full.txt) (rules that differ from JavaScript, every construct with an example, error glossary), plus the keyword map [`keywords.json`](https://kkratterf.github.io/fratmscript/keywords.json). `fratm guida` prints the same reference offline.
-- **MCP server**: `fratm mcp` gives agents the tools `fratm_reference`, `fratm_check`, `fratm_compile`, `fratm_run` and `fratm_format`, with errors as JSON (line, column, hint). In Claude Code: `claude mcp add fratm -- fratm mcp`.
+- **MCP server**: `fratm mcp` gives agents the tools `fratm_reference`, `fratm_check`, `fratm_compile`, `fratm_run`, `fratm_format` and `fratm_gomorra` (checks a GomorraSQL query), with errors as JSON (line, column, hint). In Claude Code: `claude mcp add fratm -- fratm mcp`.
 - **Claude Code plugin** with a `fratmscript` skill and the MCP server:
 
   ```text
@@ -138,6 +138,7 @@ fratm build <file.fratm>            # Compile to JavaScript
 fratm build <file> --sourcemap      # With source map
 fratm check <files...>              # Report errors without writing output
 fratm fmt <files...>                # Format files in place (comments kept)
+fratm gomorra "<query>"             # Print the SQL of a GomorraSQL query (--db file.db: run it, or open a shell)
 fratm fmt --check <files...>        # Fail if a file is not formatted
 fratm repl                          # Interactive REPL
 fratm guida                         # Language reference for AI agents

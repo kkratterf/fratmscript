@@ -121,7 +121,7 @@ Only the keywords change: operators, literals and every JavaScript built-in stay
 ## Tools
 
 - [Install the CLI](${REPO}#install): \`curl -fsSL https://raw.githubusercontent.com/kkratterf/fratmscript/main/install.sh | sh\`, or \`cargo install --git ${REPO} fratm-cli\`
-- MCP server: \`fratm mcp\` (stdio) with tools fratm_reference, fratm_check, fratm_compile, fratm_run, fratm_format; Claude Code: \`claude mcp add fratm -- fratm mcp\`
+- MCP server: \`fratm mcp\` (stdio) with tools fratm_reference, fratm_check, fratm_compile, fratm_run, fratm_format, fratm_gomorra; Claude Code: \`claude mcp add fratm -- fratm mcp\`
 - [Claude Code plugin with a FratmScript skill](${REPO}/tree/main/packages/agent-plugin): \`/plugin marketplace add kkratterf/fratmscript\` then \`/plugin install fratmscript@fratmscript\`
 - CLI for scripts: \`fratm check --json\`, \`fratm build --json\`, \`fratm lancia --json --timeout 10 -\` (reads stdin), \`fratm guida\` prints the reference
 

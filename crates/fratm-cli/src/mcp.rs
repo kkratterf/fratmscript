@@ -171,6 +171,22 @@ fn tools() -> Value {
             "inputSchema": program_schema(json!({})),
             "annotations": read_only,
         },
+        {
+            "name": "fratm_gomorra",
+            "title": "Translate a GomorraSQL query",
+            "description": "Translate a GomorraSQL query (the text inside gomorra`…`, without ${…}) to SQL, to check it before using it. Returns {ok, sql, text, error}: sql uses ? placeholders, text uses $1; error has a Neapolitan message, line and column inside the query.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "GomorraSQL, e.g. ripigliammo nomme mmiez 'a pizze arò prezzo < 10",
+                    },
+                },
+                "required": ["query"],
+            },
+            "annotations": read_only,
+        },
     ])
 }
 
@@ -193,6 +209,31 @@ fn call_tool(params: &Value) -> Result<Value, (i64, String)> {
     let arguments = &params["arguments"];
     if name == "fratm_reference" {
         return Ok(json!({ "content": [{ "type": "text", "text": crate::GUIDA }] }));
+    }
+    if name == "fratm_gomorra" {
+        let Some(query) = arguments["query"].as_str() else {
+            return Ok(
+                json!({ "content": [{ "type": "text", "text": "give 'query' (GomorraSQL)" }], "isError": true }),
+            );
+        };
+        let result = match crate::gomorra::translate_query(query) {
+            Ok(q) => json!({ "ok": true, "sql": q.sql, "text": q.text, "error": null }),
+            Err(e) => {
+                let (line, column) = crate::gomorra::error_position(&e);
+                json!({
+                    "ok": false,
+                    "sql": null,
+                    "text": null,
+                    "error": { "message": e.message, "line": line, "column": column },
+                })
+            }
+        };
+        let text = serde_json::to_string_pretty(&result).unwrap_or_default();
+        return Ok(json!({
+            "content": [{ "type": "text", "text": text }],
+            "structuredContent": result,
+            "isError": false,
+        }));
     }
     if !["fratm_check", "fratm_compile", "fratm_run", "fratm_format"].contains(&name) {
         return Err((-32602, format!("Unknown tool: {}", name)));
@@ -302,9 +343,26 @@ mod tests {
                 "fratm_check",
                 "fratm_compile",
                 "fratm_run",
-                "fratm_format"
+                "fratm_format",
+                "fratm_gomorra"
             ]
         );
+    }
+
+    #[test]
+    fn gomorra_translates_or_explains_a_query() {
+        let result = call(
+            "fratm_gomorra",
+            json!({ "query": "ripigliammo nomme mmiez 'a pizze nun cchiù 'e 3" }),
+        );
+        assert_eq!(
+            result["structuredContent"]["sql"],
+            "SELECT nomme FROM pizze LIMIT 3"
+        );
+        let result = call("fratm_gomorra", json!({ "query": "ripigliammo nomme arò" }));
+        assert_eq!(result["structuredContent"]["ok"], false);
+        assert_eq!(result["structuredContent"]["error"]["column"], 19);
+        assert_eq!(call("fratm_gomorra", json!({}))["isError"], true);
     }
 
     #[test]

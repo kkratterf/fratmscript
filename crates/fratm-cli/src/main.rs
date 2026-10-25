@@ -11,6 +11,7 @@ use std::process::Command;
 use std::time::Duration;
 
 mod esegui;
+mod gomorra;
 mod mcp;
 mod nuovo;
 
@@ -89,6 +90,17 @@ enum Commands {
         #[arg(long)]
         semplice: bool,
     },
+    /// Translate a GomorraSQL query to SQL, or run queries on a SQLite file with --db
+    Gomorra {
+        /// The query, e.g. "ripigliammo nomme mmiez 'a pizze" (`-` reads it from stdin)
+        query: Option<String>,
+        /// SQLite file to run the query on; without a query, open a shell on it (Node 22.13+)
+        #[arg(long, value_name = "FILE")]
+        db: Option<PathBuf>,
+        /// Print PostgreSQL placeholders ($1, $2…) instead of ?
+        #[arg(long)]
+        pg: bool,
+    },
     /// Interactive REPL
     Repl,
     /// Show tokens (debug)
@@ -123,6 +135,7 @@ fn main() {
             completa,
             semplice,
         } => new_project(&dir, senza_react, completa, semplice),
+        Commands::Gomorra { query, db, pg } => run_gomorra(query, db.as_deref(), pg),
         Commands::Repl => run_repl(),
         Commands::Tokens { file } => show_tokens(&file),
         Commands::Ast { file } => show_ast(&file),
@@ -592,6 +605,100 @@ fn show_ast(path: &PathBuf) {
         Err(errors) => {
             for e in errors {
                 println!("{} {}", "✗".red().bold(), e.message.red());
+            }
+        }
+    }
+}
+
+fn run_gomorra(query: Option<String>, db: Option<&Path>, pg: bool) {
+    let query = match query.as_deref() {
+        Some("-") => {
+            let mut text = String::new();
+            if let Err(e) = io::stdin().read_to_string(&mut text) {
+                eprintln!("{} {}", "✗".red().bold(), e);
+                std::process::exit(1);
+            }
+            Some(text)
+        }
+        other => other.map(str::to_string),
+    };
+    // Prints the error under the query and returns None
+    let translate = |query: &str| match gomorra::translate_query(query) {
+        Ok(q) => Some(if pg { q.text } else { q.sql }),
+        Err(e) => {
+            let (line, column) = gomorra::error_position(&e);
+            eprintln!(
+                "\n{} Riga {line}, colonna {column}: {}",
+                "✗ Error:".red().bold(),
+                e.message
+            );
+            print_source_line(query, line, Some(column));
+            None
+        }
+    };
+    let Some(db) = db else {
+        let Some(query) = query else {
+            eprintln!(
+                "{} Scrive na query, tipo: fratm gomorra \"ripigliammo nomme mmiez 'a pizze\", o apre nu database cu --db pizzeria.db",
+                "✗".red().bold()
+            );
+            std::process::exit(2);
+        };
+        match translate(&query) {
+            Some(sql) => println!("{sql}"),
+            None => std::process::exit(1),
+        }
+        return;
+    };
+    let mut shell = match gomorra::Shell::open(db) {
+        Ok(shell) => shell,
+        Err(e) => {
+            eprintln!("{} {}", "✗".red().bold(), e);
+            std::process::exit(1);
+        }
+    };
+    let mut run = |query: &str| -> bool {
+        let Some(sql) = translate(query) else {
+            return false;
+        };
+        match shell.run(&sql) {
+            Ok(answer) => {
+                println!("{}", gomorra::render(&answer));
+                true
+            }
+            Err(e) => {
+                eprintln!("{} {} ({})", "✗".red().bold(), e, sql.dimmed());
+                false
+            }
+        }
+    };
+    if let Some(query) = query {
+        if !run(&query) {
+            std::process::exit(1);
+        }
+        return;
+    }
+    println!(
+        "{} {} — na query pe riga, {} pe ascì",
+        "🤌 GomorraSQL".green().bold(),
+        db.display(),
+        "esci".bold()
+    );
+    let stdin = io::stdin();
+    loop {
+        print!("{} ", "gomorra>".cyan());
+        let _ = io::stdout().flush();
+        let mut line = String::new();
+        if stdin.lock().read_line(&mut line).unwrap_or(0) == 0 {
+            println!();
+            break;
+        }
+        let line = line.trim();
+        match line {
+            "" => {}
+            "esci" | "exit" | ".exit" => break,
+            query => {
+                run(query);
             }
         }
     }
