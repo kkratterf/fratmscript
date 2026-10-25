@@ -53,6 +53,16 @@ import { saluta } from './saluto.fratm';
 
 Compile errors show up in the Vite overlay with their line and column, and source maps point at the `.fratm` files. The plugin has no dependency on Vite, so it also works as a Rollup plugin.
 
+For React Fast Refresh on `.fratm` components, add `@vitejs/plugin-react` after it and let it see the compiled files:
+
+```js
+import react from '@vitejs/plugin-react';
+
+export default {
+  plugins: [fratmscript(), react({ include: /\.(fratm|[jt]sx?)$/ })],
+};
+```
+
 ## Run .fratm files in Node
 
 ```bash

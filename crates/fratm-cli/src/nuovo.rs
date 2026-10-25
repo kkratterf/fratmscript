@@ -30,6 +30,7 @@ const REACT_FILES: &[(&str, &str)] = &[
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.0",
     "fratmscript": "{{fratmscript}}",
     "vite": "^5.4.0"
   }
@@ -39,9 +40,11 @@ const REACT_FILES: &[(&str, &str)] = &[
     (
         "vite.config.js",
         r##"import fratmscript from 'fratmscript/vite';
+import react from '@vitejs/plugin-react';
 
 export default {
-  plugins: [fratmscript()],
+  // react() adds Fast Refresh: saving a .fratm component keeps its state
+  plugins: [fratmscript(), react({ include: /\.(fratm|[jt]sx?)$/ })],
 };
 "##,
     ),
@@ -240,9 +243,11 @@ npm run build   # production build in dist/
 - Styles are plain CSS (`src/stile.css`, imported with `chiamm "./stile.css"`) and
   CSS modules (`Pizza.module.css`, used as `className={stile.carta}`). Tailwind
   works too: follow its Vite guide and use `className="…"`.
+- `npm run dev` has Fast Refresh: save a component and the page updates without
+  losing its state (`@vitejs/plugin-react` in `vite.config.js`).
 - To use Preact instead of React, write `// @jsxImportSource preact` at the top
   of each file, or pass `fratmscript({ jsxImportSource: 'preact' })` in
-  `vite.config.js`.
+  `vite.config.js` (and drop `react()`).
 "##,
     ),
 ];
@@ -513,6 +518,12 @@ mod tests {
         let json: serde_json::Value = serde_json::from_str(&package).unwrap();
         assert_eq!(json["name"], "pizzeria-react");
         assert!(json["dependencies"]["react"].is_string());
+        assert!(json["devDependencies"]["@vitejs/plugin-react"].is_string());
+        let config = fs::read_to_string(dir.join("vite.config.js")).unwrap();
+        assert!(
+            config.contains("react({ include: /\\.(fratm|[jt]sx?)$/ })"),
+            "{config}"
+        );
         assert_eq!(
             json["devDependencies"]["fratmscript"],
             fratmscript_dependency("1.2.3")
