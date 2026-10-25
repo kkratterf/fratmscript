@@ -2,12 +2,15 @@
 
 use clap::{Parser as ClapParser, Subcommand};
 use colored::*;
+use esegui::Outcome;
 use fratm_core::{compile, errors, CompileOptions};
 use std::fs;
-use std::io::{self, BufRead, Write};
+use std::io::{self, BufRead, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::time::Duration;
 
+mod esegui;
 mod nuovo;
 
 #[derive(ClapParser)]
@@ -22,26 +25,44 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Compile and launch a .fratm file
+    /// Compile and launch a .fratm file (`-` reads it from stdin)
     #[command(name = "lancia", alias = "run")]
     Lancia {
         file: PathBuf,
         #[arg(long)]
         sourcemap: bool,
+        /// Print one JSON object: errors, captured stdout/stderr, runtime error
+        #[arg(long)]
+        json: bool,
+        /// Stop the program after this many seconds
+        #[arg(long, value_name = "SECONDS")]
+        timeout: Option<f64>,
     },
-    /// Compile a .fratm file to JavaScript
+    /// Compile a .fratm file to JavaScript (`-` reads it from stdin)
     Build {
         file: PathBuf,
         #[arg(short, long)]
         output: Option<PathBuf>,
         #[arg(long)]
         sourcemap: bool,
+        /// Print the JavaScript instead of writing a file
+        #[arg(long)]
+        stdout: bool,
+        /// Print one JSON object with the JavaScript or the errors
+        #[arg(long)]
+        json: bool,
     },
     /// Check .fratm files for errors without writing any output
     Check {
         #[arg(required = true)]
         files: Vec<PathBuf>,
+        /// Print one JSON object with the errors of every file
+        #[arg(long)]
+        json: bool,
     },
+    /// Print the FratmScript language reference for AI agents
+    #[command(name = "guida", alias = "reference")]
+    Guida,
     /// Format .fratm files in place
     Fmt {
         #[arg(required = true)]
@@ -70,13 +91,21 @@ enum Commands {
 fn main() {
     let cli = Cli::parse();
     match cli.command {
-        Commands::Lancia { file, sourcemap } => run_file(&file, sourcemap),
+        Commands::Lancia {
+            file,
+            sourcemap,
+            json,
+            timeout,
+        } => run_file(&file, sourcemap, json, timeout),
         Commands::Build {
             file,
             output,
             sourcemap,
-        } => build_file(&file, output, sourcemap),
-        Commands::Check { files } => check_files(&files),
+            stdout,
+            json,
+        } => build_file(&file, output, sourcemap, stdout, json),
+        Commands::Check { files, json } => check_files(&files, json),
+        Commands::Guida => print!("{}", GUIDA),
         Commands::Fmt { files, check } => format_files(&files, check),
         Commands::Nuovo { dir, semplice } => new_project(&dir, semplice),
         Commands::Repl => run_repl(),
@@ -85,130 +114,141 @@ fn main() {
     }
 }
 
-/// Loaded with `node -r` before the program: reports an uncaught error as
-/// JSON in the file named by `FRATM_ERROR_FILE`, so `fratm lancia` can print
-/// it in Neapolitan at the `.fratm` line (the stack is source-mapped).
-const ERROR_HOOK: &str = r#"const fs = require('fs')
-function report(e) {
-  const isError = e !== null && typeof e === 'object'
-  fs.writeFileSync(process.env.FRATM_ERROR_FILE, JSON.stringify({
-    name: isError && e.name ? String(e.name) : 'Error',
-    message: isError && 'message' in e ? String(e.message) : String(e),
-    stack: isError && e.stack ? String(e.stack) : '',
-  }))
-  process.exit(1)
-}
-process.on('uncaughtException', report)
-process.on('unhandledRejection', report)
-"#;
+/// The language reference for AI agents, also served as `llms-full.txt`.
+const GUIDA: &str = include_str!("guida.md");
 
-/// Source map name of the program, as it appears in source-mapped stacks.
-const SOURCE_NAME: &str = "input.fratm";
+/// Name shown for a program read from stdin.
+const STDIN_NAME: &str = "<stdin>";
+
+/// Reads a program from `path`, or from stdin when `path` is `-`.
+fn read_program(path: &Path) -> io::Result<String> {
+    if path.as_os_str() == "-" {
+        let mut source = String::new();
+        io::stdin().read_to_string(&mut source)?;
+        Ok(source)
+    } else {
+        fs::read_to_string(path)
+    }
+}
+
+/// How a path is shown in messages and JSON.
+fn display_name(path: &Path) -> String {
+    if path.as_os_str() == "-" {
+        STDIN_NAME.to_string()
+    } else {
+        path.display().to_string()
+    }
+}
+
+/// Prints `value` as one line of JSON and exits with 1 unless it is `ok`.
+fn print_json(value: serde_json::Value) -> ! {
+    println!("{}", value);
+    std::process::exit(if value["ok"] == true { 0 } else { 1 });
+}
+
+/// JSON for a file that cannot be read.
+fn read_error_json(path: &Path, e: &io::Error) -> serde_json::Value {
+    serde_json::json!({
+        "message": format!("cannot read {}: {}", display_name(path), e),
+        "line": null,
+        "column": null,
+        "suggestion": null,
+    })
+}
 
 /// `--sourcemap` is kept for compatibility: `lancia` always maps runtime
 /// errors back to the `.fratm` source now.
-fn run_file(path: &PathBuf, _sourcemap: bool) {
-    let source = match fs::read_to_string(path) {
+fn run_file(path: &Path, _sourcemap: bool, json: bool, timeout: Option<f64>) {
+    let source = match read_program(path) {
         Ok(s) => s,
+        Err(e) if json => print_json(serde_json::json!({
+            "ok": false,
+            "errors": [read_error_json(path, &e)],
+            "stdout": "",
+            "stderr": "",
+            "exitCode": null,
+            "runtimeError": null,
+        })),
         Err(e) => {
             eprintln!("{} {}", "Error: file not found:".red().bold(), e);
             std::process::exit(1);
         }
     };
-
-    let options = CompileOptions {
-        source_map: true,
-        filename: Some(path.display().to_string()),
-        minify: false,
+    let dir = match path.parent() {
+        Some(dir) if path.as_os_str() != "-" && !dir.as_os_str().is_empty() => dir,
+        _ => Path::new("."),
     };
-
-    let result = match compile(&source, options) {
-        Ok(result) => result,
-        Err(e) => {
+    let outcome = esegui::run(
+        &source,
+        esegui::RunOptions {
+            dir,
+            capture: json,
+            timeout: timeout.map(Duration::from_secs_f64),
+        },
+    );
+    if json {
+        print_json(esegui::outcome_json(&outcome, &source));
+    }
+    match outcome {
+        Outcome::CompileError(e) => {
             print_error(&source, &e);
             std::process::exit(1);
         }
-    };
-
-    let script_dir = path.parent().unwrap_or_else(|| std::path::Path::new("."));
-    let id = std::process::id();
-    let temp_path = script_dir.join(format!(".fratm_temp_{}.js", id));
-    let hook_path = std::env::temp_dir().join(format!("fratm_hook_{}.cjs", id));
-    let error_path = std::env::temp_dir().join(format!("fratm_error_{}.json", id));
-    let mut output = result.code;
-    if let Some(sm) = &result.source_map {
-        output.push('\n');
-        output.push_str(&sm.to_data_url());
-    }
-    if let Err(e) = fs::write(&temp_path, &output).and_then(|_| fs::write(&hook_path, ERROR_HOOK)) {
-        eprintln!("{} {}", "Error: cannot write file:".red().bold(), e);
-        std::process::exit(1);
-    }
-    let _ = fs::remove_file(&error_path);
-    let cmd_status = Command::new("node")
-        .arg("--enable-source-maps")
-        .arg("--require")
-        .arg(&hook_path)
-        .arg(&temp_path)
-        .env("FRATM_ERROR_FILE", &error_path)
-        .status();
-    let _ = fs::remove_file(&temp_path);
-    let _ = fs::remove_file(&hook_path);
-    let report = fs::read_to_string(&error_path).ok();
-    let _ = fs::remove_file(&error_path);
-    match cmd_status {
-        Ok(status) => {
-            if let Some(report) = report {
-                print_runtime_error(&source, &report);
+        Outcome::Failed(message) => {
+            eprintln!("{} {}", "Error:".red().bold(), message);
+            std::process::exit(1);
+        }
+        Outcome::Ran {
+            exit_code,
+            runtime_error,
+            timed_out,
+            ..
+        } => {
+            if let Some(e) = runtime_error {
+                print_runtime_error(&source, &e);
                 std::process::exit(1);
             }
-            if !status.success() {
-                std::process::exit(status.code().unwrap_or(1));
+            if timed_out {
+                eprintln!(
+                    "\n{} {}",
+                    "✗".red().bold(),
+                    "'O programma steva ancora jenno: l'aggio fermato.".red()
+                );
+                std::process::exit(124);
             }
-        }
-        Err(e) => {
-            eprintln!("{} {}", "Error: Node.js failed:".red().bold(), e);
-            std::process::exit(1);
+            if exit_code != Some(0) {
+                std::process::exit(exit_code.unwrap_or(1));
+            }
         }
     }
 }
 
-/// Prints an uncaught runtime error reported by [`ERROR_HOOK`].
-fn print_runtime_error(source: &str, report: &str) {
-    let value: serde_json::Value = serde_json::from_str(report).unwrap_or_default();
-    let field = |key: &str| value[key].as_str().unwrap_or_default().to_string();
-    let message =
-        fratm_core::runtime::napoletanize_runtime_error(&field("name"), &field("message"));
-    match runtime_position(&field("stack")) {
-        Some((line, column)) => {
+/// Prints an uncaught runtime error in Neapolitan, at its `.fratm` line.
+fn print_runtime_error(source: &str, error: &esegui::RuntimeError) {
+    match (error.line, error.column) {
+        (Some(line), Some(column)) => {
             eprintln!(
                 "\n{} Riga {}, colonna {}: {}",
                 "✗ Errore a runtime:".red().bold(),
                 line,
                 column,
-                message
+                error.message
             );
             print_source_line(source, line, Some(column));
         }
-        None => eprintln!("\n{} {}", "✗ Errore a runtime:".red().bold(), message),
+        _ => eprintln!("\n{} {}", "✗ Errore a runtime:".red().bold(), error.message),
     }
     eprintln!("\n{}", errors::random_encouragement().dimmed());
 }
 
-/// Line and column of the innermost stack frame inside the `.fratm` program.
-fn runtime_position(stack: &str) -> Option<(usize, usize)> {
-    stack.lines().find_map(|frame| {
-        let at = frame.find(SOURCE_NAME)? + SOURCE_NAME.len();
-        let mut parts = frame[at..].trim_start_matches(':').split(':');
-        let line = parts.next()?.parse().ok()?;
-        let column = parts.next()?.trim_end_matches(')').parse().ok()?;
-        Some((line, column))
-    })
-}
-
-fn build_file(path: &PathBuf, output: Option<PathBuf>, sourcemap: bool) {
-    let source = match fs::read_to_string(path) {
+fn build_file(path: &Path, output: Option<PathBuf>, sourcemap: bool, stdout: bool, json: bool) {
+    let source = match read_program(path) {
         Ok(s) => s,
+        Err(e) if json => print_json(serde_json::json!({
+            "ok": false,
+            "code": null,
+            "errors": [read_error_json(path, &e)],
+        })),
         Err(e) => {
             eprintln!("{} {}", "Error: file not found:".red().bold(), e);
             std::process::exit(1);
@@ -217,59 +257,103 @@ fn build_file(path: &PathBuf, output: Option<PathBuf>, sourcemap: bool) {
 
     let options = CompileOptions {
         source_map: sourcemap,
-        filename: Some(path.display().to_string()),
+        filename: Some(display_name(path)),
         minify: false,
     };
 
-    match compile(&source, options) {
-        Ok(result) => {
-            let out_path = output.unwrap_or_else(|| {
-                let mut p = path.clone();
-                p.set_extension("js");
-                p
-            });
-            let mut output_content = result.code;
-            if sourcemap {
-                if let Some(sm) = &result.source_map {
-                    let map_path = out_path.with_extension("js.map");
-                    if let Err(e) = fs::write(&map_path, sm.to_json_pretty()) {
-                        eprintln!("{} {}", "Warning: cannot write source map:".yellow(), e);
-                    } else {
-                        output_content.push_str(&format!(
-                            "\n//# sourceMappingURL={}",
-                            map_path.file_name().unwrap().to_string_lossy()
-                        ));
-                        println!("  {} {}", "Source map:".dimmed(), map_path.display());
-                    }
-                }
-            }
-            if let Err(e) = fs::write(&out_path, &output_content) {
-                eprintln!("{} {}", "Error: cannot write file:".red().bold(), e);
-                std::process::exit(1);
-            }
-            println!(
-                "{} {} → {}",
-                errors::success_message().green().bold(),
-                path.display(),
-                out_path.display()
-            );
-        }
+    let result = match compile(&source, options) {
+        Ok(result) => result,
+        Err(e) if json => print_json(serde_json::json!({
+            "ok": false,
+            "code": null,
+            "errors": [esegui::error_json(&e, &source)],
+        })),
         Err(e) => {
             print_error(&source, &e);
             std::process::exit(1);
         }
+    };
+    // With --json or --stdout, a file is written only when -o asks for one
+    let to_terminal = json || stdout || path.as_os_str() == "-";
+    if to_terminal && output.is_none() {
+        if json {
+            print_json(serde_json::json!({ "ok": true, "code": result.code, "errors": [] }));
+        }
+        print!("{}", result.code);
+        return;
     }
+    let out_path = output.unwrap_or_else(|| path.with_extension("js"));
+    let mut output_content = result.code.clone();
+    if sourcemap {
+        if let Some(sm) = &result.source_map {
+            let map_path = out_path.with_extension("js.map");
+            if let Err(e) = fs::write(&map_path, sm.to_json_pretty()) {
+                eprintln!("{} {}", "Warning: cannot write source map:".yellow(), e);
+            } else {
+                output_content.push_str(&format!(
+                    "\n//# sourceMappingURL={}",
+                    map_path.file_name().unwrap().to_string_lossy()
+                ));
+                if !json {
+                    println!("  {} {}", "Source map:".dimmed(), map_path.display());
+                }
+            }
+        }
+    }
+    if let Err(e) = fs::write(&out_path, &output_content) {
+        eprintln!("{} {}", "Error: cannot write file:".red().bold(), e);
+        std::process::exit(1);
+    }
+    if json {
+        print_json(serde_json::json!({ "ok": true, "code": result.code, "errors": [] }));
+    }
+    println!(
+        "{} {} → {}",
+        errors::success_message().green().bold(),
+        path.display(),
+        out_path.display()
+    );
 }
 
-fn check_files(paths: &[PathBuf]) {
+fn check_files(paths: &[PathBuf], json: bool) {
+    if json {
+        let files: Vec<serde_json::Value> = paths
+            .iter()
+            .map(|path| {
+                let errors = match read_program(path) {
+                    Ok(source) => match compile(&source, Default::default()) {
+                        Ok(_) => vec![],
+                        Err(e) => vec![esegui::error_json(&e, &source)],
+                    },
+                    Err(e) => vec![read_error_json(path, &e)],
+                };
+                serde_json::json!({
+                    "file": display_name(path),
+                    "ok": errors.is_empty(),
+                    "errors": errors,
+                })
+            })
+            .collect();
+        let ok = files.iter().all(|f| f["ok"] == true);
+        print_json(serde_json::json!({ "ok": ok, "files": files }));
+    }
     let mut failed = 0;
     for path in paths {
-        let Some(source) = read_source(path) else {
-            failed += 1;
-            continue;
+        let source = match read_program(path) {
+            Ok(source) => source,
+            Err(e) => {
+                eprintln!(
+                    "{} {}: {}",
+                    "Error: cannot read file".red().bold(),
+                    display_name(path),
+                    e
+                );
+                failed += 1;
+                continue;
+            }
         };
         if let Err(e) = compile(&source, Default::default()) {
-            eprintln!("{}", path.display().to_string().bold());
+            eprintln!("{}", display_name(path).bold());
             print_error(&source, &e);
             failed += 1;
         }
@@ -529,16 +613,81 @@ fn print_source_line(source: &str, line_num: usize, column: Option<usize>) {
 mod tests {
     use super::*;
 
+    /// Every ```fratm block of the agent reference, with its first line.
+    fn guida_blocks() -> Vec<(usize, String)> {
+        let mut blocks = Vec::new();
+        let mut current: Option<(usize, String)> = None;
+        for (i, line) in GUIDA.lines().enumerate() {
+            match (&mut current, line.trim_end()) {
+                (None, "```fratm") => current = Some((i + 2, String::new())),
+                (Some(_), "```") => blocks.push(current.take().unwrap()),
+                (Some((_, code)), _) => {
+                    code.push_str(line);
+                    code.push('\n');
+                }
+                _ => {}
+            }
+        }
+        blocks
+    }
+
     #[test]
-    fn finds_the_fratm_frame_in_a_mapped_stack() {
-        let stack = "TypeError: x\n    at f (/tmp/input.fratm:4:20)\n    at Object.<anonymous> (/tmp/input.fratm:6:1)";
-        assert_eq!(runtime_position(stack), Some((4, 20)));
-        let top_level =
-            "ReferenceError: y\n    at /home/a b/input.fratm:2:12\n    at node:internal";
-        assert_eq!(runtime_position(top_level), Some((2, 12)));
-        assert_eq!(
-            runtime_position("Error: z\n    at node:internal/x:1:1"),
-            None
-        );
+    fn every_example_in_the_agent_reference_compiles() {
+        let blocks = guida_blocks();
+        assert!(blocks.len() >= 10, "found {} blocks", blocks.len());
+        for (line, code) in blocks {
+            if let Err(e) = compile(&code, Default::default()) {
+                panic!("guida.md block at line {}: {}", line, e);
+            }
+        }
+    }
+
+    #[test]
+    fn the_agent_reference_lists_every_dialect_keyword() {
+        for keyword in [
+            "chist è",
+            "tien",
+            "facc",
+            "piglie",
+            "sinnò",
+            "vedimm",
+            "mentre che",
+            "primm fa",
+            "dint",
+            "'ncopp",
+            "rompe",
+            "salta",
+            "overo",
+            "sfòls",
+            "nisciun",
+            "boh",
+            "stamm a dì",
+            "mo vir",
+            "aspett",
+            "caccia",
+            "pruvamm",
+            "e si schiatta",
+            "aropp",
+            "iett",
+            "nu bell",
+            "na famiglie",
+            "figlio 'e",
+            "'o pate",
+            "stu cos",
+            "fisso",
+            "damme",
+            "miette",
+            "chiamm",
+            "mann for",
+            "leva",
+            "fermete",
+            "costruttore",
+        ] {
+            assert!(
+                GUIDA.contains(&format!("`{}", keyword)),
+                "missing {}",
+                keyword
+            );
+        }
     }
 }

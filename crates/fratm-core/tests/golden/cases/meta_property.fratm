@@ -1,0 +1,14 @@
+// new.target (import.meta works the same way, in ES modules)
+facc Pizza() {
+    si (new.target == boh) {
+        piglie "chiamata senza nu bell"
+    }
+    stu cos.nome = "margherita"
+}
+
+stamm a dì(Pizza())
+stamm a dì((nu bell Pizza()).nome)
+
+// a property called target is still a property
+chist è nw = { target: "Napoli" }
+stamm a dì(nw.target)

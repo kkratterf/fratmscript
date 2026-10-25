@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipPopup } from '@/components/ui/tooltip'
-import { CodeXml, ExternalLink, GraduationCap, Play, Square } from 'lucide-react'
+import { BookOpen, CodeXml, ExternalLink, GraduationCap, Play, Square } from 'lucide-react'
 import { ThemeSelect } from '@/components/ThemeSelect'
 import { LanguageSelect } from '@/components/LanguageSelect'
 import { useI18n } from '@/lib/i18n'
@@ -13,6 +13,8 @@ interface HeaderProps {
   onEmbed: () => void
   onTour: () => void
   tourActive: boolean
+  onGuide: () => void
+  guideActive: boolean
   isRunning: boolean
   disabled: boolean
 }
@@ -44,7 +46,7 @@ function XIcon({ className }: { className?: string }) {
   )
 }
 
-export function Header({ onRun, onStop, onShare, onEmbed, onTour, tourActive, isRunning, disabled }: HeaderProps) {
+export function Header({ onRun, onStop, onShare, onEmbed, onTour, tourActive, onGuide, guideActive, isRunning, disabled }: HeaderProps) {
   const { t } = useI18n()
   return (
     <header className="flex flex-col gap-2 bg-card px-4 py-3 border-border border-b">
@@ -69,6 +71,23 @@ export function Header({ onRun, onStop, onShare, onEmbed, onTour, tourActive, is
               }
             />
             <TooltipPopup>{t(tourActive ? 'header.tourExit' : 'header.tourOpen')}</TooltipPopup>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant={guideActive ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={onGuide}
+                  aria-pressed={guideActive}
+                  aria-label={t('header.guideLabel')}
+                >
+                  <BookOpen className="size-4" />
+                  <span className="hidden sm:inline">{t('header.guide')}</span>
+                </Button>
+              }
+            />
+            <TooltipPopup>{t(guideActive ? 'header.guideExit' : 'header.guideOpen')}</TooltipPopup>
           </Tooltip>
           <div className="hidden sm:flex items-center gap-2">
             <LanguageSelect />
@@ -124,7 +143,8 @@ export function Header({ onRun, onStop, onShare, onEmbed, onTour, tourActive, is
               <TooltipPopup>{t('header.xTip')}</TooltipPopup>
             </Tooltip>
           </div>
-          <div className="flex items-center gap-1.5">
+          {/* The guide runs its own snippets: the playground's actions wait until you leave it */}
+          <div className={cn('flex items-center gap-1.5', guideActive && 'hidden')}>
             {/* Run and Stop share one grid cell, so swapping them never moves the header.
                 The hidden one is visibility: hidden, out of the tab order and a11y tree. */}
             <div className="grid *:col-start-1 *:row-start-1">

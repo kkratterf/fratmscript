@@ -1,0 +1,21 @@
+chist è ora = 20
+
+si (ora < 12) {
+    stamm a dì("Buongiorno!")
+} sinnò si (ora < 18) {
+    stamm a dì("Buon pomeriggio!")
+} sinnò {
+    stamm a dì("Bonasera!")
+}
+
+chist è giorno = "dummeneca"
+vedimm (giorno) {
+    caso "sabato":
+        stamm a dì("Pizza!")
+        rompe
+    caso "dummeneca":
+        stamm a dì("Ragù!")
+        rompe
+    predefinit:
+        stamm a dì("Pasta e fagioli")
+}

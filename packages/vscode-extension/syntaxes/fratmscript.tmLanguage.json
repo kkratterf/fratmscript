@@ -131,9 +131,9 @@
           "match": "'(e|o pate|ncopp)\\b"
         },
         {
-          "comment": "Module: chiamm (import), da (from), mann for (export)",
+          "comment": "Module: chiamm (import), da (from), mann for (export), comme (as)",
           "name": "keyword.control.import.fratm",
-          "match": "\\b(chiamm|da|mann|for|predefinit)\\b"
+          "match": "\\b(chiamm|da|mann|for|predefinit|comme)\\b"
         },
         {
           "comment": "Async: mo vir (async), aspett (await)",

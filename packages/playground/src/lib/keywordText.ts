@@ -38,6 +38,7 @@ export const KEYWORD_TEXT: Record<string, { en: string; nap: string }> = {
   'da': { en: 'Where the import comes from', nap: 'Addò vene l\'import' },
   'mann': { en: 'Exports from the module (first part, followed by "for")', nap: 'Esporta d\'o modulo (primma parte, po\' vene "for")' },
   'for': { en: 'Part of "mann for" (export)', nap: 'Piezzo \'e "mann for" (export)' },
+  'comme': { en: 'Renames an import or export (as): chiamm { a comme b }', nap: 'Dà n\'atu nomme a n\'import o n\'export (as): chiamm { a comme b }' },
   'predefinit': { en: 'Default export/import, or the default case of a switch', nap: 'Export/import predefinito, o \'o caso ca resta int\'a nu vedimm' },
   'overo': { en: 'Boolean true', nap: 'Vero' },
   'sfòls': { en: 'Boolean false', nap: 'Falso' },

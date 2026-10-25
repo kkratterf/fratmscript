@@ -18,7 +18,7 @@ interface LessonPanelProps {
 }
 
 /** Text with `code` spans (and ``a ` inside`` for backticks). */
-function RichText({ text }: { text: string }) {
+export function RichText({ text }: { text: string }) {
   const parts = text.split(/(``\s?.+?\s?``|`[^`]+`)/g)
   return (
     <>

@@ -1,0 +1,15 @@
+facc dividi(a, b) {
+    si (b == 0) {
+        iett nu bell Error("Nun se divide pe zero!")
+    }
+    piglie a / b
+}
+
+pruvamm {
+    stamm a dì(dividi(10, 2))
+    stamm a dì(dividi(1, 0))
+} e si schiatta (errore) {
+    stamm a dì("Errore:", errore.message)
+} aropp {
+    stamm a dì("Fatto")
+}

@@ -101,6 +101,10 @@ pub fn napoletanize_error(message: &str) -> String {
     if expects(message, "'cos'") {
         return "Doppo 'stu' ce vo' 'cos'! Scrivi 'stu cos' pe riferisce a this.".to_string();
     }
+    if expects(message, "'comme'") {
+        return "Ccà ce vo' 'comme' pe dà nu nomme: 'chiamm * comme fs da \"node:fs\"'."
+            .to_string();
+    }
     if expects(message, "'for'") {
         return "Doppo 'mann' ce vo' 'for'! Scrivi 'mann for' pe esportà.".to_string();
     }
@@ -184,6 +188,12 @@ pub fn napoletanize_error(message: &str) -> String {
                 available.trim_end_matches(')')
             );
         }
+    }
+    if let Some(names) = message.strip_prefix("The fratm library is imported by name: ") {
+        return format!(
+            "'A libreria \"fratm\" se chiamma pe nomme, cu 'e graffe: {}",
+            names
+        );
     }
     if message.contains("'caccia' works only inside") {
         return "'caccia' se po' usà sulo dint'a nu generatore: facc* nomme() { caccia … }"
@@ -309,6 +319,12 @@ const TYPO_CANDIDATES: &[(&str, &str)] = &[
 /// misspelled keyword on the error line (`stama a dì` → `stamm a dì`).
 pub fn suggest(error: &CompileError, source: &str) -> Option<String> {
     if let CompileError::ParseError { line, column, .. } = error {
+        if let Some((word, phrase)) = javascript_keyword(source, *line, *column) {
+            return Some(format!(
+                "💡 In FratmScript '{}' se scrive '{}'",
+                word, phrase
+            ));
+        }
         if let Some((typo, phrase)) = keyword_typo(source, *line, *column) {
             return Some(format!(
                 "💡 Forse vulive scrivere '{}' invece 'e '{}'?",
@@ -317,6 +333,73 @@ pub fn suggest(error: &CompileError, source: &str) -> Option<String> {
         }
     }
     get_suggestion(error)
+}
+
+// ============== JavaScript keywords ==============
+
+/// JavaScript keywords that FratmScript spells in dialect, with the phrase to
+/// write instead. `typeof` and `instanceof` are left out: they are accepted.
+const JS_KEYWORDS: &[(&str, &str)] = &[
+    ("const", "chist è"),
+    ("let", "tien"),
+    ("var", "tien"),
+    ("function", "facc"),
+    ("return", "piglie"),
+    ("if", "si"),
+    ("else", "sinnò"),
+    ("while", "mentre che"),
+    ("for", "pe"),
+    ("do", "primm fa"),
+    ("switch", "vedimm"),
+    ("case", "caso"),
+    ("default", "predefinit"),
+    ("break", "rompe"),
+    ("continue", "salta"),
+    ("true", "overo"),
+    ("false", "sfòls"),
+    ("null", "nisciun"),
+    ("this", "stu cos"),
+    ("new", "nu bell"),
+    ("class", "na famiglie"),
+    ("extends", "figlio 'e"),
+    ("super", "'o pate"),
+    ("static", "fisso"),
+    ("constructor", "costruttore"),
+    ("try", "pruvamm"),
+    ("catch", "e si schiatta"),
+    ("finally", "aropp"),
+    ("throw", "iett"),
+    ("async", "mo vir"),
+    ("await", "aspett"),
+    ("yield", "caccia"),
+    ("import", "chiamm"),
+    ("export", "mann for"),
+    ("delete", "leva"),
+    ("debugger", "fermete"),
+];
+
+/// The FratmScript phrase for a JavaScript keyword (`const` → `chist è`).
+pub fn fratm_for_javascript(word: &str) -> Option<&'static str> {
+    JS_KEYWORDS
+        .iter()
+        .find(|(js, _)| *js == word)
+        .map(|(_, phrase)| *phrase)
+}
+
+/// The JavaScript keyword closest before the error position (on the same
+/// line), with the FratmScript phrase to write instead.
+fn javascript_keyword(source: &str, line: usize, column: usize) -> Option<(String, &'static str)> {
+    let tokens = crate::lexer::Lexer::new(source).tokenize();
+    tokens
+        .iter()
+        .filter(|t| t.span.line == line && t.span.column <= column)
+        .rev()
+        .find_map(|t| match &t.kind {
+            crate::lexer::TokenKind::Identifier(name) => {
+                fratm_for_javascript(name).map(|phrase| (name.clone(), phrase))
+            }
+            _ => None,
+        })
 }
 
 /// The identifier closest before the error position (on the same line) that
@@ -420,6 +503,41 @@ pub fn success_message() -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn hint(source: &str) -> Option<String> {
+        let error = crate::compile(source, Default::default()).unwrap_err();
+        suggest(&error, source)
+    }
+
+    #[test]
+    fn test_javascript_keywords_point_to_the_dialect() {
+        assert_eq!(
+            hint("const x = 1").as_deref(),
+            Some("💡 In FratmScript 'const' se scrive 'chist è'")
+        );
+        assert_eq!(
+            hint("facc f() { return 1 }").as_deref(),
+            Some("💡 In FratmScript 'return' se scrive 'piglie'")
+        );
+        assert_eq!(
+            hint("tien d = new Date()").as_deref(),
+            Some("💡 In FratmScript 'new' se scrive 'nu bell'")
+        );
+        assert_eq!(
+            hint("if (overo) { }").as_deref(),
+            Some("💡 In FratmScript 'if' se scrive 'si'")
+        );
+        assert_eq!(
+            hint("function saluta() { }").as_deref(),
+            Some("💡 In FratmScript 'function' se scrive 'facc'")
+        );
+    }
+
+    #[test]
+    fn test_reserved_names_that_compile_get_no_javascript_hint() {
+        // `for` is a valid FratmScript name; the error here is the missing value
+        assert!(!hint("tien for =").unwrap_or_default().contains("'for'"));
+    }
 
     #[test]
     fn test_error_formatting() {

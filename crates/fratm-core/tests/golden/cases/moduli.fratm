@@ -1,0 +1,26 @@
+// Every import form
+chiamm React da "react"
+chiamm Vue, { ref, computed comme calcola } da "vue"
+chiamm * comme fs da "node:fs"
+chiamm Pippo, * comme tutto da "./pippo.js"
+chiamm { predefinit comme Base, for } da "./base.js"
+chiamm {
+    a,
+    b as bi,
+} da "./multi.js"
+chiamm "./stile.css"
+
+// Every export form
+chist è x = 1
+tien comme = 2
+mann for { x, comme comme y, x comme predefinit }
+mann for { c, d comme e } da "./c.js"
+mann for * da "./d.js"
+mann for * comme spazio da "./e.js"
+
+// Dynamic import
+mo vir facc carica(nome) {
+    chist è modulo = aspett chiamm("./pagine/" + nome + ".js")
+    piglie modulo.default
+}
+chiamm("./effetti.js")

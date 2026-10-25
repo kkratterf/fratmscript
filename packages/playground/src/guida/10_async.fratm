@@ -1,0 +1,14 @@
+chiamm { aspetta } da "fratm"
+
+mo vir facc cucina(pizza) {
+    stamm a dì("Inforno", pizza)
+    aspett aspetta(300)
+    piglie pizza + " pronta"
+}
+
+mo vir facc servizio() {
+    chist è pizze = aspett Promise.all([cucina("margherita"), cucina("marinara")])
+    stamm a dì(pizze.join(", "))
+}
+
+servizio()

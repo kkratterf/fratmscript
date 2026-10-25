@@ -1,11 +1,15 @@
 // ============================================
 // Example 9: Modules (Import/Export)
-// chiamm (import), mann for (export)
+// chiamm (import), mann for (export), comme (as)
 // ============================================
 
-// Import from Node built-in modules (no external dependencies)
+// Named imports from Node built-in modules (no external dependencies)
 chiamm { basename, dirname } da "node:path"
-chiamm { platform } da "node:os"
+// Default import, and a namespace import with 'comme'
+chiamm os da "node:os"
+chiamm * comme percorsi da "node:path"
+// Rename an import with 'comme'
+chiamm { a_caso comme dado } da "fratm"
 
 facc descriviPercorso(percorso) {
     piglie "file=" + basename(percorso) + ", cartella=" + dirname(percorso)
@@ -16,8 +20,21 @@ mann for facc calcolaIVA(prezzo) {
     piglie prezzo * 1.22
 }
 
+// Export names you already have, renamed with 'comme' if you like
+chist è aliquota = 22
+mann for { aliquota, descriviPercorso comme descrivi }
+
 // Export default object
-mann for predefinit { nome: "ModuloDemo", versione: "1.1", ambiente: platform() }
+mann for predefinit { nome: "ModuloDemo", versione: "1.2", ambiente: os.platform() }
+
+// Dynamic import: loads a module only when you need it
+mo vir facc estensione(file) {
+    chist è path = aspett chiamm("node:path")
+    piglie path.extname(file)
+}
 
 stamm a dì(descriviPercorso("/tmp/fratm/esempio.js"))
 stamm a dì("IVA 100 => " + calcolaIVA(100))
+stamm a dì("Separatore: " + percorsi.sep)
+stamm a dì("Dado tra 1 e 1: " + dado(1, 1))
+estensione("pizza.fratm").then(est => stamm a dì("Estensione: " + est))

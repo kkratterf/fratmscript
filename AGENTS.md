@@ -22,7 +22,7 @@ FratmScript is a Neapolitan-flavoured language that transpiles to JavaScript.
 
 - **Code, comments, doc comments, commit messages, PR titles and PR descriptions: English.**
 - FratmScript keywords, examples and user-facing compiler and runtime error messages stay in Neapolitan/Italian. That is the product, not a style choice.
-- Playground UI copy comes in Italian (default), English and Neapolitan, picked from a menu in the header. Every UI string lives in `packages/playground/src/lib/i18n.tsx` in all three languages; tour lessons (`src/lib/lessons.ts`), syntax reference rows (`SyntaxHelp.tsx`), example names (`src/lib/examples.ts`) and keyword hover texts (`src/lib/keywordText.ts`, Italian from the shared keyword table) carry their own translations.
+- Playground UI copy comes in Italian (default), English and Neapolitan, picked from a menu in the header. Every UI string lives in `packages/playground/src/lib/i18n.tsx` in all three languages; tour lessons (`src/lib/lessons.ts`), guide sections (`src/guida/guida.json`, also read by the agent reference, so keep its keys stable), syntax reference rows (`SyntaxHelp.tsx`), example names (`src/lib/examples.ts`) and keyword hover texts (`src/lib/keywordText.ts`, Italian from the shared keyword table) carry their own translations.
 - When you touch a file that has Italian comments, translate the comments you edit; do not rewrite unrelated ones in the same PR.
 
 ## Build and test
@@ -60,7 +60,7 @@ VS Code extension (needs the npm package's WASM build first): `cd packages/vscod
 - **CI must be green** before a PR is ready. Never skip, `#[ignore]`, delete or weaken a test to get green. Never silence clippy with a blanket `allow`; fix the lint or justify a narrow `#[allow]` with a comment.
 - **Every compiler fix ships with a regression test** that fails before the fix and passes after it. Put it next to the code it covers (`#[cfg(test)] mod tests` in the same module) and assert on the generated JavaScript, not only on "it compiles".
 - **Golden tests** (`crates/fratm-core/tests/golden.rs`) snapshot the JavaScript generated for every `examples/*.fratm` and every `crates/fratm-core/tests/golden/cases/*.fratm`; when a `.out` file sits next to the snapshot, the JS is also run with Node and stdout must match. New language constructs add a case there with a `.out` file. After an intended output change, regenerate with `FRATM_UPDATE_GOLDEN=1 cargo test -p fratm-core --test golden` and review the diff.
-- **Every new language construct** needs: lexer/parser/codegen support, tests, an update to the keyword table in `README.md`, the VS Code grammar/snippets if relevant, the playground syntax help, and an example in `examples/` when it is user-visible.
+- **Every new language construct** needs: lexer/parser/codegen support, tests, an update to the keyword table in `README.md` and to the agent reference `crates/fratm-cli/src/guida.md` (printed by `fratm guida`; its `fratm` code blocks are compile-tested, and its "not supported yet" list must stay true), the VS Code grammar/snippets if relevant, the playground syntax help, and an example in `examples/` when it is user-visible.
 - Do not change existing keywords or their meaning without an issue that says so. Backwards compatibility of `.fratm` files matters.
 - Keep PRs small and focused: one issue, one PR. Do not mix refactors with behaviour changes.
 - No new dependencies without a reason written in the PR description.

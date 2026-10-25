@@ -1,0 +1,11 @@
+chist è citta = "Napoli"
+tien pizze = 2
+
+pizze += 1
+pizze++
+stamm a dì(citta, pizze)
+
+// Più variabili in una riga
+tien x = 1, y = 2
+x = x + y
+stamm a dì(x)

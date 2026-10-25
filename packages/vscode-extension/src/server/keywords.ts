@@ -254,6 +254,12 @@ export const KEYWORDS: KeywordInfo[] = [
     descrizione: 'Export/import di default',
     categoria: 'modulo'
   },
+  {
+    napoletano: 'comme',
+    javascript: 'as',
+    descrizione: 'Rinomina un import o un export: chiamm { a comme b }, chiamm * comme fs',
+    categoria: 'modulo'
+  },
 
   // === Valori ===
   {

@@ -129,7 +129,7 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
-function ErrorCard({ error, onErrorClick }: { error: PlaygroundError; onErrorClick: OutputPanelProps['onErrorClick'] }) {
+export function ErrorCard({ error, onErrorClick }: { error: PlaygroundError; onErrorClick: OutputPanelProps['onErrorClick'] }) {
   const line = error.kind === 'compile' || error.kind === 'runtime' ? error.line : undefined
   const column = error.kind === 'compile' || error.kind === 'runtime' ? error.column : undefined
   const { t } = useI18n()
@@ -168,7 +168,7 @@ function ErrorCard({ error, onErrorClick }: { error: PlaygroundError; onErrorCli
         <div className="bg-warning/5 px-4 py-3 border-destructive/20 border-t">
           <div className="flex items-start gap-2 text-sm">
             <TriangleAlert className="mt-0.5 w-4 h-4 text-warning shrink-0" />
-            <span className="text-warning">{error.suggestion}</span>
+            <span className="text-warning-foreground">{error.suggestion}</span>
           </div>
         </div>
       )}
@@ -236,8 +236,8 @@ export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, 
                   {/* Log content */}
                   <span className={cn(
                     'flex-1 break-all whitespace-pre-wrap',
-                    log.type === 'warn' && 'text-warning',
-                    log.type === 'error' && 'text-destructive',
+                    log.type === 'warn' && 'text-warning-foreground',
+                    log.type === 'error' && 'text-destructive-foreground',
                     log.type === 'log' && 'text-foreground'
                   )}>
                     {log.args.map((arg, j) => (

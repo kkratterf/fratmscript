@@ -65,6 +65,48 @@ jobs:
             fi
           done
 
+      - name: Check the playground guide
+        run: |
+          cd packages/playground/src/guida
+          # guida.json: unique ids, text in every UI language, every snippet listed and present
+          node -e '
+            const fs = require("fs")
+            const { sections } = JSON.parse(fs.readFileSync("guida.json", "utf8"))
+            const ids = new Set()
+            const listed = new Set()
+            for (const section of sections) {
+              if (ids.has(section.id)) throw new Error(`duplicate section id: ${section.id}`)
+              ids.add(section.id)
+              for (const lang of ["it", "en", "nap"]) {
+                if (!section.title?.[lang] || !section.body?.[lang]?.length) throw new Error(`section ${section.id} has no ${lang} text`)
+              }
+              for (const file of section.snippets) {
+                if (!fs.existsSync(file)) throw new Error(`section ${section.id} names a missing snippet: ${file}`)
+                listed.add(file)
+              }
+            }
+            for (const file of fs.readdirSync(".").filter(f => f.endsWith(".fratm"))) {
+              if (!listed.has(file)) throw new Error(`${file} is not in guida.json`)
+            }
+          '
+          fratm=../../../../target/debug/fratm
+          for snippet in *.fratm; do
+            case "$snippet" in
+              *.sbagliato.fratm)
+                # Snippets that show a compiler message must keep failing
+                if "$fratm" check "$snippet" > /dev/null 2>&1; then
+                  echo "::error file=packages/playground/src/guida/$snippet::this snippet should not compile"
+                  exit 1
+                fi
+                ;;
+              *)
+                "$fratm" check "$snippet"
+                "$fratm" fmt --check "$snippet"
+                diff -u "${snippet%.fratm}.out" <("$fratm" lancia "$snippet")
+                ;;
+            esac
+          done
+
   npm-package:
     name: npm package and VS Code extension
     runs-on: ubuntu-latest

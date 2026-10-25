@@ -1,0 +1,266 @@
+{
+  "sections": [
+    {
+      "id": "ciao",
+      "title": { "it": "Primi passi", "en": "First steps", "nap": "'E primme passe" },
+      "body": {
+        "it": [
+          "FratmScript è JavaScript con le parole chiave in napoletano. Il compilatore traduce il tuo codice in JavaScript normale, che gira ovunque: nel browser, in Node, qui nel playground.",
+          "`stamm a dì(…)` stampa una riga nella console: è il `console.log` di JavaScript. Accetta più valori separati da virgole. `avvis a dì` e `scrive a dì` stampano avvisi ed errori (`console.warn`, `console.error`).",
+          "I commenti si scrivono come in JavaScript: `// fino a fine riga` oppure `/* … */`. Il punto e virgola non serve: basta andare a capo."
+        ],
+        "en": [
+          "FratmScript is JavaScript with Neapolitan keywords. The compiler turns your code into plain JavaScript that runs anywhere: in the browser, in Node, here in the playground.",
+          "`stamm a dì(…)` prints a line to the console: it is JavaScript's `console.log`. It takes several values separated by commas. `avvis a dì` and `scrive a dì` print warnings and errors (`console.warn`, `console.error`).",
+          "Comments work as in JavaScript: `// to the end of the line` or `/* … */`. No semicolons needed: a new line ends a statement."
+        ],
+        "nap": [
+          "FratmScript è JavaScript cu 'e parole chiave in napoletano. 'O compilatore traduce 'o codice tuoio in JavaScript normale, ca gira addò vuò tu: int'o browser, cu Node, ccà int'o playground.",
+          "`stamm a dì(…)` stampa na riga int'a console: è 'o `console.log` 'e JavaScript. Piglia cchiù valori, separati cu 'e virgole. `avvis a dì` e `scrive a dì` stampano avvise e errori (`console.warn`, `console.error`).",
+          "'E commenti se scriveno comme in JavaScript: `// fino a fine riga` o `/* … */`. 'O punto e virgola nun serve: abbasta ji' a capo."
+        ]
+      },
+      "snippets": ["01_ciao.fratm"]
+    },
+    {
+      "id": "variabili",
+      "title": { "it": "Variabili", "en": "Variables", "nap": "Variabili" },
+      "body": {
+        "it": [
+          "`chist è nome = valore` dichiara una costante, un valore che non cambia mai (`const`). `tien nome = valore` dichiara una variabile che può cambiare (`let`).",
+          "Per cambiare una variabile ci sono `=`, gli operatori composti (`+=`, `-=`, `*=`, `??=`…) e `++` / `--`. Con `tien x = 1, y = 2` dichiari più variabili insieme.",
+          "Niente accenti sulla tastiera? `chist e` funziona come `chist è`."
+        ],
+        "en": [
+          "`chist è name = value` declares a constant, a value that never changes (`const`). `tien name = value` declares a variable that can change (`let`).",
+          "To change a variable use `=`, compound operators (`+=`, `-=`, `*=`, `??=`…) and `++` / `--`. `tien x = 1, y = 2` declares several variables at once.",
+          "No accents on your keyboard? `chist e` works like `chist è`."
+        ],
+        "nap": [
+          "`chist è nomme = valore` dichiara na costante, nu valore ca nun cagna maje (`const`). `tien nomme = valore` dichiara na variabile ca pò cagnà (`let`).",
+          "Pe cagnà na variabile ce stanno `=`, l'operatori composti (`+=`, `-=`, `*=`, `??=`…) e `++` / `--`. Cu `tien x = 1, y = 2` dichiari cchiù variabili int'na botta.",
+          "Nun tiene l'accenti ncopp'a tastiera? `chist e` funziona comme `chist è`."
+        ]
+      },
+      "snippets": ["02_variabili.fratm"]
+    },
+    {
+      "id": "valori",
+      "title": { "it": "Valori e operatori", "en": "Values and operators", "nap": "Valori e operatori" },
+      "body": {
+        "it": [
+          "Numeri, stringhe tra `\"…\"` o `'…'` e template tra backtick (`` `Uè ${nome}` ``) sono quelli di JavaScript. I valori speciali hanno nomi napoletani: `overo` (true), `sfòls` (false), `nisciun` (null), `boh` (undefined).",
+          "Gli operatori logici sono parole: `e` o `pure` (&&), `o` (||), `no` o `manco` (!). I confronti restano `<`, `>`, `<=`, `>=`, `==`, `!=`.",
+          "`a ?? b` dà `b` quando `a` è `nisciun` o `boh`; `a?.b` legge `b` solo se `a` esiste. `chè è x` è `typeof x` e `x è uno Classe` è `instanceof`."
+        ],
+        "en": [
+          "Numbers, strings in `\"…\"` or `'…'` and backtick templates (`` `Uè ${nome}` ``) are JavaScript's. Special values have Neapolitan names: `overo` (true), `sfòls` (false), `nisciun` (null), `boh` (undefined).",
+          "Logical operators are words: `e` or `pure` (&&), `o` (||), `no` or `manco` (!). Comparisons stay `<`, `>`, `<=`, `>=`, `==`, `!=`.",
+          "`a ?? b` gives `b` when `a` is `nisciun` or `boh`; `a?.b` reads `b` only if `a` exists. `chè è x` is `typeof x` and `x è uno Class` is `instanceof`."
+        ],
+        "nap": [
+          "Nummere, stringhe tra `\"…\"` o `'…'` e template tra backtick (`` `Uè ${nome}` ``) so' chille 'e JavaScript. 'E valori speciali teneno nomme napoletane: `overo` (true), `sfòls` (false), `nisciun` (null), `boh` (undefined).",
+          "L'operatori logici so' parole: `e` o `pure` (&&), `o` (||), `no` o `manco` (!). 'E confronti restano `<`, `>`, `<=`, `>=`, `==`, `!=`.",
+          "`a ?? b` dà `b` quanno `a` è `nisciun` o `boh`; `a?.b` legge `b` sulo si `a` ce sta. `chè è x` è `typeof x` e `x è uno Classe` è `instanceof`."
+        ]
+      },
+      "snippets": ["03_valori.fratm"]
+    },
+    {
+      "id": "condizioni",
+      "title": { "it": "Condizioni", "en": "Conditions", "nap": "Si e sinnò" },
+      "body": {
+        "it": [
+          "`si (condizione) { … }` esegue il blocco solo se la condizione è vera (`if`). `sinnò { … }` è il caso contrario (`else`), e `sinnò si (…)` aggiunge altri casi.",
+          "`vedimm (valore) { caso …: … }` sceglie tra tanti casi (`switch`). `rompe` esce dal blocco (`break`), `predefinit:` è il caso che resta (`default`)."
+        ],
+        "en": [
+          "`si (condition) { … }` runs the block only when the condition is true (`if`). `sinnò { … }` is the other branch (`else`), and `sinnò si (…)` adds more cases.",
+          "`vedimm (value) { caso …: … }` picks one of many cases (`switch`). `rompe` leaves the block (`break`), `predefinit:` is the fallback case (`default`)."
+        ],
+        "nap": [
+          "`si (condizione) { … }` fa 'o blocco sulo si 'a condizione è vera (`if`). `sinnò { … }` è chello ca succede quanno nun è vera (`else`), e `sinnò si (…)` mette n'ato caso.",
+          "`vedimm (valore) { caso …: … }` sceglie tra tanta casi (`switch`). `rompe` esce d'o blocco (`break`), `predefinit:` è 'o caso ca resta (`default`)."
+        ]
+      },
+      "snippets": ["04_condizioni.fratm"]
+    },
+    {
+      "id": "cicli",
+      "title": { "it": "Cicli", "en": "Loops", "nap": "Cicli" },
+      "body": {
+        "it": [
+          "`pe (tien i = 0; i < 3; i++) { … }` ripete contando (`for`). `mentre che (condizione) { … }` ripete finché la condizione è vera (`while`); `primm fa { … } mentre che (…)` esegue il blocco almeno una volta (`do…while`).",
+          "`pe ogni (chist è x dint lista)` scorre gli elementi uno a uno (`for…of`); `pe ogni (chist è chiave 'ncopp oggetto)` scorre le chiavi di un oggetto (`for…in`).",
+          "`rompe` esce dal ciclo (`break`) e `salta` passa al giro successivo (`continue`). Un ciclo infinito non blocca la pagina: il playground lo ferma dopo qualche secondo."
+        ],
+        "en": [
+          "`pe (tien i = 0; i < 3; i++) { … }` repeats while counting (`for`). `mentre che (condition) { … }` repeats while the condition is true (`while`); `primm fa { … } mentre che (…)` runs the block at least once (`do…while`).",
+          "`pe ogni (chist è x dint list)` walks the items one by one (`for…of`); `pe ogni (chist è key 'ncopp object)` walks the keys of an object (`for…in`).",
+          "`rompe` leaves the loop (`break`) and `salta` skips to the next round (`continue`). An endless loop does not freeze the page: the playground stops it after a few seconds."
+        ],
+        "nap": [
+          "`pe (tien i = 0; i < 3; i++) { … }` ripete cuntanno (`for`). `mentre che (condizione) { … }` ripete fino a quanno 'a condizione è vera (`while`); `primm fa { … } mentre che (…)` fa 'o blocco almeno na vota (`do…while`).",
+          "`pe ogni (chist è x dint lista)` passa 'e elementi uno a uno (`for…of`); `pe ogni (chist è chiave 'ncopp oggetto)` passa 'e chiave 'e n'oggetto (`for…in`).",
+          "`rompe` esce d'o ciclo (`break`) e `salta` zompa a 'o giro appriesso (`continue`). Nu ciclo ca nun fernesce maje nun blocca 'a pagina: 'o playground 'o ferma doppo quacche secondo."
+        ]
+      },
+      "snippets": ["05_cicli.fratm"]
+    },
+    {
+      "id": "funzioni",
+      "title": { "it": "Funzioni", "en": "Functions", "nap": "Funzioni" },
+      "body": {
+        "it": [
+          "`facc nome(parametri) { … }` dichiara una funzione (`function`) e `piglie valore` restituisce un valore (`return`). I parametri possono avere un default (`nome = \"Gennà\"`) e un resto (`...numeri`).",
+          "Per le funzioni corte c'è la freccia: `n => n * 2`, `(a, b) => a + b`, oppure con un blocco `(x) => { … }`. Le funzioni sono valori: le puoi passare, restituire e salvare in una variabile."
+        ],
+        "en": [
+          "`facc name(params) { … }` declares a function (`function`) and `piglie value` returns a value (`return`). Parameters can have a default (`nome = \"Gennà\"`) and a rest (`...numeri`).",
+          "Short functions use arrows: `n => n * 2`, `(a, b) => a + b`, or with a block `(x) => { … }`. Functions are values: pass them around, return them, store them in variables."
+        ],
+        "nap": [
+          "`facc nomme(parametri) { … }` dichiara na funzione (`function`) e `piglie valore` dà nu valore a chi l'ha chiammata (`return`). 'E parametri ponno tenè nu default (`nome = \"Gennà\"`) e nu resto (`...numeri`).",
+          "Pe 'e funzioni corte ce sta 'a freccia: `n => n * 2`, `(a, b) => a + b`, o cu nu blocco `(x) => { … }`. 'E funzioni so' valori: 'e puoi passà, dà e mettere int'a na variabile."
+        ]
+      },
+      "snippets": ["06_funzioni.fratm"]
+    },
+    {
+      "id": "liste-oggetti",
+      "title": { "it": "Liste e oggetti", "en": "Lists and objects", "nap": "Liste e oggetti" },
+      "body": {
+        "it": [
+          "Le liste (`[\"a\", \"b\"]`) e gli oggetti (`{ nome: \"Margherita\", prezzo: 6 }`) sono quelli di JavaScript, con tutti i loro metodi: `push`, `map`, `filter`, `join`, `Object.keys`…",
+          "Negli oggetti puoi usare la forma breve (`{ nome }`), le chiavi calcolate (`[chiave]: valore`) e i metodi (`descrivi() { … }`). Dentro un metodo, `stu cos` è l'oggetto stesso (`this`).",
+          "Lo spread `...` copia liste e oggetti (`[...a, 4]`, `{ ...o, prezzo: 7 }`); il destructuring tira fuori più valori in una volta (`chist è { prezzo, forno = \"a legna\" } = pizza`). `leva o.campo` cancella un campo (`delete`)."
+        ],
+        "en": [
+          "Lists (`[\"a\", \"b\"]`) and objects (`{ nome: \"Margherita\", prezzo: 6 }`) are JavaScript's, with all their methods: `push`, `map`, `filter`, `join`, `Object.keys`…",
+          "Objects support shorthand (`{ nome }`), computed keys (`[key]: value`) and methods (`descrivi() { … }`). Inside a method, `stu cos` is the object itself (`this`).",
+          "Spread `...` copies lists and objects (`[...a, 4]`, `{ ...o, prezzo: 7 }`); destructuring pulls out several values at once (`chist è { prezzo, forno = \"a legna\" } = pizza`). `leva o.field` deletes a field (`delete`)."
+        ],
+        "nap": [
+          "'E liste (`[\"a\", \"b\"]`) e l'oggetti (`{ nome: \"Margherita\", prezzo: 6 }`) so' chille 'e JavaScript, cu tutt'e metodi lloro: `push`, `map`, `filter`, `join`, `Object.keys`…",
+          "Int'all'oggetti puoi scrivere 'a forma corta (`{ nome }`), 'e chiave calcolate (`[chiave]: valore`) e 'e metodi (`descrivi() { … }`). Dint'a nu metodo, `stu cos` è l'oggetto stesso (`this`).",
+          "'O spread `...` copia liste e oggetti (`[...a, 4]`, `{ ...o, prezzo: 7 }`); 'o destructuring caccia cchiù valori int'na botta (`chist è { prezzo, forno = \"a legna\" } = pizza`). `leva o.campo` leva nu campo (`delete`)."
+        ]
+      },
+      "snippets": ["07_liste.fratm", "07_oggetti.fratm"]
+    },
+    {
+      "id": "classi",
+      "title": { "it": "Classi", "en": "Classes", "nap": "Famiglie" },
+      "body": {
+        "it": [
+          "`na famiglie Nome { … }` dichiara una classe (`class`). Il `costruttore(…)` prepara l'oggetto e `nu bell Nome(…)` ne crea uno nuovo (`new`).",
+          "`figlio 'e` eredita da un'altra classe (`extends`) e `'o pate` chiama la classe madre (`super`). `fisso` rende un metodo statico (`static`), `damme` e `miette` creano getter e setter. I campi con `#` sono privati."
+        ],
+        "en": [
+          "`na famiglie Name { … }` declares a class (`class`). The `costruttore(…)` sets the object up and `nu bell Name(…)` creates a new one (`new`).",
+          "`figlio 'e` inherits from another class (`extends`) and `'o pate` calls the parent class (`super`). `fisso` makes a method static (`static`), `damme` and `miette` create getters and setters. Fields starting with `#` are private."
+        ],
+        "nap": [
+          "`na famiglie Nomme { … }` dichiara na classe (`class`). 'O `costruttore(…)` prepara l'oggetto e `nu bell Nomme(…)` ne crea uno nuovo (`new`).",
+          "`figlio 'e` eredita 'a n'ata famiglie (`extends`) e `'o pate` chiamma 'a famiglie 'e primma (`super`). `fisso` fa nu metodo fisso (`static`), `damme` e `miette` fanno getter e setter. 'E campi cu `#` so' privati."
+        ]
+      },
+      "snippets": ["08_classi.fratm"]
+    },
+    {
+      "id": "errori",
+      "title": { "it": "Errori", "en": "Errors", "nap": "Errori" },
+      "body": {
+        "it": [
+          "`iett nu bell Error(\"…\")` lancia un errore (`throw`). `pruvamm { … } e si schiatta (errore) { … }` lo acchiappa e il programma continua (`try/catch`); `aropp { … }` gira sempre, che ci sia stato un errore o no (`finally`).",
+          "Un errore che nessuno acchiappa ferma il programma: il playground lo mostra in napoletano, con la riga del tuo codice."
+        ],
+        "en": [
+          "`iett nu bell Error(\"…\")` throws an error (`throw`). `pruvamm { … } e si schiatta (errore) { … }` catches it and the program goes on (`try/catch`); `aropp { … }` always runs, error or not (`finally`).",
+          "An error nobody catches stops the program: the playground shows it in Neapolitan, with the line of your code."
+        ],
+        "nap": [
+          "`iett nu bell Error(\"…\")` iette n'errore (`throw`). `pruvamm { … } e si schiatta (errore) { … }` l'acchiappa e 'o programma va annanze (`try/catch`); `aropp { … }` gira sempe, cu l'errore o senza (`finally`).",
+          "N'errore ca nisciuno acchiappa ferma 'o programma: 'o playground t'o mostra in napoletano, cu 'a riga d'o codice tuoio."
+        ]
+      },
+      "snippets": ["09_errori.fratm"]
+    },
+    {
+      "id": "async",
+      "title": { "it": "Async e generatori", "en": "Async and generators", "nap": "Mo vir e caccia" },
+      "body": {
+        "it": [
+          "`mo vir facc` dichiara una funzione asincrona (`async function`) e `aspett` aspetta che una Promise finisca (`await`). Funziona anche con le frecce: `mo vir (x) => …`, e nei cicli: `pe aspett (… dint …)`.",
+          "`facc* nome() { … }` dichiara un generatore (`function*`): ogni `caccia valore` produce il prossimo valore (`yield`). Un generatore si scorre con `pe ogni` o con lo spread."
+        ],
+        "en": [
+          "`mo vir facc` declares an async function (`async function`) and `aspett` waits for a Promise (`await`). It also works with arrows, `mo vir (x) => …`, and in loops, `pe aspett (… dint …)`.",
+          "`facc* name() { … }` declares a generator (`function*`): each `caccia value` produces the next value (`yield`). Walk a generator with `pe ogni` or spread it."
+        ],
+        "nap": [
+          "`mo vir facc` dichiara na funzione asincrona (`async function`) e `aspett` aspetta ca na Promise fernesce (`await`). Funziona pure cu 'e frecce, `mo vir (x) => …`, e int'e cicli, `pe aspett (… dint …)`.",
+          "`facc* nomme() { … }` dichiara nu generatore (`function*`): ogni `caccia valore` caccia 'o valore appriesso (`yield`). Nu generatore se passa cu `pe ogni` o cu 'o spread."
+        ]
+      },
+      "snippets": ["10_async.fratm", "10_generatori.fratm"]
+    },
+    {
+      "id": "moduli",
+      "title": { "it": "Moduli e libreria fratm", "en": "Modules and the fratm library", "nap": "Moduli e 'a libreria fratm" },
+      "body": {
+        "it": [
+          "`chiamm { a, b } da \"modulo\"` importa (`import … from`) e `mann for` esporta (`export`), come i moduli di JavaScript. Nel playground il codice gira in un solo file, quindi gli import da altri file funzionano con la CLI e con Vite.",
+          "`chiamm { … } da \"fratm\"` usa la libreria di FratmScript, che funziona ovunque, anche qui: `a_caso(min, max)`, `uno_a_caso(lista)`, `mischia(lista)`, `quanti(cosa)`, `arrotonda(n, cifre)`, `ripeti(volte, f)` e `aspetta(ms)`."
+        ],
+        "en": [
+          "`chiamm { a, b } da \"module\"` imports (`import … from`) and `mann for` exports (`export`), like JavaScript modules. The playground runs a single file, so imports from other files work with the CLI and with Vite.",
+          "`chiamm { … } da \"fratm\"` uses the FratmScript library, which works everywhere, here too: `a_caso(min, max)`, `uno_a_caso(list)`, `mischia(list)`, `quanti(thing)`, `arrotonda(n, digits)`, `ripeti(times, f)` and `aspetta(ms)`."
+        ],
+        "nap": [
+          "`chiamm { a, b } da \"modulo\"` chiamma nu modulo (`import … from`) e `mann for` 'o manna fore (`export`), comme 'e moduli 'e JavaScript. Int'o playground gira nu file sulo, quindi l'import 'a ati file funzionano cu 'a CLI e cu Vite.",
+          "`chiamm { … } da \"fratm\"` usa 'a libreria 'e FratmScript, ca funziona addò vuò tu, pure ccà: `a_caso(min, max)`, `uno_a_caso(lista)`, `mischia(lista)`, `quanti(cosa)`, `arrotonda(n, cifre)`, `ripeti(vote, f)` e `aspetta(ms)`."
+        ]
+      },
+      "snippets": ["11_libreria.fratm"]
+    },
+    {
+      "id": "javascript",
+      "title": { "it": "Tutto JavaScript", "en": "All of JavaScript", "nap": "Tutto JavaScript" },
+      "body": {
+        "it": [
+          "Tutto quello che non è una parola chiave resta JavaScript: `Math`, `JSON`, `Map`, `Set`, `Promise`, i metodi di stringhe e liste, le API del browser e di Node. Ogni libreria JavaScript si può usare da FratmScript.",
+          "Il pannello JS a destra mostra il JavaScript generato: è il modo più veloce per capire cosa fa una parola chiave. I nomi riservati in JavaScript vengono rinominati (`tien for = 1` diventa `let $for = 1`)."
+        ],
+        "en": [
+          "Everything that is not a keyword stays JavaScript: `Math`, `JSON`, `Map`, `Set`, `Promise`, string and list methods, browser and Node APIs. Any JavaScript library can be used from FratmScript.",
+          "The JS panel shows the generated JavaScript: the quickest way to see what a keyword does. Names reserved in JavaScript are renamed (`tien for = 1` becomes `let $for = 1`)."
+        ],
+        "nap": [
+          "Tutto chello ca nun è na parola chiave resta JavaScript: `Math`, `JSON`, `Map`, `Set`, `Promise`, 'e metodi 'e stringhe e liste, l'API d'o browser e 'e Node. Ogni libreria JavaScript se pò usà da FratmScript.",
+          "'O pannello JS fa vedé 'o JavaScript ca esce: è 'o modo cchiù veloce pe capì che fa na parola chiave. 'E nomme riservati in JavaScript vengono cagnati (`tien for = 1` addiventa `let $for = 1`)."
+        ]
+      },
+      "snippets": ["12_javascript.fratm"]
+    },
+    {
+      "id": "messaggi",
+      "title": { "it": "Messaggi del compilatore", "en": "Compiler messages", "nap": "'E messaggi d'o compilatore" },
+      "body": {
+        "it": [
+          "Quando sbagli, il compilatore te lo dice in napoletano, con la riga, la colonna e spesso un suggerimento: se scrivi `stama` ti propone `stamm a dì`. Clicca sull'errore per andare alla riga.",
+          "Anche gli errori a runtime (per esempio una variabile che non esiste) arrivano in napoletano, con il messaggio originale di JavaScript tra parentesi. Esegui l'esempio qui sotto e correggilo."
+        ],
+        "en": [
+          "When something is wrong, the compiler tells you in Neapolitan, with the line, the column and often a hint: write `stama` and it suggests `stamm a dì`. Click the error to jump to the line.",
+          "Runtime errors (say, a variable that does not exist) come in Neapolitan too, with JavaScript's original message in brackets. Run the example below and fix it."
+        ],
+        "nap": [
+          "Quanno sbaglie, 'o compilatore t'o dice in napoletano, cu 'a riga, 'a colonna e spisso nu cunziglio: si scrive `stama` te dice `stamm a dì`. Clicca ncopp'a l'errore pe ji' 'a riga.",
+          "Pure l'errori a runtime (pe esempio na variabile ca nun ce sta) arrivano in napoletano, cu 'o messaggio 'e JavaScript tra parentesi. Fa' girà l'esempio ccà sotto e aggiustalo."
+        ]
+      },
+      "snippets": ["13_messaggi.sbagliato.fratm"]
+    }
+  ]
+}

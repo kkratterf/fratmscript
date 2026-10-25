@@ -1,0 +1,10 @@
+facc* numeri(fino) {
+    pe (tien i = 1; i <= fino; i++) {
+        caccia i
+    }
+}
+
+pe ogni (chist è n dint numeri(3)) {
+    stamm a dì(n)
+}
+stamm a dì([...numeri(5)].join(" "))

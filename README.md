@@ -119,8 +119,16 @@ fratm check <files...>              # Report errors without writing output
 fratm fmt <files...>                # Format files in place (comments kept)
 fratm fmt --check <files...>        # Fail if a file is not formatted
 fratm repl                          # Interactive REPL
+fratm guida                         # Language reference for AI agents
 fratm tokens <file>                 # Debug: show tokens
 fratm ast <file>                    # Debug: show AST
+```
+
+`check`, `build` and `lancia` take `--json` for one machine-readable JSON object (errors with line, column and hint; `build` adds the JavaScript, `lancia` the captured output and runtime error). `-` as the file reads the program from stdin, `build --stdout` prints the JavaScript and `lancia --timeout <seconds>` stops programs that never end:
+
+```bash
+echo 'stamm a dì(1 + 1)' | fratm lancia --json -
+# {"errors":[],"exitCode":0,"ok":true,"runtimeError":null,"stderr":"","stdout":"2\n"}
 ```
 
 A `.fratm` file can start with a shebang line and be run as a script:
@@ -278,10 +286,21 @@ iett nu bell Error("message")
 
 ### Modules
 ```fratm
-chiamm { x } da "module"     // import
-mann for facc fn() { }       // export
-mann for predefinit App      // export default
+chiamm { x, y comme z } da "module"   // import { x, y as z }
+chiamm React da "react"               // default import
+chiamm React, { useState } da "react"
+chiamm * comme fs da "node:fs"        // import * as fs
+chiamm "./stile.css"                  // import for side effects only
+chist è m = aspett chiamm("./m.js")   // dynamic import()
+
+mann for facc fn() { }                // export
+mann for predefinit App               // export default
+mann for { a, b comme c }             // export { a, b as c }
+mann for { a } da "./altro.js"        // re-export
+mann for * da "./altro.js"            // export * (also * comme ns)
 ```
+
+`comme` (or `as`) is a keyword only between a module name and its alias, and `predefinit` there means `default`: `chiamm { predefinit comme App } da "./app.js"`.
 
 ### The `fratm` library
 
@@ -357,6 +376,7 @@ fermete                      // debugger
 | `chiamm` | `import` | "call" |
 | `da` | `from` | "from" |
 | `mann for` | `export` | "send out" |
+| `comme` | `as` (imports/exports) | "like" |
 | `e` / `pure` | `&&` | "and" / "also" |
 | `o` | `\|\|` | "or" |
 | `no` / `manco` / `!` | `!` | "no" / "not even" |
@@ -397,6 +417,8 @@ just wasm
 ## Playground
 
 The [playground](https://kkratterf.github.io/fratmscript/) is a web-based editor to try FratmScript in your browser. Press **Impara** (Learn, Scola) for *'A scola 'e FratmScript*, a tour of 12 short lessons with an exercise each, checked against the console output. Lessons live in `packages/playground/src/scola/` (starter, `.soluzione.fratm` and expected `.out`; CI runs every solution).
+
+Press **Guida** (Guide) for the [language guide](https://kkratterf.github.io/fratmscript/#guida): every construct explained in Italian, English or Neapolitan, with examples you edit and run on the spot and their generated JavaScript. Link a section with `#guida=<id>`, e.g. [`#guida=cicli`](https://kkratterf.github.io/fratmscript/#guida=cicli). The guide lives in `packages/playground/src/guida/` (`guida.json` plus one `.fratm`/`.out` pair per example; CI runs every example).
 
 Next to the generated JavaScript, the **Token** and **Tree** tabs show how the compiler reads your code; hover an item to highlight it in the editor.
 

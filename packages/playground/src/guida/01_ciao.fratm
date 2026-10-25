@@ -1,0 +1,6 @@
+// stamm a dì stampa una riga nella console (console.log)
+stamm a dì("Uè, munno!")
+stamm a dì("Pizze:", 3, "Pronte:", overo)
+
+// avvis a dì e scrive a dì stampano avvisi ed errori
+avvis a dì("Attento, 'o furno è caldo")

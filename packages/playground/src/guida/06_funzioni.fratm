@@ -1,0 +1,19 @@
+facc saluta(nome = "Gennà") {
+    piglie "Uè " + nome + "!"
+}
+stamm a dì(saluta())
+stamm a dì(saluta("Totò"))
+
+// Funzioni freccia e parametri rest
+chist è doppio = n => n * 2
+chist è somma = (...numeri) => numeri.reduce((totale, n) => totale + n, 0)
+stamm a dì(doppio(21), somma(1, 2, 3))
+
+// Una funzione che crea funzioni
+facc contatore() {
+    tien conto = 0
+    piglie () => ++conto
+}
+chist è prossimo = contatore()
+prossimo()
+stamm a dì(prossimo())

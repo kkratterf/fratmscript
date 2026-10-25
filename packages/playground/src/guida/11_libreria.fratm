@@ -1,0 +1,5 @@
+chiamm { quanti, arrotonda, ripeti } da "fratm"
+
+stamm a dì(quanti(["a", "b", "c"]), quanti("pizza"))
+stamm a dì(arrotonda(3.14159, 2))
+ripeti(2, giro => stamm a dì("Giro", giro))

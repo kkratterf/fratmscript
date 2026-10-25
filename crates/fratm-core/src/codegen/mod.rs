@@ -437,15 +437,78 @@ impl CodeGen {
             }
 
             Statement::Import {
+                default,
+                namespace,
+                specifiers,
+                source,
+                ..
+            } => {
+                self.write_indent();
+                let mut parts = Vec::new();
+                if let Some(name) = default {
+                    parts.push(js_name(name).into_owned());
+                }
+                if let Some(name) = namespace {
+                    parts.push(format!("* as {}", js_name(name)));
+                }
+                if !specifiers.is_empty() {
+                    let names: Vec<String> = specifiers
+                        .iter()
+                        .map(|s| alias(&s.imported, &js_name(&s.local)))
+                        .collect();
+                    parts.push(format!("{{ {} }}", names.join(", ")));
+                }
+                if parts.is_empty() {
+                    self.emit("import ");
+                } else {
+                    self.emit("import ");
+                    self.emit(&parts.join(", "));
+                    self.emit(" from ");
+                }
+                self.emit(&js_string(source));
+                self.emit(";");
+            }
+
+            Statement::ExportNamed {
                 specifiers, source, ..
             } => {
                 self.write_indent();
-                self.emit("import { ");
-                let names: Vec<String> = specifiers.iter().map(|s| s.local.clone()).collect();
-                self.emit(&js_names(&names));
-                self.emit(" } from \"");
-                self.emit(source);
-                self.emit("\";");
+                // Local names are escaped like everywhere else, unless they
+                // name another module's exports (`mann for { for } da "m"`)
+                let names: Vec<String> = specifiers
+                    .iter()
+                    .map(|s| match source {
+                        Some(_) => alias(&s.local, &s.exported),
+                        None => alias(&js_name(&s.local), &s.exported),
+                    })
+                    .collect();
+                if names.is_empty() {
+                    self.emit("export {}");
+                } else {
+                    self.emit("export { ");
+                    self.emit(&names.join(", "));
+                    self.emit(" }");
+                }
+                if let Some(source) = source {
+                    self.emit(" from ");
+                    self.emit(&js_string(source));
+                }
+                self.emit(";");
+            }
+
+            Statement::ExportAll {
+                exported, source, ..
+            } => {
+                self.write_indent();
+                self.emit("export * ");
+                if let Some(name) = exported {
+                    self.emit("as ");
+                    self.emit(name);
+                    self.emit(" ");
+                }
+                self.emit("from ");
+                self.emit(&js_string(source));
+                self.emit(";");
             }
 
             Statement::Export {
@@ -554,6 +617,16 @@ impl CodeGen {
             Expression::Undefined { .. } => self.emit("undefined"),
             Expression::This { .. } => self.emit("this"),
             Expression::Super { .. } => self.emit("super"),
+            Expression::Import { source, .. } => {
+                self.emit("import(");
+                self.gen_expression(source);
+                self.emit(")");
+            }
+            Expression::MetaProperty { meta, property, .. } => {
+                self.emit(meta);
+                self.emit(".");
+                self.emit(property);
+            }
             Expression::Array { elements, .. } => {
                 self.emit("[");
                 for (i, elem) in elements.iter().enumerate() {
@@ -1080,12 +1153,18 @@ fn pattern_name(pattern: &Pattern) -> Option<&str> {
     }
 }
 
-fn js_names(names: &[String]) -> String {
-    names
-        .iter()
-        .map(|n| js_name(n))
-        .collect::<Vec<_>>()
-        .join(", ")
+/// `name`, or `name as alias` when the two differ.
+fn alias(name: &str, alias: &str) -> String {
+    if name == alias {
+        name.to_string()
+    } else {
+        format!("{} as {}", name, alias)
+    }
+}
+
+/// A module path as a JS string literal.
+fn js_string(value: &str) -> String {
+    serde_json::to_string(value).unwrap_or_else(|_| format!("\"{}\"", value))
 }
 
 impl Default for CodeGen {

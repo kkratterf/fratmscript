@@ -1,0 +1,16 @@
+chist è nome = "Margherita"
+chist è pizza = {
+    nome,
+    prezzo: 6,
+    descrivi() {
+        piglie `${stu cos.nome}: ${stu cos.prezzo} euro`
+    },
+}
+stamm a dì(pizza.descrivi())
+
+chist è { prezzo, forno = "a legna" } = pizza
+stamm a dì(prezzo, forno)
+
+chist è copia = { ...pizza, prezzo: 7 }
+leva copia.descrivi
+stamm a dì(copia.prezzo, copia.descrivi)

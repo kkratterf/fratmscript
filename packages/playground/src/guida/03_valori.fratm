@@ -1,0 +1,11 @@
+chist è nome = "Totò"
+chist è anni = 42
+
+stamm a dì(`${nome} tene ${anni} anni`)
+stamm a dì(anni > 18 e nome != "", no overo)
+stamm a dì(nisciun ?? "niente", boh ?? "nun definito")
+
+chist è ordine = { cliente: { nome: "Ciro" } }
+stamm a dì(ordine.cliente?.nome, ordine.consegna?.via ?? "ritiro al banco")
+
+stamm a dì(chè è anni, [1, 2] è uno Array)

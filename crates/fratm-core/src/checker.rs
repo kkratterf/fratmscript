@@ -312,10 +312,25 @@ impl Checker {
             }
             Statement::Throw { value, .. } => self.expression(value),
             Statement::Import {
+                default,
+                namespace,
                 specifiers,
                 source,
                 span,
             } => {
+                let whole = default.iter().chain(namespace.iter());
+                if source == crate::stdlib::MODULE && (default.is_some() || namespace.is_some()) {
+                    self.fail(SemanticError {
+                        message: format!(
+                            "The fratm library is imported by name: chiamm {{ {} }} da \"fratm\"",
+                            crate::stdlib::names()
+                        ),
+                        span: *span,
+                    });
+                }
+                for name in whole {
+                    self.declare(name, Binding::Lexical, *span);
+                }
                 for s in specifiers {
                     if source == crate::stdlib::MODULE
                         && crate::stdlib::helper(&s.imported).is_none()
@@ -344,6 +359,7 @@ impl Checker {
                     self.expression(value);
                 }
             }
+            Statement::ExportNamed { .. } | Statement::ExportAll { .. } => {}
             Statement::Expression { expression, .. } => self.expression(expression),
             Statement::Block { statements, .. } => self.block(statements),
         }
@@ -367,6 +383,7 @@ impl Checker {
             | Expression::Undefined { .. }
             | Expression::This { .. }
             | Expression::Super { .. }
+            | Expression::MetaProperty { .. }
             | Expression::Regex { .. } => {}
             Expression::Array { elements: list, .. }
             | Expression::Sequence {
@@ -417,6 +434,9 @@ impl Checker {
             }
             | Expression::Delete {
                 operand: argument, ..
+            }
+            | Expression::Import {
+                source: argument, ..
             } => self.expression(argument),
             Expression::Yield { argument, .. } => {
                 if let Some(argument) = argument {

@@ -1,0 +1,22 @@
+pe (tien i = 1; i <= 3; i++) {
+    stamm a dì("Giro", i)
+}
+
+tien caffè = 0
+mentre che (caffè < 2) {
+    caffè++
+}
+stamm a dì("Caffè:", caffè)
+
+chist è pizze = ["margherita", "marinara", "diavola"]
+pe ogni (chist è pizza dint pizze) {
+    si (pizza == "marinara") {
+        salta
+    }
+    stamm a dì(pizza)
+}
+
+chist è prezzi = { margherita: 6, diavola: 8 }
+pe ogni (chist è nome 'ncopp prezzi) {
+    stamm a dì(nome, prezzi[nome])
+}

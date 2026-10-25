@@ -104,8 +104,13 @@ const syntaxReference: { category: Localized; items: SyntaxItem[] }[] = [
     { fratm: 'iett', js: 'throw', desc: { it: 'Lancia un errore', en: 'Throw error', nap: "Lancia n'errore" } },
   ]},
   { category: { it: 'Moduli', en: 'Modules', nap: 'Moduli' }, items: [
-    { fratm: 'chiamm ... da', js: 'import ... from', desc: { it: 'Importa un modulo', en: 'Import module', nap: 'Chiamma nu modulo' }, insert: 'chiamm {  } da ""' },
+    { fratm: 'chiamm { a } da', js: 'import { a } from', desc: { it: 'Importa per nome', en: 'Named import', nap: 'Chiamma pe nomme' }, insert: 'chiamm {  } da ""' },
+    { fratm: 'chiamm X da', js: 'import X from', desc: { it: 'Importa il default', en: 'Default import', nap: "Chiamma 'o predefinito" }, insert: 'chiamm  da ""' },
+    { fratm: 'chiamm * comme ns da', js: 'import * as ns from', desc: { it: 'Importa tutto il modulo', en: 'Namespace import', nap: "Chiamma tutt'o modulo" }, insert: 'chiamm * comme  da ""' },
+    { fratm: 'a comme b', js: 'a as b', desc: { it: 'Rinomina un import o un export', en: 'Rename an import or export', nap: "Dà n'atu nomme" } },
     { fratm: 'mann for', js: 'export', desc: { it: 'Esporta', en: 'Export', nap: 'Esporta' } },
+    { fratm: 'mann for { a } da', js: 'export { a } from', desc: { it: 'Riesporta da un altro modulo', en: 'Re-export', nap: "Riesporta 'a n'atu modulo" }, insert: 'mann for {  } da ""' },
+    { fratm: 'chiamm("…")', js: 'import("…")', desc: { it: 'Import dinamico (con aspett)', en: 'Dynamic import (with aspett)', nap: 'Import dinamico (cu aspett)' }, insert: 'aspett chiamm("")' },
   ]},
   // Helpers of the fratm library (crates/fratm-core/src/stdlib.rs): a click inserts the import
   { category: { it: 'Libreria fratm', en: 'fratm library', nap: "'A libreria fratm" }, items: [

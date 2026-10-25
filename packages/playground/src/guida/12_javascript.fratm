@@ -1,0 +1,10 @@
+// Tutto JavaScript è disponibile: Math, JSON, Map, Set, metodi delle stringhe...
+stamm a dì(Math.max(3, 7, 5))
+stamm a dì(JSON.stringify({ pizza: "margherita", prezzo: 6 }))
+
+chist è visti = nu bell Set(["Ciro", "Totò", "Ciro"])
+stamm a dì(visti.size)
+
+chist è prezzi = nu bell Map([["margherita", 6]])
+stamm a dì(prezzi.get("margherita"))
+stamm a dì("napoli".toUpperCase().padStart(8, "*"))

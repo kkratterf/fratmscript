@@ -99,7 +99,11 @@ pub enum Statement {
         members: Vec<ClassMember>,
         span: Span,
     },
+    /// `chiamm D, { a comme b } da "m"`, `chiamm * comme ns da "m"`,
+    /// `chiamm "m"` (no bindings: only for its side effects)
     Import {
+        default: Option<String>,
+        namespace: Option<String>,
         specifiers: Vec<ImportSpecifier>,
         source: String,
         span: Span,
@@ -107,6 +111,18 @@ pub enum Statement {
     Export {
         declaration: Option<Box<Statement>>,
         default_value: Option<Expression>,
+        span: Span,
+    },
+    /// `mann for { a, b comme c }`, optionally re-exported `da "m"`
+    ExportNamed {
+        specifiers: Vec<ExportSpecifier>,
+        source: Option<String>,
+        span: Span,
+    },
+    /// `mann for * da "m"`, `mann for * comme ns da "m"`
+    ExportAll {
+        exported: Option<String>,
+        source: String,
         span: Span,
     },
     Expression {
@@ -123,6 +139,12 @@ pub enum Statement {
 pub struct ImportSpecifier {
     pub imported: String,
     pub local: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExportSpecifier {
+    pub local: String,
+    pub exported: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -311,6 +333,17 @@ pub enum Expression {
         operand: Box<Expression>,
         span: Span,
     },
+    /// `chiamm("./m")`: dynamic import
+    Import {
+        source: Box<Expression>,
+        span: Span,
+    },
+    /// `import.meta`, `new.target`
+    MetaProperty {
+        meta: String,
+        property: String,
+        span: Span,
+    },
 }
 
 impl Expression {
@@ -324,6 +357,8 @@ impl Expression {
             Expression::Undefined { span } => *span,
             Expression::This { span } => *span,
             Expression::Super { span } => *span,
+            Expression::MetaProperty { span, .. } => *span,
+            Expression::Import { span, .. } => *span,
             Expression::Array { span, .. } => *span,
             Expression::Regex { span, .. } => *span,
             Expression::Sequence { span, .. } => *span,

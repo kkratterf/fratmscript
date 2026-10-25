@@ -1,0 +1,35 @@
+na famiglie Persona {
+    costruttore(nome) {
+        stu cos.nome = nome
+    }
+
+    saluta() {
+        piglie "Uè, so' " + stu cos.nome
+    }
+}
+
+na famiglie Pizzaiolo figlio 'e Persona {
+    #pizze = 0
+
+    costruttore(nome) {
+        'o pate(nome)
+    }
+
+    sforna() {
+        stu cos.#pizze++
+    }
+
+    damme pizze() {
+        piglie stu cos.#pizze
+    }
+
+    fisso mestiere() {
+        piglie "pizzaiolo"
+    }
+}
+
+chist è gennaro = nu bell Pizzaiolo("Gennaro")
+gennaro.sforna()
+gennaro.sforna()
+stamm a dì(gennaro.saluta(), gennaro.pizze)
+stamm a dì(Pizzaiolo.mestiere(), gennaro è uno Persona)

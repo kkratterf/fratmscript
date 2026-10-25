@@ -1,0 +1,11 @@
+chist è pizze = ["margherita", "marinara"]
+pizze.push("diavola")
+
+stamm a dì(pizze[0], pizze.length)
+stamm a dì(pizze.map(p => p.toUpperCase()).join(", "))
+stamm a dì(pizze.filter(p => p.startsWith("m")).length)
+
+// Spread e destructuring
+chist è tutte = [...pizze, "capricciosa"]
+chist è [prima, ...ato] = tutte
+stamm a dì(prima, ato.length)

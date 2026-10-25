@@ -20,6 +20,8 @@ import { cn } from '@/lib/utils'
 import { buildShareUrl, buildEmbedSnippet, isEmbed, readSharedCode, loadSavedCode, saveCode } from '@/lib/share'
 import { lessons } from '@/lib/lessons'
 import { LessonPanel } from '@/components/LessonPanel'
+import { GuidePage } from '@/components/GuidePage'
+import { guide } from '@/lib/guide'
 import type { LogValue } from '@/lib/runner'
 import { useI18n, type MessageKey } from '@/lib/i18n'
 
@@ -37,6 +39,13 @@ function lessonFromHash(): number | null {
   if (value === null) return null
   const n = Number.parseInt(value, 10)
   return Number.isFinite(n) ? Math.min(Math.max(n, 1), lessons.length) - 1 : 0
+}
+
+/** Guide section from the URL hash (`#guida` or `#guida=cicli`), or null outside the guide. */
+function guideFromHash(): number | null {
+  const value = new URLSearchParams(window.location.hash.slice(1)).get('guida')
+  if (value === null) return null
+  return Math.max(guide.findIndex(section => section.id === value), 0)
 }
 
 function readStored(key: string): string | null {
@@ -85,17 +94,18 @@ function App() {
   // A share link wins over the autosaved code, which wins over the default
   const [initial] = useState(() => {
     // An embed shows only the code from its link
-    if (embed) return { code: readSharedCode() ?? defaultCode, example: '', lesson: null }
+    if (embed) return { code: readSharedCode() ?? defaultCode, example: '', lesson: null, guide: null }
     const lesson = lessonFromHash()
     if (lesson !== null) {
       const id = lessons[lesson].id
-      return { code: readStored(LESSON_CODE_KEY + id) ?? lessons[lesson].starter, example: '', lesson }
+      return { code: readStored(LESSON_CODE_KEY + id) ?? lessons[lesson].starter, example: '', lesson, guide: null }
     }
+    const section = guideFromHash()
     const code = readSharedCode() ?? loadSavedCode() ?? defaultCode
-    if (code === defaultCode) return { code, example: '', lesson: null }
+    if (code === defaultCode) return { code, example: '', lesson: null, guide: section }
     // Unedited example code restored from autosave keeps its name in the picker
     const match = Object.entries(examples).find(([, source]) => source === code)
-    return { code, example: match ? match[0] : 'custom', lesson: null }
+    return { code, example: match ? match[0] : 'custom', lesson: null, guide: section }
   })
   const [code, setCode] = useState(initial.code)
   const [selectedExample, setSelectedExample] = useState(initial.example)
@@ -113,6 +123,8 @@ function App() {
   // 'A scola: index of the open lesson, null outside the tour
   const [lessonIndex, setLessonIndex] = useState<number | null>(initial.lesson)
   const lesson = lessonIndex === null ? null : lessons[lessonIndex]
+  // 'A guida: index of the open guide section, null outside the guide
+  const [guideIndex, setGuideIndex] = useState<number | null>(initial.guide)
   const [completed, setCompleted] = useState<Set<string>>(() => {
     try {
       return new Set(JSON.parse(readStored(LESSONS_DONE_KEY) ?? '[]') as string[])
@@ -196,6 +208,7 @@ function App() {
 
   const openLesson = useCallback((index: number) => {
     const next = lessons[index]
+    setGuideIndex(null)
     setLessonIndex(index)
     setSelectedExample('')
     setCode(readStored(LESSON_CODE_KEY + next.id) ?? next.starter)
@@ -230,6 +243,30 @@ function App() {
       return next
     })
   }, [code, compiler.busy, compiler.consoleLogs, compiler.errors.length, compiler.status, completed, lastRunCode, lesson])
+
+  const openGuide = useCallback((index: number) => {
+    if (lessonIndex !== null) exitTour()
+    setGuideIndex(index)
+    history.replaceState(null, '', `#guida=${guide[index].id}`)
+  }, [exitTour, lessonIndex])
+
+  const exitGuide = useCallback(() => {
+    setGuideIndex(null)
+    history.replaceState(null, '', window.location.pathname + window.location.search)
+  }, [])
+
+  const handleGuide = useCallback(() => {
+    if (guideIndex !== null) exitGuide()
+    else openGuide(0)
+  }, [exitGuide, guideIndex, openGuide])
+
+  // A snippet opened from the guide becomes the playground code
+  const handleOpenSnippet = useCallback((source: string) => {
+    exitGuide()
+    setCode(source)
+    setSelectedExample('custom')
+    setMobileTab('code')
+  }, [exitGuide])
 
   const copy = useCallback((text: string, title: MessageKey, description: MessageKey) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -277,15 +314,20 @@ function App() {
             onEmbed={handleEmbed}
             onTour={handleTour}
             tourActive={lesson !== null}
+            onGuide={handleGuide}
+            guideActive={guideIndex !== null}
             isRunning={isRunning}
             disabled={compiler.isLoading}
           />
         )}
 
-        {/* Main content area - fills remaining space. Side by side on
-            desktop; on phones one full-height tab at a time. */}
-        <main className="flex md:grid flex-col flex-1 md:grid-cols-2 min-h-0 overflow-hidden">
-          {isMobile && (
+        {/* One main landmark for the guide, the mobile tabs and the panels */}
+        <main className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          {guideIndex !== null && (
+            <GuidePage index={guideIndex} onSelect={openGuide} ready={compiler.isWasmLoaded} onOpen={handleOpenSnippet} />
+          )}
+
+          {isMobile && guideIndex === null && (
             <MobileTabs
               value={mobileTab}
               onChange={setMobileTab}
@@ -293,130 +335,135 @@ function App() {
               logCount={compiler.consoleLogs.length}
             />
           )}
-          {/* Editor Panel (kept mounted when hidden so the editor keeps its state) */}
-          <div
-            id="panel-code"
-            role={isMobile ? 'tabpanel' : undefined}
-            className={cn(
-              'flex flex-col flex-1 md:border-r border-border min-h-0 overflow-hidden',
-              isMobile && mobileTab !== 'code' && 'hidden',
-            )}
-          >
-            {lesson && lessonIndex !== null && (
-              <LessonPanel
-                lessons={lessons}
-                index={lessonIndex}
-                completed={completed}
-                onSelect={openLesson}
-                onExit={exitTour}
-                onReset={() => editorRef.current?.replaceAll(lesson.starter)}
-                onShowSolution={() => editorRef.current?.replaceAll(lesson.solution)}
-              />
-            )}
-            {/* Sticky panel header */}
-            <div className={cn('flex justify-between items-center bg-card px-4 py-2.5 border-border border-b shrink-0', embed && 'hidden')}>
-              <span className="font-medium text-muted-foreground text-sm truncate">
-                {lesson ? `scola/${lesson.id}.fratm` : EXAMPLE_TITLES[selectedExample] ?? 'main.fratm'}
-                {selectedExample === 'custom' && <span className="ml-1.5 text-xs">{t('editor.edited')}</span>}
-              </span>
-              <Badge className="px-1 font-mono" variant="outline">{compiler.version}</Badge>
-            </div>
-            {/* Scrollable editor */}
-            <div className="flex-1 bg-background min-h-0 overflow-auto">
-              <Editor
-                ref={editorRef}
-                value={code}
-                onChange={handleCodeChange}
-                onRun={handleRun}
-                onFormat={handleFormat}
-                diagnostics={diagnostics}
-                onCursorLineChange={setCursorLine}
-              />
-            </div>
-            {/* Sticky examples bar */}
-            <div className={cn('flex flex-wrap items-center justify-between gap-x-2 gap-y-2 bg-card px-4 py-2.5 border-border border-t shrink-0', embed && 'hidden')}>
-              <div className={cn('flex items-center gap-3 min-w-0', lesson && 'invisible')}>
-                <label htmlFor="example-picker" className="text-muted-foreground text-xs">{t('editor.examples')}</label>
-                <NativeSelect
-                  id="example-picker"
-                  value={selectedExample}
-                  onChange={handleExampleChange}
-                  className="w-44 sm:w-52"
-                >
-                  <option value="">{t('editor.chooseExample')}</option>
-                  {selectedExample === 'custom' && <option value="custom" disabled>{t('editor.custom')}</option>}
-                  {exampleList.map(example => (
-                    <option key={example.id} value={example.id}>{example.title[lang]}</option>
-                  ))}
-                </NativeSelect>
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <label className="flex items-center gap-1.5 text-muted-foreground text-xs cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={autoRun}
-                    onChange={handleAutoRunChange}
-                    className="accent-primary size-3.5"
-                  />
-                  {t('editor.autoRun')}
-                </label>
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        variant="outline"
-                        size="icon-sm"
-                        aria-label={t('editor.format')}
-                        onClick={handleFormat}
-                        disabled={compiler.isLoading}
-                      >
-                        <AlignLeft className="size-4" />
-                      </Button>
-                    }
-                  />
-                  <TooltipPopup>{t('editor.formatTip')}</TooltipPopup>
-                </Tooltip>
-                <SyntaxHelp onInsert={handleInsert} />
-              </div>
-            </div>
-          </div>
 
-          {/* Output Panel */}
-          <div
-            id="panel-output"
-            role={isMobile ? 'tabpanel' : undefined}
-            className={cn(
-              'flex flex-col flex-1 min-h-0 overflow-hidden',
-              isMobile && mobileTab === 'code' && 'hidden',
-            )}
-          >
-            {/* Sticky output header */}
-            <div className="hidden md:flex items-center bg-card px-4 py-2.5 border-border border-b shrink-0">
-              <span className="font-medium text-foreground text-sm">{t('output.title')}</span>
+          {/* Main content area - fills remaining space. Side by side on
+              desktop; on phones one full-height tab at a time. */}
+          <div className={cn('flex md:grid flex-col flex-1 md:grid-cols-2 min-h-0 overflow-hidden', guideIndex !== null && 'hidden md:hidden')}>
+            {/* Editor Panel (kept mounted when hidden so the editor keeps its state) */}
+            <div
+              id="panel-code"
+              role={isMobile ? 'tabpanel' : undefined}
+              className={cn(
+                'flex flex-col flex-1 md:border-r border-border min-h-0 overflow-hidden',
+                isMobile && mobileTab !== 'code' && 'hidden',
+              )}
+            >
+              {lesson && lessonIndex !== null && (
+                <LessonPanel
+                  lessons={lessons}
+                  index={lessonIndex}
+                  completed={completed}
+                  onSelect={openLesson}
+                  onExit={exitTour}
+                  onReset={() => editorRef.current?.replaceAll(lesson.starter)}
+                  onShowSolution={() => editorRef.current?.replaceAll(lesson.solution)}
+                />
+              )}
+              {/* Sticky panel header */}
+              <div className={cn('flex justify-between items-center bg-card px-4 py-2.5 border-border border-b shrink-0', embed && 'hidden')}>
+                <span className="font-medium text-muted-foreground text-sm truncate">
+                  {lesson ? `scola/${lesson.id}.fratm` : EXAMPLE_TITLES[selectedExample] ?? 'main.fratm'}
+                  {selectedExample === 'custom' && <span className="ml-1.5 text-xs">{t('editor.edited')}</span>}
+                </span>
+                <Badge className="px-1 font-mono" variant="outline">{compiler.version}</Badge>
+              </div>
+              {/* Scrollable editor */}
+              <div className="flex-1 bg-background min-h-0 overflow-auto">
+                <Editor
+                  ref={editorRef}
+                  value={code}
+                  onChange={handleCodeChange}
+                  onRun={handleRun}
+                  onFormat={handleFormat}
+                  diagnostics={diagnostics}
+                  onCursorLineChange={setCursorLine}
+                />
+              </div>
+              {/* Sticky examples bar */}
+              <div className={cn('flex flex-wrap items-center justify-between gap-x-2 gap-y-2 bg-card px-4 py-2.5 border-border border-t shrink-0', embed && 'hidden')}>
+                <div className={cn('flex items-center gap-3 min-w-0', lesson && 'invisible')}>
+                  <label htmlFor="example-picker" className="text-muted-foreground text-xs">{t('editor.examples')}</label>
+                  <NativeSelect
+                    id="example-picker"
+                    value={selectedExample}
+                    onChange={handleExampleChange}
+                    className="w-44 sm:w-52"
+                  >
+                    <option value="">{t('editor.chooseExample')}</option>
+                    {selectedExample === 'custom' && <option value="custom" disabled>{t('editor.custom')}</option>}
+                    {exampleList.map(example => (
+                      <option key={example.id} value={example.id}>{example.title[lang]}</option>
+                    ))}
+                  </NativeSelect>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <label className="flex items-center gap-1.5 text-muted-foreground text-xs cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={autoRun}
+                      onChange={handleAutoRunChange}
+                      className="accent-primary size-3.5"
+                    />
+                    {t('editor.autoRun')}
+                  </label>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          variant="outline"
+                          size="icon-sm"
+                          aria-label={t('editor.format')}
+                          onClick={handleFormat}
+                          disabled={compiler.isLoading}
+                        >
+                          <AlignLeft className="size-4" />
+                        </Button>
+                      }
+                    />
+                    <TooltipPopup>{t('editor.formatTip')}</TooltipPopup>
+                  </Tooltip>
+                  <SyntaxHelp onInsert={handleInsert} />
+                </div>
+              </div>
             </div>
-            {/* Scrollable output content */}
-            <div className="flex-1 bg-background min-h-0 overflow-auto">
-              <OutputPanel
-                jsOutput={compiler.jsOutput}
-                consoleLogs={compiler.consoleLogs}
-                errors={compiler.errors}
-                notice={compiler.notice}
-                isRunning={isRunning}
-                onErrorClick={handleErrorClick}
-                onClearConsole={compiler.clearConsole}
-                jsLineMap={compiler.jsLineMap}
-                cursorLine={cursorLine}
-                show={isMobile && mobileTab !== 'code' ? mobileTab : 'all'}
-                stale={isStale && !isRunning}
-                source={code}
-                onHighlight={handleHighlight}
-              />
+
+            {/* Output Panel */}
+            <div
+              id="panel-output"
+              role={isMobile ? 'tabpanel' : undefined}
+              className={cn(
+                'flex flex-col flex-1 min-h-0 overflow-hidden',
+                isMobile && mobileTab === 'code' && 'hidden',
+              )}
+            >
+              {/* Sticky output header */}
+              <div className="hidden md:flex items-center bg-card px-4 py-2.5 border-border border-b shrink-0">
+                <span className="font-medium text-foreground text-sm">{t('output.title')}</span>
+              </div>
+              {/* Scrollable output content */}
+              <div className="flex-1 bg-background min-h-0 overflow-auto">
+                <OutputPanel
+                  jsOutput={compiler.jsOutput}
+                  consoleLogs={compiler.consoleLogs}
+                  errors={compiler.errors}
+                  notice={compiler.notice}
+                  isRunning={isRunning}
+                  onErrorClick={handleErrorClick}
+                  onClearConsole={compiler.clearConsole}
+                  jsLineMap={compiler.jsLineMap}
+                  cursorLine={cursorLine}
+                  show={isMobile && mobileTab !== 'code' ? mobileTab : 'all'}
+                  stale={isStale && !isRunning}
+                  source={code}
+                  onHighlight={handleHighlight}
+                />
+              </div>
             </div>
           </div>
         </main>
 
         {/* Sticky StatusBar */}
-        {!embed && <StatusBar
+        {!embed && guideIndex === null && <StatusBar
           status={isStale && !isRunning ? 'stale' : compiler.status}
           statusText={isStale && !isRunning
             ? t(autoRun ? 'status.staleAuto' : 'status.staleManual')
