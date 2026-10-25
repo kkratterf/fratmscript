@@ -119,8 +119,16 @@ fratm check <files...>              # Report errors without writing output
 fratm fmt <files...>                # Format files in place (comments kept)
 fratm fmt --check <files...>        # Fail if a file is not formatted
 fratm repl                          # Interactive REPL
+fratm guida                         # Language reference for AI agents
 fratm tokens <file>                 # Debug: show tokens
 fratm ast <file>                    # Debug: show AST
+```
+
+`check`, `build` and `lancia` take `--json` for one machine-readable JSON object (errors with line, column and hint; `build` adds the JavaScript, `lancia` the captured output and runtime error). `-` as the file reads the program from stdin, `build --stdout` prints the JavaScript and `lancia --timeout <seconds>` stops programs that never end:
+
+```bash
+echo 'stamm a dì(1 + 1)' | fratm lancia --json -
+# {"errors":[],"exitCode":0,"ok":true,"runtimeError":null,"stderr":"","stdout":"2\n"}
 ```
 
 A `.fratm` file can start with a shebang line and be run as a script:
