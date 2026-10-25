@@ -311,5 +311,7 @@ jobs:
           if [ -z "$OVSX_PAT" ]; then
             echo "::warning::OVSX_PAT is not set, so the extension was not published to Open VSX"
           else
+            # The first publish needs the namespace; later runs find it there
+            npx --yes ovsx@0 create-namespace fratmscript -p "$OVSX_PAT" || true
             npx --yes ovsx@0 publish "fratmscript-vscode-$TAG.vsix" -p "$OVSX_PAT"
           fi
