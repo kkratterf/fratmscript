@@ -5,6 +5,7 @@
     { "include": "#comments" },
     { "include": "#strings" },
     { "include": "#template-strings" },
+    { "include": "#jsx" },
     { "include": "#numbers" },
     { "include": "#keywords" },
     { "include": "#constants" },
@@ -290,6 +291,124 @@
           "name": "variable.other.private.fratm",
           "match": "#[\\p{L}_$][\\p{L}\\p{N}_$]*"
         }
+      ]
+    },
+    "jsx": {
+      "comment": "JSX element, only where an expression can start (after ( [ , = : ? { } & | ! ; => piglie or at the start of a line), so a < b stays a comparison",
+      "patterns": [
+        {
+          "name": "meta.tag.jsx.fratm",
+          "begin": "(?:^|(?<=[(\\[,=:?{}&|!;]|=>|\\bpiglie))\\s*(<)(?:([a-z][\\w\\-:]*)|([\\p{L}_$][\\w.$]*)|(?=>))(?=[\\s/>])",
+          "beginCaptures": {
+            "1": { "name": "punctuation.definition.tag.begin.fratm" },
+            "2": { "name": "entity.name.tag.fratm" },
+            "3": { "name": "support.class.component.fratm" }
+          },
+          "end": "(/>)|(?:(</)(?:([a-z][\\w\\-:]*)|([\\p{L}_$][\\w.$]*))?\\s*(>))",
+          "endCaptures": {
+            "1": { "name": "punctuation.definition.tag.end.fratm" },
+            "2": { "name": "punctuation.definition.tag.begin.fratm" },
+            "3": { "name": "entity.name.tag.fratm" },
+            "4": { "name": "support.class.component.fratm" },
+            "5": { "name": "punctuation.definition.tag.end.fratm" }
+          },
+          "patterns": [
+            { "include": "#jsx-attributes" },
+            { "include": "#jsx-children" }
+          ]
+        }
+      ]
+    },
+    "jsx-element": {
+      "comment": "JSX element nested in children or used as an attribute value",
+      "patterns": [
+        {
+          "name": "meta.tag.jsx.fratm",
+          "begin": "(<)(?:([a-z][\\w\\-:]*)|([\\p{L}_$][\\w.$]*)|(?=>))(?=[\\s/>])",
+          "beginCaptures": {
+            "1": { "name": "punctuation.definition.tag.begin.fratm" },
+            "2": { "name": "entity.name.tag.fratm" },
+            "3": { "name": "support.class.component.fratm" }
+          },
+          "end": "(/>)|(?:(</)(?:([a-z][\\w\\-:]*)|([\\p{L}_$][\\w.$]*))?\\s*(>))",
+          "endCaptures": {
+            "1": { "name": "punctuation.definition.tag.end.fratm" },
+            "2": { "name": "punctuation.definition.tag.begin.fratm" },
+            "3": { "name": "entity.name.tag.fratm" },
+            "4": { "name": "support.class.component.fratm" },
+            "5": { "name": "punctuation.definition.tag.end.fratm" }
+          },
+          "patterns": [
+            { "include": "#jsx-attributes" },
+            { "include": "#jsx-children" }
+          ]
+        }
+      ]
+    },
+    "jsx-attributes": {
+      "comment": "Attribute names, values and spreads, until the > that starts the children",
+      "patterns": [
+        { "include": "#comments" },
+        {
+          "name": "entity.other.attribute-name.fratm",
+          "match": "[\\p{L}_$][\\w\\-:$]*"
+        },
+        {
+          "name": "keyword.operator.assignment.fratm",
+          "match": "="
+        },
+        {
+          "name": "string.quoted.double.fratm",
+          "begin": "\"",
+          "end": "\""
+        },
+        {
+          "name": "string.quoted.single.fratm",
+          "begin": "'",
+          "end": "'"
+        },
+        { "include": "#jsx-expression" },
+        { "include": "#jsx-element" }
+      ]
+    },
+    "jsx-children": {
+      "contentName": "meta.jsx.children.fratm",
+      "begin": "(>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.end.fratm" }
+      },
+      "end": "(?=</)",
+      "patterns": [
+        { "include": "#jsx-element" },
+        { "include": "#jsx-expression" },
+        {
+          "name": "constant.character.entity.fratm",
+          "match": "&(?:[a-zA-Z][a-zA-Z0-9]*|#[0-9]+|#x[0-9a-fA-F]+);"
+        }
+      ]
+    },
+    "jsx-expression": {
+      "name": "meta.embedded.expression.fratm",
+      "begin": "\\{",
+      "beginCaptures": {
+        "0": { "name": "punctuation.section.embedded.begin.fratm" }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": { "name": "punctuation.section.embedded.end.fratm" }
+      },
+      "patterns": [
+        { "include": "#braces" },
+        { "include": "source.fratm" }
+      ]
+    },
+    "braces": {
+      "comment": "Balanced { } inside a JSX expression, so an object literal does not close it",
+      "begin": "\\{",
+      "end": "\\}",
+      "patterns": [
+        { "include": "#braces" },
+        { "include": "source.fratm" }
       ]
     }
   }

@@ -13,6 +13,7 @@ Evidenziazione completa per tutte le keywords napoletane:
 - `mentre che` → `while`
 - `stamm a dì` → `console.log`
 - E molte altre...
+- JSX: tag, attributi e `{ … }` dint'e componenti React
 
 ### Snippets
 30+ snippets per scrivere codice velocemente:
@@ -21,6 +22,8 @@ Evidenziazione completa per tutte le keywords napoletane:
 - `si` → Blocco if
 - `nafamiglie` → Classe
 - `pruvamm` → Try-catch
+- `componente` → Componente React cu JSX
+- `usestate` → `tien [valore, setValore] = useState(…)`
 
 ### Language Server
 - **Autocompletamento** intelligente per tutte le keywords
