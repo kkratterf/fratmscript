@@ -129,9 +129,18 @@ const NAP_TEXTS: Record<string, LessonText> = {
     title: 'vedimm',
     body: [
       '`vedimm (valore) { caso …: … }` sceglie tra tanti casi (`switch`). `rompe` esce (`break`), `predefinit` è \'o caso ca resta (`default`).',
-      'Hê fernuto \'a scola! Mo puoi pruvà \'e esempi, leggere \'a guida d\'a sintassi cu \'o tasto ? o scrivere \'o programma tuoio.',
     ],
     task: 'Aggiungi nu `caso "dummeneca"` ca stampa "Ragù!" e mietti `giorno` a "dummeneca".',
+  },
+  '13_magazzino': {
+    title: 'apri_db e gomorra',
+    body: [
+      "`apri_db()` apre nu database SQLite: sta già int'a libreria `fratm`, nun serve installà niente. Int'o playground 'o database sta int'a memoria; cu Node se pò salvà ncopp'a nu file.",
+      "Miette `gomorra` primma 'e na template string e scrive 'a query in napoletano (GomorraSQL): `ripigliammo … mmiez 'a …` è `SELECT … FROM …`, `arò` è `WHERE`, `mettimmo in fila pe` è `ORDER BY`. 'O compilatore 'a traduce e te dice si è sbagliata.",
+      "Nu valore miso cu `${…}` passa comme parametro, maie mmiez 'o testo d'a query: accussì nisciuno te pò fà na SQL injection.",
+      'Hê fernuto \'a scola! Mo puoi pruvà \'e esempi, leggere \'a guida d\'a sintassi cu \'o tasto ? o scrivere \'o programma tuoio.',
+    ],
+    task: "Nzipp na Marinara a 4 euro e stampa sulo 'e pizze ca costano meno 'e 6 euro, d'a cchiù economica: `arò prezzo < ${6} mettimmo in fila pe prezzo`.",
   },
 }
 
@@ -234,9 +243,18 @@ const IT_TEXTS: Record<string, LessonText> = {
     title: 'vedimm',
     body: [
       '`vedimm (valore) { caso …: … }` sceglie tra tanti casi (`switch`). `rompe` esce (`break`), `predefinit` è il caso per tutto il resto (`default`).',
-      'Hai finito il tour! Ora puoi provare gli esempi, leggere la guida alla sintassi con il tasto ? o scrivere il tuo programma.',
     ],
     task: 'Aggiungi un `caso "dummeneca"` che stampa "Ragù!" e metti `giorno` a "dummeneca".',
+  },
+  '13_magazzino': {
+    title: 'apri_db e gomorra',
+    body: [
+      "`apri_db()` apre un database SQLite: è già nella libreria `fratm`, non serve installare niente. Nel playground il database vive in memoria; con Node si può salvare su un file.",
+      "Metti `gomorra` davanti a una template string e scrivi la query in napoletano (GomorraSQL): `ripigliammo … mmiez 'a …` è `SELECT … FROM …`, `arò` è `WHERE`, `mettimmo in fila pe` è `ORDER BY`. Il compilatore la traduce e ti dice se è sbagliata.",
+      "Un valore messo con `${…}` passa come parametro, mai dentro il testo della query: così nessuno può farti una SQL injection.",
+      'Hai finito il tour! Ora puoi provare gli esempi, leggere la guida alla sintassi con il tasto ? o scrivere il tuo programma.',
+    ],
+    task: "Inserisci una Marinara a 4 euro e stampa solo le pizze che costano meno di 6 euro, dalla più economica: `arò prezzo < ${6} mettimmo in fila pe prezzo`.",
   },
 }
 
@@ -339,9 +357,18 @@ const EN_TEXTS: Record<string, LessonText> = {
     title: 'vedimm',
     body: [
       '`vedimm (value) { caso …: … }` picks one of many cases (`switch`). `rompe` leaves it (`break`), and `predefinit` is the case for everything else (`default`).',
-      'You finished the tour! Now you can try the examples, read the syntax reference with the ? button, or write your own program.',
     ],
     task: 'Add a `caso "dummeneca"` that prints "Ragù!" and set `giorno` to "dummeneca".',
+  },
+  '13_magazzino': {
+    title: 'apri_db e gomorra',
+    body: [
+      "`apri_db()` opens a SQLite database: it is already in the `fratm` library, nothing to install. In the playground the database lives in memory; with Node it can be saved to a file.",
+      "Put `gomorra` in front of a template string and write the query in Neapolitan (GomorraSQL): `ripigliammo … mmiez 'a …` is `SELECT … FROM …`, `arò` is `WHERE`, `mettimmo in fila pe` is `ORDER BY`. The compiler translates it and tells you when it is wrong.",
+      "A value put in with `${…}` goes in as a parameter, never inside the query text: that way nobody can pull a SQL injection on you.",
+      'You finished the tour! Now you can try the examples, read the syntax reference with the ? button, or write your own program.',
+    ],
+    task: "Insert a Marinara at 4 euro and print only the pizzas that cost less than 6 euro, cheapest first: `arò prezzo < ${6} mettimmo in fila pe prezzo`.",
   },
 }
 

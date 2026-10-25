@@ -1,7 +1,8 @@
 // ============================================
 // Example 18: 'O magazzino
 // apri_db + gomorra: a SQLite database with queries in Neapolitan.
-// Needs Node 22.13 or newer (node:sqlite, no npm package).
+// Needs Node 22.13 or newer (node:sqlite, no npm package);
+// the playground runs it on sql.js, SQLite in WebAssembly.
 // ============================================
 
 chiamm { apri_db, gomorra } da "fratm"

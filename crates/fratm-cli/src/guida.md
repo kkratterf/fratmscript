@@ -458,7 +458,8 @@ db.chiude()
 - `ripiglia` → list of row objects, `ripiglia_uno` → first row or `nisciun`, `esegui` →
   `{ cambiate, ultimo_id }`, `chiude()` closes.
 - The methods are synchronous; `aspett db.ripiglia(…)` also works (and stays right if the driver
-  becomes async). In the browser or the playground `apri_db` throws: it needs Node.
+  becomes async). In a plain browser page `apri_db` throws: it needs Node. The playground runs it
+  on sql.js (SQLite in WebAssembly), always in memory.
 
 ## Reading errors
 

@@ -444,7 +444,7 @@ chist è care = aspett db.ripiglia(gomorra`ripigliammo nomme mmiez 'a pizze arò
 | `db.esegui(q)` | `{ cambiate, ultimo_id }`: rows changed, id of the last inserted row |
 | `db.chiude()` | closes the database |
 
-The methods are synchronous; writing `aspett` in front of them is fine and keeps the code working if a future driver is asynchronous. In the browser and on older Node, `apri_db` throws an error that says so.
+The methods are synchronous; writing `aspett` in front of them is fine and keeps the code working if a future driver is asynchronous. On older Node and in a plain browser page, `apri_db` throws an error that says so; the [playground](https://kkratterf.github.io/fratmscript/) runs it on [sql.js](https://sql.js.org) (SQLite in WebAssembly) with an in-memory database.
 
 The keywords come from [GomorraSQL](https://github.com/aurasphere/gomorra-sql) by Donato Rimenti (MIT), a Java translator over JDBC; FratmScript ports its dialect to JavaScript and adds ordering, limits, grouping and tables.
 
@@ -592,7 +592,7 @@ Check the `examples/` folder for complete programs:
 15. `15_libreria.fratm` - The `fratm` library: `a_caso`, `mischia`, `quanti`, `aspetta`…
 16. `16_pizzeria_jsx.fratm` - A React component written with JSX
 17. `17_gomorra.fratm` - GomorraSQL: SQL queries in Neapolitan with bound parameters
-18. `18_magazzino.fratm` - A SQLite database with `apri_db` and `gomorra` (Node 22.13+)
+18. `18_magazzino.fratm` - A SQLite database with `apri_db` and `gomorra` (Node 22.13+, or the playground)
 
 ---
 

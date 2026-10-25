@@ -70,7 +70,7 @@ keywords change.
 helpers; the compiler inlines them. `chiamm { gomorra } da "fratm"` adds SQL in Neapolitan
 (GomorraSQL): ``gomorra`ripigliammo nomme mmiez 'a pizze arò id = ${id}` `` is translated at compile
 time to `{ sql, params, text, values }`, with every `${…}` as a bound parameter. `apri_db(file)`
-runs them on SQLite (Node 22.13+): `db.ripiglia(q)`, `db.ripiglia_uno(q)`, `db.esegui(q)`,
+runs them on SQLite (Node 22.13+, or sql.js in the playground): `db.ripiglia(q)`, `db.ripiglia_uno(q)`, `db.esegui(q)`,
 `db.chiude()`. Run `fratm guida` for the keyword list. `fratm nuovo --completa app` scaffolds a
 full-stack app: React in `src/`, a Hono API with SQLite in `server/api.fratm`.
 

@@ -5,6 +5,7 @@
 
 import type { WorkerRequest, WorkerMessage } from './runner'
 import { toLogValue } from './logValue'
+import { installSqlite } from './sqlite'
 
 declare const self: DedicatedWorkerGlobalScope
 
@@ -82,13 +83,15 @@ const intervals = new Set<number>()
 let pendingFetches = 0
 let idleCheckQueued = false
 let finished = false
+// False while sql.js loads: its own fetch must not end the run
+let started = false
 
 function isIdle() {
   return timeouts.size === 0 && intervals.size === 0 && pendingFetches === 0
 }
 
 function scheduleIdleCheck() {
-  if (idleCheckQueued || finished) return
+  if (idleCheckQueued || finished || !started) return
   idleCheckQueued = true
   // A macrotask hop lets pending promise reactions run first.
   realSetTimeout(() => {
@@ -149,12 +152,27 @@ if (realFetch) {
 
 // --- run ---------------------------------------------------------------------
 
-self.addEventListener('message', (event: MessageEvent<WorkerRequest>) => {
+// apri_db asks for node:sqlite; only then is sql.js (about 650 kB) loaded.
+const NEEDS_SQLITE = 'node:sqlite'
+
+self.addEventListener('message', async (event: MessageEvent<WorkerRequest>) => {
   if (event.data.type !== 'run') return
+  const { code } = event.data
+  if (code.includes(NEEDS_SQLITE)) {
+    try {
+      await installSqlite(g)
+    } catch (err) {
+      // apri_db then throws its own "nun se pò aprì" error
+      console.warn('SQLite nun s\'è caricato:', err instanceof Error ? err.message : String(err))
+    }
+  }
+  // The main thread starts the time limits from here, after any loading
+  started = true
+  post({ type: 'started' })
   try {
     // Indirect eval runs in global scope; sourceURL gives stack traces a
     // stable file name so we can find the failing line in every browser.
-    ;(0, eval)(`${event.data.code}\n//# sourceURL=${SOURCE_URL}`)
+    ;(0, eval)(`${code}\n//# sourceURL=${SOURCE_URL}`)
   } catch (err) {
     reportError(err)
   }

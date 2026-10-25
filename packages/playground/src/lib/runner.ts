@@ -30,6 +30,7 @@ export type WorkerMessage =
   | { type: 'log'; level: LogEntry['type']; args: LogValue[] }
   | { type: 'truncated'; limit: number }
   | { type: 'error'; name: string; message: string; line?: number; column?: number }
+  | { type: 'started' }
   | { type: 'sync-done' }
   | { type: 'done' }
 
@@ -49,6 +50,8 @@ export interface RunHandlers {
 
 export const SYNC_TIME_LIMIT_MS = 3000
 export const TOTAL_TIME_LIMIT_MS = 10000
+/** Time the worker gets to load what the code needs (sql.js) before it runs */
+export const LOAD_TIME_LIMIT_MS = 20000
 
 export function runInWorker(code: string, handlers: RunHandlers): { stop: () => void } {
   const worker = new Worker(new URL('./runner.worker.ts', import.meta.url), { type: 'module' })
@@ -58,16 +61,26 @@ export function runInWorker(code: string, handlers: RunHandlers): { stop: () => 
   const end = (reason: RunEnd) => {
     if (ended) return
     ended = true
+    clearTimeout(loadTimer)
     clearTimeout(syncTimer)
     clearTimeout(totalTimer)
     worker.terminate()
     handlers.onEnd(reason)
   }
 
-  const syncTimer = setTimeout(() => {
-    if (!syncDone) end('sync-timeout')
-  }, SYNC_TIME_LIMIT_MS)
-  const totalTimer = setTimeout(() => end('async-timeout'), TOTAL_TIME_LIMIT_MS)
+  let syncTimer: ReturnType<typeof setTimeout> | undefined
+  let totalTimer: ReturnType<typeof setTimeout> | undefined
+  const loadTimer = setTimeout(() => {
+    handlers.onError({ name: 'Error', message: "SQLite nun s'è caricato a tiempo: controlla 'a connessione" })
+    end('completed')
+  }, LOAD_TIME_LIMIT_MS)
+  const startTimers = () => {
+    clearTimeout(loadTimer)
+    syncTimer = setTimeout(() => {
+      if (!syncDone) end('sync-timeout')
+    }, SYNC_TIME_LIMIT_MS)
+    totalTimer = setTimeout(() => end('async-timeout'), TOTAL_TIME_LIMIT_MS)
+  }
 
   worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
     if (ended) return
@@ -81,6 +94,9 @@ export function runInWorker(code: string, handlers: RunHandlers): { stop: () => 
         break
       case 'error':
         handlers.onError({ name: msg.name, message: msg.message, line: msg.line, column: msg.column })
+        break
+      case 'started':
+        startTimers()
         break
       case 'sync-done':
         syncDone = true

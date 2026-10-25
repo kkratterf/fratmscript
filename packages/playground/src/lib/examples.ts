@@ -11,10 +11,10 @@ const sources = import.meta.glob('../../../../examples/*.fratm', {
 
 /**
  * Examples that cannot run in the playground: 09 imports Node modules
- * (node:path, node:os), 13 reads the terminal with readline and 18 opens
- * a SQLite database with node:sqlite.
+ * (node:path, node:os) and 13 reads the terminal with readline. 18 opens a
+ * SQLite database: the runner gives it sql.js in place of node:sqlite.
  */
-const NODE_ONLY = new Set(['09_moduli', '13_pomodor_e_muzzarel', '18_magazzino'])
+const NODE_ONLY = new Set(['09_moduli', '13_pomodor_e_muzzarel'])
 
 /** Picker names in each UI language; an example missing here uses its file's title comment. */
 const TITLES: Record<string, Record<Lang, string>> = {
@@ -32,6 +32,7 @@ const TITLES: Record<string, Record<Lang, string>> = {
   '14_sintassi_moderna': { it: 'Sintassi moderna', en: 'Modern syntax', nap: 'Sintassi moderna' },
   '16_pizzeria_jsx': { it: 'Componente React (JSX)', en: 'React component (JSX)', nap: "'A pizzeria cu React" },
   '17_gomorra': { it: 'Query SQL con GomorraSQL', en: 'SQL queries with GomorraSQL', nap: "'E query 'e GomorraSQL" },
+  '18_magazzino': { it: 'Database SQLite', en: 'SQLite database', nap: "'O magazzino (SQLite)" },
 }
 
 export interface Example {

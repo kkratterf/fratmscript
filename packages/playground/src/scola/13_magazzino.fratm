@@ -1,0 +1,11 @@
+chiamm { apri_db, gomorra } da "fratm"
+
+chist è db = apri_db()
+db.esegui(gomorra`facimm 'a tavula pizze (nomme TEXT, prezzo REAL)`)
+db.esegui(gomorra`nzipp 'ngoppa pizze nomme, prezzo chist ${"Margherita"}, ${5}`)
+db.esegui(gomorra`nzipp 'ngoppa pizze nomme, prezzo chist ${"Diavola"}, ${7}`)
+
+chist è pizze = db.ripiglia(gomorra`ripigliammo nomme, prezzo mmiez 'a pizze`)
+pe ogni (chist è pizza dint pizze) {
+    stamm a dì(`${pizza.nomme}: ${pizza.prezzo} euro`)
+}

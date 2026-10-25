@@ -15,6 +15,8 @@ export default defineConfig({
     },
   },
   base: '/fratmscript/',
+  // ES workers can split chunks, so sql.js loads only when a program needs it
+  worker: { format: 'es' },
   // The example picker imports ../../examples/*.fratm
   server: { fs: { allow: [path.resolve(__dirname, '../..')] } },
   build: {
