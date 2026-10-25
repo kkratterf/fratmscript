@@ -122,6 +122,13 @@ const syntaxReference: { category: Localized; items: SyntaxItem[] }[] = [
     { fratm: 'mann for { a } da', js: 'export { a } from', desc: { it: 'Riesporta da un altro modulo', en: 'Re-export', nap: "Riesporta 'a n'atu modulo" }, insert: 'mann for {  } da ""' },
     { fratm: 'chiamm("…")', js: 'import("…")', desc: { it: 'Import dinamico (con aspett)', en: 'Dynamic import (with aspett)', nap: 'Import dinamico (cu aspett)' }, insert: 'aspett chiamm("")' },
   ]},
+  { category: { it: 'JSX e componenti', en: 'JSX and components', nap: 'JSX e componenti' }, items: [
+    { fratm: '<div>…</div>', js: 'jsx("div", …)', desc: { it: 'Elemento HTML (per React o Preact)', en: 'HTML element (for React or Preact)', nap: 'Elemento HTML (pe React o Preact)' }, insert: '<div></div>' },
+    { fratm: '<Pizza nomme="x" />', js: 'jsx(Pizza, { nomme })', desc: { it: 'Componente con props', en: 'Component with props', nap: 'Componente cu props' }, insert: '< />' },
+    { fratm: '{espressione}', js: '{expression}', desc: { it: 'Valore dentro il JSX', en: 'Value inside JSX', nap: "Nu valore dint'o JSX" }, insert: '{}' },
+    { fratm: '<>…</>', js: 'Fragment', desc: { it: 'Frammento senza tag', en: 'Fragment without a tag', nap: 'Frammento senza tag' }, insert: '<></>' },
+    { fratm: 'class="x"', js: 'className="x"', desc: { it: 'Classe CSS (anche className)', en: 'CSS class (className works too)', nap: 'Classe CSS (pure className)' }, insert: 'class=""' },
+  ]},
   // Helpers of the fratm library (crates/fratm-core/src/stdlib.rs): a click inserts the import
   { category: { it: 'Libreria fratm', en: 'fratm library', nap: "'A libreria fratm" }, items: [
     { fratm: 'a_caso(min, max)', js: 'Math.random()', desc: { it: 'Intero a caso tra min e max', en: 'Random integer from min to max', nap: 'Nummero a caso tra min e max' }, insert: 'chiamm { a_caso } da "fratm"\n' },

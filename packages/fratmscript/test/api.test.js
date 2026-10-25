@@ -25,6 +25,19 @@ test('compile can skip the source map', () => {
   assert.equal(compile('tien a = 1', { sourceMap: false }).map, null);
 });
 
+test('compile turns JSX into react/jsx-runtime calls, or another library', () => {
+  const react = compile('chist è b = <b class="x">Uè</b>', { sourceMap: false });
+  assert.equal(
+    react.code,
+    'import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";\n' +
+      'const b = _jsx("b", { className: "x", children: "Uè" });\n',
+  );
+  const preact = compile('chist è b = <b />', { sourceMap: false, jsxImportSource: 'preact' });
+  assert.match(preact.code, /from "preact\/jsx-runtime"/);
+  const plugin = fratmscript({ jsxImportSource: 'preact' });
+  assert.match(plugin.transform.call({}, 'x = <b />', '/src/a.fratm').code, /preact\/jsx-runtime/);
+});
+
 test('format reindents and keeps comments', () => {
   assert.deepEqual(format('si (overo) {\nstamm a dì(1) // uno\n}'), {
     code: 'si (overo) {\n    stamm a dì(1) // uno\n}\n',

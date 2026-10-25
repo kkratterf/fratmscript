@@ -1,0 +1,44 @@
+// ============================================
+// Example 16: 'A pizzeria cu JSX
+// A React component written in FratmScript: JSX, props, state and lists
+// ============================================
+
+chiamm { useState } da "react"
+
+chist è MENU = [
+    { nomme: "Margherita", prezzo: 5, piccante: sfòls },
+    { nomme: "Diavola", prezzo: 7, piccante: overo },
+    { nomme: "Marinara", prezzo: 4, piccante: sfòls },
+]
+
+// A component is a function that takes props and returns JSX
+facc Pizza({ nomme, prezzo, piccante, ordina }) {
+    piglie (
+        <li class="pizza">
+            <strong>{nomme}</strong> &middot; {prezzo} €
+            {piccante ? <span title="Piccante">🌶️</span> : nisciun}
+            <button onClick={() => ordina(nomme)}>Ordina</button>
+        </li>
+    )
+}
+
+mann for predefinit facc Pizzeria() {
+    tien [ordine, setOrdine] = useState([])
+    chist è totale = ordine
+        .map((nomme) => MENU.find((p) => p.nomme === nomme).prezzo)
+        .reduce((a, b) => a + b, 0)
+
+    piglie (
+        <main>
+            <h1>Uè, benvenuto 'a pizzeria!</h1>
+            <ul>
+                {MENU.map((pizza) => (
+                    <Pizza key={pizza.nomme} {...pizza} ordina={(n) => setOrdine([...ordine, n])} />
+                ))}
+            </ul>
+            {ordine.length === 0
+                ? <p>Ancora nisciuna pizza. Che te magne?</p>
+                : <p>Hai ordinato {ordine.length} pizze: {totale} €</p>}
+        </main>
+    )
+}

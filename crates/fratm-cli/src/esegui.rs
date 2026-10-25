@@ -71,6 +71,7 @@ pub fn run(source: &str, options: RunOptions) -> Outcome {
         source_map: true,
         filename: Some(SOURCE_NAME.to_string()),
         minify: false,
+        jsx_import_source: None,
     };
     let result = match compile(source, compile_options) {
         Ok(result) => result,

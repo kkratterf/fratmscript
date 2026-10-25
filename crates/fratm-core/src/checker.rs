@@ -601,6 +601,26 @@ impl Checker {
         }
     }
 
+    fn jsx(&mut self, element: &JsxElement) {
+        for attribute in &element.attributes {
+            match attribute {
+                JsxAttribute::Named { value, .. } => {
+                    if let Some(value) = value {
+                        self.expression(value);
+                    }
+                }
+                JsxAttribute::Spread(e) => self.expression(e),
+            }
+        }
+        for child in &element.children {
+            match child {
+                JsxChild::Text(_) => {}
+                JsxChild::Expression(e) => self.expression(e),
+                JsxChild::Element(nested) => self.jsx(nested),
+            }
+        }
+    }
+
     fn property_key(&mut self, key: &PropertyKey) {
         if let PropertyKey::Computed(e) = key {
             self.expression(e);
@@ -615,6 +635,7 @@ impl Checker {
                 self.expression(tag);
                 self.expression(quasi);
             }
+            Expression::Jsx { element, .. } => self.jsx(element),
             // `#saldo` read through `stu cos.#saldo` or in `#saldo dint'a o`
             Expression::Identifier { name, span } if name.starts_with('#') => {
                 if !self.private_names.iter().any(|names| names.contains(name)) {

@@ -16,8 +16,8 @@ function toErrors(response) {
 /** @param {any} wasm */
 export function createApi(wasm) {
   function compile(source, options = {}) {
-    const { sourceMap = true, filename = 'input.fratm' } = options;
-    const response = wasm.compile(String(source), sourceMap);
+    const { sourceMap = true, filename = 'input.fratm', jsxImportSource } = options;
+    const response = wasm.compile(String(source), sourceMap, jsxImportSource ?? undefined);
     if (!response.success) {
       return { code: null, map: null, errors: toErrors(response) };
     }

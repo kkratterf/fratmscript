@@ -263,6 +263,7 @@ fn build_file(path: &Path, output: Option<PathBuf>, sourcemap: bool, stdout: boo
         source_map: sourcemap,
         filename: Some(display_name(path)),
         minify: false,
+        jsx_import_source: None,
     };
 
     let result = match compile(&source, options) {

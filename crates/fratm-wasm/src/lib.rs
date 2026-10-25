@@ -22,19 +22,31 @@ pub fn init() {
 /// - `error`: string (if failure)
 /// - `line`: number (if failure)
 /// - `column`: number (if failure)
+///
+/// `jsx_import_source` picks the library of the JSX runtime (`react` when
+/// left out).
 #[wasm_bindgen]
-pub fn compile(source: &str, generate_source_map: bool) -> JsValue {
-    let response = compile_to_response(source, generate_source_map);
+pub fn compile(
+    source: &str,
+    generate_source_map: bool,
+    jsx_import_source: Option<String>,
+) -> JsValue {
+    let response = compile_to_response(source, generate_source_map, jsx_import_source);
     serde_wasm_bindgen::to_value(&response).unwrap_or(JsValue::NULL)
 }
 
 /// Pure-Rust core of `compile`, kept separate so it can be tested natively
 /// (`serde_wasm_bindgen` needs a JS host and panics outside wasm32).
-fn compile_to_response(source: &str, generate_source_map: bool) -> CompileResponse {
+fn compile_to_response(
+    source: &str,
+    generate_source_map: bool,
+    jsx_import_source: Option<String>,
+) -> CompileResponse {
     let options = CompileOptions {
         source_map: generate_source_map,
         filename: Some("input.fratm".to_string()),
         minify: false,
+        jsx_import_source,
     };
 
     match core_compile(source, options) {
@@ -134,15 +146,26 @@ mod tests {
 
     #[test]
     fn test_compile() {
-        let result = compile_to_response("chist è x = 42", false);
+        let result = compile_to_response("chist è x = 42", false, None);
         assert!(result.success);
         assert!(result.code.unwrap().contains("const x = 42"));
         assert!(result.error.is_none());
     }
 
     #[test]
+    fn test_compile_jsx_import_source() {
+        let code = |source: Option<&str>| {
+            compile_to_response("x = <b />", false, source.map(String::from))
+                .code
+                .unwrap()
+        };
+        assert!(code(None).contains("from \"react/jsx-runtime\""));
+        assert!(code(Some("preact")).contains("from \"preact/jsx-runtime\""));
+    }
+
+    #[test]
     fn test_compile_source_map() {
-        let result = compile_to_response("chist è x = 42", true);
+        let result = compile_to_response("chist è x = 42", true, None);
         assert!(result.success);
         assert!(result.source_map.is_some());
     }
@@ -164,7 +187,7 @@ mod tests {
 
     #[test]
     fn test_compile_error_is_napoletano() {
-        let result = compile_to_response("chist è x = ", false);
+        let result = compile_to_response("chist è x = ", false, None);
         assert!(!result.success);
         assert!(result.code.is_none());
         let error = result.error.unwrap();

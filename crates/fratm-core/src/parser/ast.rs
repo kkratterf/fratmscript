@@ -386,6 +386,11 @@ pub enum Expression {
         property: String,
         span: Span,
     },
+    /// `<div className="x">{a}</div>`, `<Pizza nomme="Margherita" />`, `<>…</>`
+    Jsx {
+        element: Box<JsxElement>,
+        span: Span,
+    },
 }
 
 impl Expression {
@@ -401,6 +406,7 @@ impl Expression {
             Expression::This { span } => *span,
             Expression::Super { span } => *span,
             Expression::MetaProperty { span, .. } => *span,
+            Expression::Jsx { span, .. } => *span,
             Expression::Import { span, .. } => *span,
             Expression::TaggedTemplate { span, .. } => *span,
             Expression::Function { span, .. } => *span,
@@ -429,6 +435,36 @@ impl Expression {
             Expression::Delete { span, .. } => *span,
         }
     }
+}
+
+/// A JSX element or fragment.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct JsxElement {
+    /// `div`, `Menu.Voce`, `svg:rect`; `None` for a fragment
+    pub name: Option<String>,
+    pub attributes: Vec<JsxAttribute>,
+    /// Text already cleaned up as JSX does (see `parser::jsx_text`); empty
+    /// `{}` and comment-only children are dropped
+    pub children: Vec<JsxChild>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum JsxAttribute {
+    /// `name` (value `overo`), `name="text"`, `name={expr}`
+    Named {
+        name: String,
+        value: Option<Expression>,
+        span: Span,
+    },
+    /// `{...props}`
+    Spread(Expression),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum JsxChild {
+    Text(String),
+    Expression(Expression),
+    Element(JsxElement),
 }
 
 /// A `caso value:` (or `predefinit:` when `test` is `None`) label and its statements.

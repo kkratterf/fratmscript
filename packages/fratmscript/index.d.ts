@@ -3,6 +3,11 @@ export interface CompileOptions {
   sourceMap?: boolean;
   /** Name of the source file, used in the source map (default: "input.fratm"). */
   filename?: string;
+  /**
+   * Library whose JSX runtime compiles JSX, as in `<source>/jsx-runtime` (default: "react").
+   * A `// @jsxImportSource preact` comment in the file wins over this option.
+   */
+  jsxImportSource?: string;
 }
 
 export interface FratmError {

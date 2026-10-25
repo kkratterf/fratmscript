@@ -102,6 +102,7 @@ fn category(kind: &TokenKind) -> &'static str {
         | TokenKind::Number(_)
         | TokenKind::Template { .. }
         | TokenKind::Regex { .. }
+        | TokenKind::Jsx(_)
         | TokenKind::Overo
         | TokenKind::Sfols
         | TokenKind::Nisciun

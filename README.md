@@ -348,6 +348,24 @@ mann for * da "./altro.js"            // export * (also * comme ns)
 
 `comme` (or `as`) is a keyword only between a module name and its alias, and `predefinit` there means `default`: `chiamm { predefinit comme App } da "./app.js"`.
 
+### JSX: React components in Neapolitan
+```fratm
+chiamm { useState } da "react"
+chiamm "./stile.css"
+
+mann for predefinit facc Contatore() {
+    tien [pizze, setPizze] = useState(0)
+    piglie (
+        <main class="pizzeria">
+            <h1>Pizze sfurnate: {pizze}</h1>
+            <button onClick={() => setPizze(pizze + 1)}>Sforna</button>
+        </main>
+    )
+}
+```
+
+JSX compiles to the automatic runtime of React (`react/jsx-runtime`). Write `// @jsxImportSource preact` at the top of a file to use Preact instead. Tags stay HTML, `class` and `for` work on them, and CSS is plain CSS (or CSS modules) imported through Vite. A `<` starts JSX only where a value can start and a tag name follows right away, so `a < b` is still a comparison.
+
 ### The `fratm` library
 
 Small helpers with Neapolitan names. Import the ones you use: the compiler writes their definitions into the output (no package needed), and the rest cost nothing.
@@ -429,6 +447,7 @@ fermete                      // debugger
 | `dint'a` | `in` (operator) | "inside" |
 | `leva` | `delete` | "remove" |
 | `fermete` | `debugger` | "stop" |
+| `<div>…</div>`, `<Pizza />` | JSX (React/Preact) | markup in the code |
 
 No accents on your keyboard? `sinno`, `sfols`, `di` (in `stamm a di`), `chist e` and `chè e` work like `sinnò`, `sfòls`, `dì`, `chist è` and `chè è`; `typeof` and `instanceof` are accepted for `chè è` and `è uno`.
 

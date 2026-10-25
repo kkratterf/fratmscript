@@ -106,6 +106,7 @@ pub use formatter::format;
 ///     source_map: true,
 ///     filename: Some("main.fratm".to_string()),
 ///     minify: false,
+///     jsx_import_source: None,
 /// };
 /// ```
 #[derive(Debug, Clone, Default)]
@@ -125,6 +126,12 @@ pub struct CompileOptions {
     ///
     /// When enabled, removes whitespace and shortens variable names.
     pub minify: bool,
+
+    /// Library whose JSX runtime compiles JSX (`<source>/jsx-runtime`).
+    ///
+    /// `None` means `react`. A `// @jsxImportSource preact` comment in the
+    /// file takes precedence.
+    pub jsx_import_source: Option<String>,
 }
 
 /// Compilation result containing the generated code and metadata.
@@ -217,7 +224,7 @@ pub fn compile(source: &str, options: CompileOptions) -> Result<CompileResult, C
     }
 
     // Parsing
-    let mut parser = Parser::new(tokens);
+    let mut parser = Parser::new(tokens.clone());
     let program = parser.parse().map_err(|errors| {
         let first = errors.into_iter().next().unwrap();
         CompileError::ParseError {
@@ -238,6 +245,12 @@ pub fn compile(source: &str, options: CompileOptions) -> Result<CompileResult, C
     let mut codegen = CodeGen::new(options.source_map);
     if let Some(line) = shebang(source) {
         codegen.emit_shebang(line);
+    }
+    if uses_jsx(&tokens) {
+        let source = jsx_import_source(source)
+            .or(options.jsx_import_source.as_deref())
+            .unwrap_or(DEFAULT_JSX_IMPORT_SOURCE);
+        codegen.emit_jsx_import(source);
     }
     let code = codegen.generate(&program);
 
@@ -269,7 +282,66 @@ fn first_invalid(tokens: &[lexer::Token]) -> Option<&lexer::Token> {
         lexer::TokenKind::Template { expressions, .. } => {
             expressions.iter().find_map(|e| first_invalid(e))
         }
+        lexer::TokenKind::Jsx(element) => {
+            jsx_token_lists(element).into_iter().find_map(first_invalid)
+        }
         _ => None,
+    })
+}
+
+/// JSX compiles to calls into `react/jsx-runtime` unless told otherwise.
+pub const DEFAULT_JSX_IMPORT_SOURCE: &str = "react";
+
+/// Whether the program has JSX anywhere, also inside template interpolations.
+fn uses_jsx(tokens: &[lexer::Token]) -> bool {
+    tokens.iter().any(|t| match &t.kind {
+        lexer::TokenKind::Jsx(_) => true,
+        lexer::TokenKind::Template { expressions, .. } => expressions.iter().any(|e| uses_jsx(e)),
+        _ => false,
+    })
+}
+
+/// The token lists of every `{ … }` in a JSX element, nested ones included.
+fn jsx_token_lists(element: &lexer::JsxToken) -> Vec<&[lexer::Token]> {
+    use lexer::{JsxTokenAttribute, JsxTokenChild, JsxTokenValue};
+    let mut lists = Vec::new();
+    for attribute in &element.attributes {
+        match attribute {
+            JsxTokenAttribute::Spread(tokens)
+            | JsxTokenAttribute::Named {
+                value: Some(JsxTokenValue::Expression(tokens)),
+                ..
+            } => lists.push(tokens.as_slice()),
+            JsxTokenAttribute::Named {
+                value: Some(JsxTokenValue::Element(nested)),
+                ..
+            } => lists.extend(jsx_token_lists(nested)),
+            JsxTokenAttribute::Named { .. } => {}
+        }
+    }
+    for child in element.children.iter().flatten() {
+        match child {
+            JsxTokenChild::Expression(tokens, _) => lists.push(tokens.as_slice()),
+            JsxTokenChild::Element(nested) => lists.extend(jsx_token_lists(nested)),
+            JsxTokenChild::Text(_) => {}
+        }
+    }
+    lists
+}
+
+/// The library named by a `@jsxImportSource preact` comment, as in Babel
+/// and TypeScript.
+fn jsx_import_source(source: &str) -> Option<&str> {
+    source.lines().find_map(|line| {
+        let line = line.trim_start();
+        if !(line.starts_with("//") || line.starts_with("/*") || line.starts_with('*')) {
+            return None;
+        }
+        let (_, rest) = line.split_once("@jsxImportSource")?;
+        rest.split_whitespace()
+            .next()
+            .map(|name| name.trim_end_matches("*/"))
+            .filter(|name| !name.is_empty())
     })
 }
 
@@ -289,6 +361,131 @@ pub fn version() -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const JSX_IMPORT: &str =
+        "import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from \"react/jsx-runtime\";\n";
+
+    /// The generated JS without the JSX runtime import.
+    fn jsx_js(source: &str) -> String {
+        let code = compile(source, Default::default()).unwrap().code;
+        code.strip_prefix(JSX_IMPORT)
+            .unwrap_or_else(|| panic!("no JSX import in:\n{code}"))
+            .to_string()
+    }
+
+    #[test]
+    fn test_jsx_compiles_to_the_automatic_runtime() {
+        assert_eq!(
+            jsx_js("chist è x = <a href=\"/\">Uè</a>"),
+            "const x = _jsx(\"a\", { href: \"/\", children: \"Uè\" });\n"
+        );
+        assert_eq!(jsx_js("x = <br />"), "x = _jsx(\"br\", {});\n");
+        assert_eq!(
+            jsx_js("x = <p>Pizze: {n}</p>"),
+            "x = _jsxs(\"p\", { children: [\"Pizze: \", n] });\n"
+        );
+        assert_eq!(
+            jsx_js("x = <><b /><i /></>"),
+            "x = _jsxs(_Fragment, { children: [_jsx(\"b\", {}), _jsx(\"i\", {})] });\n"
+        );
+    }
+
+    #[test]
+    fn test_jsx_components_props_keys_and_spreads() {
+        assert_eq!(
+            jsx_js("x = <Pizza key={p.id} nomme=\"Margherita\" {...p} cotta />"),
+            "x = _jsx(Pizza, { nomme: \"Margherita\", ...p, cotta: true }, p.id);\n"
+        );
+        assert_eq!(
+            jsx_js("x = <Menu.Voce aria-label=\"menu\" />"),
+            "x = _jsx(Menu.Voce, { \"aria-label\": \"menu\" });\n"
+        );
+        // `class` and `for` become `className` and `htmlFor` on HTML tags only
+        assert_eq!(
+            jsx_js("x = <label class=\"a\" for=\"b\"><Campo class=\"c\" /></label>"),
+            "x = _jsx(\"label\", { className: \"a\", htmlFor: \"b\", children: _jsx(Campo, { class: \"c\" }) });\n"
+        );
+        // Custom elements and SVG namespaces are tags, not components
+        assert_eq!(
+            jsx_js("x = <my-card xlink:href=\"#a\" />"),
+            "x = _jsx(\"my-card\", { \"xlink:href\": \"#a\" });\n"
+        );
+    }
+
+    #[test]
+    fn test_jsx_text_comments_and_nested_expressions() {
+        assert_eq!(
+            jsx_js(
+                "x = (\n    <ul>\n        {/* niente */}\n        {xs.map((v) => <li key={v}>{v} &amp; basta</li>)}\n    </ul>\n)"
+            ),
+            "x = _jsx(\"ul\", { children: xs.map((v) => _jsxs(\"li\", { children: [v, \" & basta\"] }, v)) });\n"
+        );
+        // Neapolitan inside the braces
+        assert_eq!(
+            jsx_js("x = <p>{pronto ? \"sì\" : nisciun}{a e b}</p>"),
+            "x = _jsxs(\"p\", { children: [(pronto ? \"sì\" : null), (a && b)] });\n"
+        );
+        // An element as an attribute value
+        assert_eq!(
+            jsx_js("x = <Scheda titolo=<b>Uè</b> />"),
+            "x = _jsx(Scheda, { titolo: _jsx(\"b\", { children: \"Uè\" }) });\n"
+        );
+    }
+
+    #[test]
+    fn test_jsx_import_only_when_used_and_source_can_change() {
+        let plain = compile("chist è x = a < b", Default::default())
+            .unwrap()
+            .code;
+        assert_eq!(plain, "const x = (a < b);\n");
+
+        let pragma = compile("// @jsxImportSource preact\nx = <b />", Default::default())
+            .unwrap()
+            .code;
+        assert!(
+            pragma.starts_with("import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from \"preact/jsx-runtime\";\n"),
+            "{pragma}"
+        );
+        let options = CompileOptions {
+            jsx_import_source: Some("solid-js/h".to_string()),
+            ..Default::default()
+        };
+        let option = compile("x = <b />", options).unwrap().code;
+        assert!(
+            option.contains("from \"solid-js/h/jsx-runtime\""),
+            "{option}"
+        );
+
+        // After a shebang, and also when the only JSX is inside a template
+        let code = compile("#!/usr/bin/env node\nx = `${<b />}`", Default::default())
+            .unwrap()
+            .code;
+        assert!(code.starts_with("#!/usr/bin/env node\nimport {"), "{code}");
+    }
+
+    #[test]
+    fn test_jsx_import_shifts_source_map_by_one_line() {
+        let options = CompileOptions {
+            source_map: true,
+            ..Default::default()
+        };
+        let result = compile("chist è x = <b />\n", options).unwrap();
+        // Line 1 is the import; `const x = <b />` maps to source line 1
+        assert_eq!(result.source_map.unwrap().mappings, ";AAAA,MAAQ,IAAI");
+    }
+
+    #[test]
+    fn test_jsx_checks_the_code_in_braces() {
+        // `aspett` outside `mo vir` is still caught inside JSX
+        let err = compile("facc A() { piglie <p>{aspett x}</p> }", Default::default()).unwrap_err();
+        assert!(err.to_string().contains("aspett"), "{err}");
+        // Errors inside braces point at the right line
+        let err = compile("x = <div>\n  {1 2}\n</div>", Default::default()).unwrap_err();
+        assert_eq!(err.line(), Some(2));
+        // Lexer errors from inside the braces are reported
+        let err = compile("x = <p>{\"a}</p>", Default::default()).unwrap_err();
+        assert_eq!(err.line(), Some(1));
+    }
 
     #[test]
     fn test_shebang_is_kept_at_the_top() {

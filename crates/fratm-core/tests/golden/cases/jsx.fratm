@@ -1,0 +1,26 @@
+// JSX: elements, fragments, attributes, spreads, keys, text and entities
+chiamm { Fragment } da "react"
+
+facc Voce({ nomme, children }) {
+    piglie <li data-nomme={nomme}>{children}</li>
+}
+
+mann for facc Lista({ voci, titolo, ...resto }) {
+    piglie (
+        <section {...resto} class="lista" aria-label={titolo}>
+            {/* 'o titolo */}
+            <h2>
+                {titolo} &amp; cumpagnia
+            </h2>
+            <ul>
+                {voci.map((v, i) => <Voce key={i} nomme={v}>{i + 1}. {v}</Voce>)}
+            </ul>
+            <>
+                <input type="checkbox" disabled checked={voci.length > 2} />
+                <label for="x">Uè</label>
+            </>
+            <Fragment key="f"><br /></Fragment>
+            {voci.length === 0 e <p>Vacante</p>}
+        </section>
+    )
+}

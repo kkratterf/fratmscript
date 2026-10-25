@@ -301,6 +301,8 @@ pub enum TokenKind {
         pattern: String,
         flags: String,
     },
+    /// A whole JSX element or fragment, `<div>…</div>`
+    Jsx(Box<JsxToken>),
 
     // === Special ===
     Newline,
@@ -432,6 +434,10 @@ impl fmt::Display for TokenKind {
             TokenKind::BigInt(digits) => write!(f, "{}n", digits),
             TokenKind::Template { .. } => write!(f, "`…`"),
             TokenKind::Regex { pattern, flags } => write!(f, "/{}/{}", pattern, flags),
+            TokenKind::Jsx(element) => match &element.name {
+                Some(name) => write!(f, "<{}>", name),
+                None => write!(f, "<>"),
+            },
             TokenKind::Newline => write!(f, "\\n"),
             TokenKind::Eof => write!(f, "EOF"),
             TokenKind::Invalid(s) => write!(f, "INVALID({})", s),
@@ -523,4 +529,44 @@ pub fn lookup_keyword(ident: &str) -> Option<TokenKind> {
         "pure" => Some(TokenKind::Pure),
         _ => None,
     }
+}
+
+/// A JSX element as the lexer reads it: names and text are kept as written,
+/// and every `{ … }` holds its own tokens, like a template interpolation.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct JsxToken {
+    /// Tag name (`div`, `Menu.Voce`, `svg:rect`); `None` for a fragment `<>`
+    pub name: Option<String>,
+    pub attributes: Vec<JsxTokenAttribute>,
+    /// `None` for a self-closing element (`<br />`)
+    pub children: Option<Vec<JsxTokenChild>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum JsxTokenAttribute {
+    /// `name`, `name="text"`, `name={expr}` or `name=<el />`
+    Named {
+        name: String,
+        value: Option<JsxTokenValue>,
+        span: Span,
+    },
+    /// `{...props}`
+    Spread(Vec<Token>),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum JsxTokenValue {
+    /// Raw text between the quotes
+    String(String),
+    Expression(Vec<Token>),
+    Element(Box<JsxToken>),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum JsxTokenChild {
+    /// Raw text, whitespace and entities untouched
+    Text(String),
+    /// `{expr}`; empty for `{}` or `{/* comment */}`
+    Expression(Vec<Token>, Span),
+    Element(Box<JsxToken>),
 }

@@ -32,6 +32,12 @@ impl CodeGen {
         self.output.clone()
     }
 
+    /// Writes the import of the JSX runtime before the program.
+    pub fn emit_jsx_import(&mut self, source: &str) {
+        self.emit(&jsx_runtime_import(source));
+        self.emit("\n");
+    }
+
     /// Writes a shebang line before the program, keeping source map lines in step.
     pub fn emit_shebang(&mut self, line: &str) {
         self.emit(line);
@@ -627,6 +633,10 @@ impl CodeGen {
                 self.gen_callee(tag);
                 self.gen_expression(quasi);
             }
+            Expression::Jsx { element, span } => {
+                self.add_mapping(span.line, span.column);
+                self.gen_jsx(element);
+            }
             Expression::Import { source, .. } => {
                 self.emit("import(");
                 self.gen_expression(source);
@@ -986,6 +996,97 @@ impl CodeGen {
         }
     }
 
+    /// `<a href="/">Uè</a>` → `_jsx("a", { href: "/", children: "Uè" })`, the
+    /// automatic JSX runtime: `_jsxs` when there are several children, `key`
+    /// as the third argument.
+    fn gen_jsx(&mut self, element: &JsxElement) {
+        let intrinsic = element.name.as_deref().is_some_and(is_intrinsic_tag);
+        self.emit(if element.children.len() > 1 {
+            "_jsxs("
+        } else {
+            "_jsx("
+        });
+        match &element.name {
+            None => self.emit("_Fragment"),
+            Some(name) if intrinsic => self.emit(&js_string(name)),
+            Some(name) => {
+                for (i, part) in name.split('.').enumerate() {
+                    if i == 0 {
+                        self.emit(&js_name(part));
+                    } else {
+                        self.emit(".");
+                        self.emit(part);
+                    }
+                }
+            }
+        }
+        self.emit(", ");
+        let mut key = None;
+        let mut first = true;
+        let mut separator = |gen: &mut Self| {
+            gen.emit(if first { "{ " } else { ", " });
+            first = false;
+        };
+        for attribute in &element.attributes {
+            match attribute {
+                JsxAttribute::Named { name, value, .. } if name == "key" => key = Some(value),
+                JsxAttribute::Named { name, value, .. } => {
+                    separator(self);
+                    let name = match name.as_str() {
+                        "class" if intrinsic => "className",
+                        "for" if intrinsic => "htmlFor",
+                        name => name,
+                    };
+                    if is_plain_name(name) {
+                        self.emit(name);
+                    } else {
+                        self.emit(&js_string(name));
+                    }
+                    self.emit(": ");
+                    match value {
+                        Some(value) => self.gen_expression(value),
+                        None => self.emit("true"),
+                    }
+                }
+                JsxAttribute::Spread(e) => {
+                    separator(self);
+                    self.emit("...");
+                    self.gen_expression(e);
+                }
+            }
+        }
+        if !element.children.is_empty() {
+            separator(self);
+            self.emit("children: ");
+            let many = element.children.len() > 1;
+            if many {
+                self.emit("[");
+            }
+            for (i, child) in element.children.iter().enumerate() {
+                if i > 0 {
+                    self.emit(", ");
+                }
+                match child {
+                    JsxChild::Text(text) => self.emit(&js_string(text)),
+                    JsxChild::Expression(e) => self.gen_expression(e),
+                    JsxChild::Element(nested) => self.gen_jsx(nested),
+                }
+            }
+            if many {
+                self.emit("]");
+            }
+        }
+        self.emit(if first { "{}" } else { " }" });
+        if let Some(key) = key {
+            self.emit(", ");
+            match key {
+                Some(value) => self.gen_expression(value),
+                None => self.emit("true"),
+            }
+        }
+        self.emit(")");
+    }
+
     fn gen_property_key(&mut self, key: &PropertyKey) {
         match key {
             PropertyKey::Name(name) => self.emit(name),
@@ -1293,6 +1394,30 @@ fn alias(name: &str, alias: &str) -> String {
     } else {
         format!("{} as {}", name, alias)
     }
+}
+
+/// `div`, `my-element`, `svg:rect` are HTML/SVG tags (strings for the
+/// runtime); `Pizza`, `Menu.Voce` and `motion.div` are components.
+fn is_intrinsic_tag(name: &str) -> bool {
+    name.contains(':')
+        || (name.starts_with(|c: char| c.is_ascii_lowercase()) && !name.contains('.'))
+}
+
+/// Whether a property name can be written without quotes.
+fn is_plain_name(name: &str) -> bool {
+    let mut chars = name.chars();
+    chars
+        .next()
+        .is_some_and(|c| c.is_alphabetic() || c == '_' || c == '$')
+        && chars.all(|c| c.is_alphanumeric() || c == '_' || c == '$')
+}
+
+/// Line that imports the automatic JSX runtime of `source` (`react`, `preact`…).
+pub fn jsx_runtime_import(source: &str) -> String {
+    format!(
+        "import {{ jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment }} from {};",
+        js_string(&format!("{}/jsx-runtime", source))
+    )
 }
 
 /// A module path as a JS string literal.

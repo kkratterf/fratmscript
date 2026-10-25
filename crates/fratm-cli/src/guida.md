@@ -322,6 +322,48 @@ Also: `chiamm "./stile.css"` (side effects only), `mann for { a } da "./m.js"` a
 another `.fratm` file, build each file with `fratm build` and import the `.js`, or use the Vite
 plugin.
 
+## JSX: components and web pages
+
+`.fratm` files can contain JSX, so React (or Preact) components are written in FratmScript.
+Tags are HTML as usual (`div`, `button`, `input`); a capitalised or dotted tag is a component.
+Inside `{ }` goes any FratmScript expression.
+
+```fratm
+chiamm { useState } da "react"
+chiamm "./stile.css"
+
+facc Pizza({ nomme, prezzo }) {
+    piglie <li class="pizza">{nomme}: {prezzo} €</li>
+}
+
+mann for predefinit facc Menu({ pizze }) {
+    tien [scelte, setScelte] = useState(0)
+    piglie (
+        <section>
+            <h1>Pizze scelte: {scelte}</h1>
+            <ul>
+                {pizze.map((p) => <Pizza key={p.nomme} {...p} />)}
+            </ul>
+            {scelte > 0 ? <p>Bravo!</p> : nisciun}
+            <button onClick={() => setScelte(scelte + 1)}>Scegli</button>
+        </section>
+    )
+}
+```
+
+- Supported: elements, self-closing tags, fragments `<>…</>`, `{expr}` attributes and children,
+  `{...props}`, boolean attributes, `{/* comments */}`, HTML entities (`&amp;`, `&nbsp;`).
+- `class` and `for` work on HTML tags (they become `className` / `htmlFor`).
+- The output uses the automatic JSX runtime: `import { jsx as _jsx, ... } from
+  "react/jsx-runtime"` is added at the top. Write `// @jsxImportSource preact` at the top of the
+  file to use Preact; the npm package's `compile` takes `jsxImportSource` too.
+- Hooks and React APIs keep their names: `useState`, `useEffect`, `createRoot`.
+- Styles: import plain CSS (`chiamm "./stile.css"`) or CSS modules
+  (`chiamm stile da "./App.module.css"`, then `className={stile.titolo}`) through Vite; inline
+  styles are objects: `style={{ color: "red" }}`.
+- A `<` starts JSX only where a value can start (after `=`, `(`, `,`, `piglie`, `=>`, ...) and
+  when a tag name or `>` follows right away, so `a < b` and `i <n` stay comparisons.
+
 ## The `fratm` library
 
 Import helpers from `"fratm"`: the compiler inlines their code, no package is needed.

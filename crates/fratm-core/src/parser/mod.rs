@@ -1,9 +1,11 @@
 //! Parser for FratmScript
 
 mod ast;
+mod jsx;
 
 use crate::lexer::{Span, Token, TokenKind};
 pub use ast::*;
+pub use jsx::{decode_entities, jsx_text};
 
 /// Name, parent and members of a class declaration or expression.
 type ClassParts = (Option<String>, Option<String>, Vec<ClassMember>);
@@ -2012,6 +2014,14 @@ impl Parser {
                 Ok(Expression::Template {
                     quasis,
                     expressions,
+                    span,
+                })
+            }
+            TokenKind::Jsx(element) => {
+                let element = (**element).clone();
+                let element = jsx::element(&element, span, self.depth)?;
+                Ok(Expression::Jsx {
+                    element: Box::new(element),
                     span,
                 })
             }

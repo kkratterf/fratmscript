@@ -4,14 +4,14 @@ import { compile } from './index.js';
 const FRATM = /\.fratm$/;
 
 export default function fratmscript(options = {}) {
-  const { sourceMap = true } = options;
+  const { sourceMap = true, jsxImportSource } = options;
   return {
     name: 'fratmscript',
     enforce: 'pre',
     transform(source, id) {
       const file = id.split('?', 1)[0];
       if (!FRATM.test(file)) return null;
-      const result = compile(source, { sourceMap, filename: file });
+      const result = compile(source, { sourceMap, filename: file, jsxImportSource });
       if (result.errors.length > 0) {
         const [error] = result.errors;
         this.error({

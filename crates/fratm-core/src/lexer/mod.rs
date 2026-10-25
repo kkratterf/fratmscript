@@ -34,7 +34,10 @@
 
 mod token;
 
-pub use token::{lookup_keyword, Span, Token, TokenKind};
+pub use token::{
+    lookup_keyword, JsxToken, JsxTokenAttribute, JsxTokenChild, JsxTokenValue, Span, Token,
+    TokenKind,
+};
 
 /// Lexical analyzer for FratmScript.
 ///
@@ -86,6 +89,13 @@ pub struct Lexer<'a> {
     prev_kind: Option<TokenKind>,
     /// How many template interpolations enclose the current position
     template_depth: usize,
+}
+
+/// Why a JSX element could not be read.
+enum JsxError {
+    Message(String),
+    /// An invalid token from inside a `{ … }`, reported as it is
+    Nested(Token),
 }
 
 /// Templates nested deeper than this are an error rather than a stack
@@ -301,6 +311,7 @@ impl<'a> Lexer<'a> {
                         self.make_token(TokenKind::Not)
                     }
                 }
+                '<' if self.jsx_allowed() => self.scan_jsx(),
                 '<' => {
                     if self.match_char('<') {
                         if self.match_char('=') {
@@ -647,6 +658,301 @@ impl<'a> Lexer<'a> {
             }
             self.prev_kind = Some(token.kind.clone());
             tokens.push(token);
+        }
+    }
+
+    /// A `<` starts JSX where a value can start (where a regex could) and
+    /// when a tag name or the `>` of a fragment follows right away:
+    /// `piglie <b>…</b>`, `x = <></>`, but `a < b` and `i <n`.
+    fn jsx_allowed(&mut self) -> bool {
+        self.regex_allowed()
+            && self
+                .peek()
+                .map(|c| is_ident_start(c) || c == '>')
+                .unwrap_or(false)
+    }
+
+    /// Scans a JSX element or fragment after its `<` into one token.
+    fn scan_jsx(&mut self) -> Token {
+        let (start, line, column) = (self.token_start, self.token_line, self.token_column);
+        let element = self.scan_jsx_element();
+        (self.token_start, self.token_line, self.token_column) = (start, line, column);
+        match element {
+            Ok(element) => self.make_token(TokenKind::Jsx(Box::new(element))),
+            Err(JsxError::Nested(token)) => token,
+            Err(JsxError::Message(message)) => self.make_token(TokenKind::Invalid(message)),
+        }
+    }
+
+    fn scan_jsx_element(&mut self) -> Result<JsxToken, JsxError> {
+        if self.template_depth >= MAX_TEMPLATE_DEPTH {
+            return Err(JsxError::Message("JSX nested too deeply".to_string()));
+        }
+        self.template_depth += 1;
+        let element = self.scan_jsx_element_inner();
+        self.template_depth -= 1;
+        element
+    }
+
+    fn scan_jsx_element_inner(&mut self) -> Result<JsxToken, JsxError> {
+        self.skip_jsx_space();
+        if self.match_char('>') {
+            let children = self.scan_jsx_children("<>")?;
+            self.skip_jsx_space();
+            if !self.match_char('>') {
+                return Err(JsxError::Message(
+                    "The fragment '<>' must be closed by '</>'".to_string(),
+                ));
+            }
+            return Ok(JsxToken {
+                name: None,
+                attributes: Vec::new(),
+                children: Some(children),
+            });
+        }
+        let name = self.scan_jsx_name(true)?;
+        let mut attributes = Vec::new();
+        loop {
+            self.skip_jsx_space();
+            match self.peek() {
+                Some('/') => {
+                    self.advance();
+                    if !self.match_char('>') {
+                        return Err(JsxError::Message(format!(
+                            "Expected '>' after '/' in '<{}'",
+                            name
+                        )));
+                    }
+                    return Ok(JsxToken {
+                        name: Some(name),
+                        attributes,
+                        children: None,
+                    });
+                }
+                Some('>') => {
+                    self.advance();
+                    let children = self.scan_jsx_children(&name)?;
+                    self.skip_jsx_space();
+                    let closing = if self.peek() == Some('>') {
+                        String::new()
+                    } else {
+                        self.scan_jsx_name(true)?
+                    };
+                    if closing != name {
+                        return Err(JsxError::Message(format!(
+                            "'<{}>' is closed by '</{}>'",
+                            name, closing
+                        )));
+                    }
+                    self.skip_jsx_space();
+                    if !self.match_char('>') {
+                        return Err(JsxError::Message(format!(
+                            "Expected '>' after '</{}'",
+                            name
+                        )));
+                    }
+                    return Ok(JsxToken {
+                        name: Some(name),
+                        attributes,
+                        children: Some(children),
+                    });
+                }
+                Some('{') => {
+                    self.advance();
+                    self.skip_jsx_space();
+                    if !self.source[self.position..].starts_with("...") {
+                        return Err(JsxError::Message(format!(
+                            "Only '{{...props}}' can go in braces among the attributes of '<{}>'",
+                            name
+                        )));
+                    }
+                    for _ in 0..3 {
+                        self.advance();
+                    }
+                    attributes.push(JsxTokenAttribute::Spread(self.scan_jsx_expression()?));
+                }
+                Some(c) if is_ident_start(c) => {
+                    let (line, column, start) = (self.line, self.column, self.position);
+                    let attr = self.scan_jsx_name(false)?;
+                    let span = Span::new(start, self.position, line, column);
+                    self.skip_jsx_space();
+                    let value = if self.match_char('=') {
+                        self.skip_jsx_space();
+                        Some(self.scan_jsx_attribute_value(&attr)?)
+                    } else {
+                        None
+                    };
+                    attributes.push(JsxTokenAttribute::Named {
+                        name: attr,
+                        value,
+                        span,
+                    });
+                }
+                None => {
+                    return Err(JsxError::Message(format!(
+                        "The tag '<{}' is never closed",
+                        name
+                    )))
+                }
+                Some(c) => {
+                    return Err(JsxError::Message(format!(
+                        "Unexpected '{}' in the tag '<{}>'",
+                        c, name
+                    )))
+                }
+            }
+        }
+    }
+
+    fn scan_jsx_attribute_value(&mut self, attr: &str) -> Result<JsxTokenValue, JsxError> {
+        match self.peek() {
+            Some(quote @ ('"' | '\'')) => {
+                self.advance();
+                let mut text = String::new();
+                loop {
+                    match self.peek() {
+                        None => {
+                            return Err(JsxError::Message(format!(
+                                "Unterminated string in the attribute '{}'",
+                                attr
+                            )))
+                        }
+                        Some(c) if c == quote => {
+                            self.advance();
+                            return Ok(JsxTokenValue::String(text));
+                        }
+                        Some(c) => {
+                            self.advance_tracking_lines();
+                            text.push(c);
+                        }
+                    }
+                }
+            }
+            Some('{') => {
+                self.advance();
+                let tokens = self.scan_jsx_expression()?;
+                if tokens.is_empty() {
+                    return Err(JsxError::Message(format!(
+                        "The attribute '{}' has empty braces: write a value inside '{{ }}'",
+                        attr
+                    )));
+                }
+                Ok(JsxTokenValue::Expression(tokens))
+            }
+            Some('<') => {
+                self.advance();
+                Ok(JsxTokenValue::Element(Box::new(self.scan_jsx_element()?)))
+            }
+            _ => Err(JsxError::Message(format!(
+                "The attribute '{}' needs a value in quotes or in braces: {}=\"…\" or {}={{…}}",
+                attr, attr, attr
+            ))),
+        }
+    }
+
+    /// Text, `{ … }` and nested elements up to the `</` that closes `parent`.
+    fn scan_jsx_children(&mut self, parent: &str) -> Result<Vec<JsxTokenChild>, JsxError> {
+        let mut children = Vec::new();
+        let mut text = String::new();
+        loop {
+            match self.peek() {
+                None => {
+                    return Err(JsxError::Message(if parent == "<>" {
+                        "The fragment '<>' is never closed: add '</>'".to_string()
+                    } else {
+                        format!("'<{}>' is never closed: add '</{}>'", parent, parent)
+                    }))
+                }
+                Some('<') => {
+                    if !text.is_empty() {
+                        children.push(JsxTokenChild::Text(std::mem::take(&mut text)));
+                    }
+                    self.advance();
+                    if self.match_char('/') {
+                        return Ok(children);
+                    }
+                    children.push(JsxTokenChild::Element(Box::new(self.scan_jsx_element()?)));
+                }
+                Some('{') => {
+                    if !text.is_empty() {
+                        children.push(JsxTokenChild::Text(std::mem::take(&mut text)));
+                    }
+                    let span = Span::new(self.position, self.position + 1, self.line, self.column);
+                    self.advance();
+                    let tokens = self.scan_jsx_expression()?;
+                    if tokens.first().map(|t| &t.kind) == Some(&TokenKind::Ellipsis) {
+                        return Err(JsxError::Message(
+                            "'{...lista}' is not allowed among the children: write '{lista}'"
+                                .to_string(),
+                        ));
+                    }
+                    children.push(JsxTokenChild::Expression(tokens, span));
+                }
+                Some('}') => {
+                    return Err(JsxError::Message(
+                        "Unexpected '}' in the text of a JSX element: write {'}'}".to_string(),
+                    ))
+                }
+                Some(c) => {
+                    self.advance_tracking_lines();
+                    text.push(c);
+                }
+            }
+        }
+    }
+
+    /// The tokens of a `{ … }` inside JSX, after its `{`.
+    fn scan_jsx_expression(&mut self) -> Result<Vec<Token>, JsxError> {
+        self.template_depth += 1;
+        let tokens = self.scan_interpolation();
+        self.template_depth -= 1;
+        match tokens {
+            Ok(tokens) => Ok(tokens
+                .into_iter()
+                .filter(|t| t.kind != TokenKind::Newline)
+                .collect()),
+            Err(Some(nested)) => Err(JsxError::Nested(nested)),
+            Err(None) => Err(JsxError::Message(
+                "A '{' in JSX is never closed".to_string(),
+            )),
+        }
+    }
+
+    /// A tag or attribute name: letters, digits, `_`, `$` and `-`, with
+    /// `.` (tags only) or one `:` between parts.
+    fn scan_jsx_name(&mut self, tag: bool) -> Result<String, JsxError> {
+        let start = self.position;
+        if !self.peek().map(is_ident_start).unwrap_or(false) {
+            return Err(JsxError::Message(match self.peek() {
+                Some(c) => format!("Expected a tag name, not '{}'", c),
+                None => "Expected a tag name".to_string(),
+            }));
+        }
+        loop {
+            while self
+                .peek()
+                .map(|c| is_ident_continue(c) || c == '-')
+                .unwrap_or(false)
+            {
+                self.advance();
+            }
+            let joins = match self.peek() {
+                Some('.') => tag,
+                Some(':') => true,
+                _ => false,
+            };
+            if joins && self.peek_next().map(is_ident_start).unwrap_or(false) {
+                self.advance();
+            } else {
+                break;
+            }
+        }
+        Ok(self.source[start..self.position].to_string())
+    }
+
+    fn skip_jsx_space(&mut self) {
+        while self.peek().map(char::is_whitespace).unwrap_or(false) {
+            self.advance_tracking_lines();
         }
     }
 
@@ -1139,5 +1445,87 @@ mod tests {
         assert_eq!((nome.span.line, nome.span.column), (2, 4));
         // The template token itself keeps its start position
         assert_eq!((tokens[3].span.line, tokens[3].span.column), (1, 10));
+    }
+
+    fn kinds(source: &str) -> Vec<TokenKind> {
+        Lexer::new(source)
+            .tokenize()
+            .into_iter()
+            .map(|t| t.kind)
+            .collect()
+    }
+
+    #[test]
+    fn test_jsx_starts_only_where_a_value_can() {
+        assert!(matches!(kinds("x = <b>ciao</b>")[2], TokenKind::Jsx(_)));
+        assert!(matches!(kinds("piglie <></>")[1], TokenKind::Jsx(_)));
+        assert!(matches!(kinds("f(<br />)")[2], TokenKind::Jsx(_)));
+        // Comparisons stay comparisons
+        assert_eq!(kinds("a <b")[1], TokenKind::Less);
+        assert_eq!(kinds("1 < 2")[1], TokenKind::Less);
+        assert_eq!(kinds("f() <x")[3], TokenKind::Less);
+        assert_eq!(kinds("x = a < b")[3], TokenKind::Less);
+        assert_eq!(kinds("x = 1 <<2")[3], TokenKind::LessLess);
+    }
+
+    #[test]
+    fn test_jsx_element_keeps_attributes_children_and_inner_tokens() {
+        let tokens = Lexer::new(
+            "x = <Menu.Voce aria-label='a' attivo {...resto} n={1 + 2}>\n  Uè {nomme}<i/></Menu.Voce>",
+        )
+        .tokenize();
+        let TokenKind::Jsx(element) = &tokens[2].kind else {
+            panic!("{:?}", tokens[2].kind)
+        };
+        assert_eq!(element.name.as_deref(), Some("Menu.Voce"));
+        let names: Vec<_> = element
+            .attributes
+            .iter()
+            .map(|a| match a {
+                JsxTokenAttribute::Named { name, .. } => name.as_str(),
+                JsxTokenAttribute::Spread(_) => "...",
+            })
+            .collect();
+        assert_eq!(names, ["aria-label", "attivo", "...", "n"]);
+        let children = element.children.as_ref().unwrap();
+        assert_eq!(children.len(), 3);
+        assert!(matches!(&children[0], JsxTokenChild::Text(t) if t == "\n  Uè "));
+        let JsxTokenChild::Expression(inner, _) = &children[1] else {
+            panic!("{:?}", children[1])
+        };
+        assert!(matches!(&inner[0].kind, TokenKind::Identifier(n) if n == "nomme"));
+        assert_eq!((inner[0].span.line, inner[0].span.column), (2, 7));
+        assert!(matches!(&children[2], JsxTokenChild::Element(e) if e.children.is_none()));
+        // The token covers the whole element and the next token follows it
+        assert!(tokens[2].literal.ends_with("</Menu.Voce>"));
+        assert_eq!(tokens[3].kind, TokenKind::Eof);
+    }
+
+    #[test]
+    fn test_jsx_errors_are_invalid_tokens() {
+        for source in [
+            "x = <div>",
+            "x = <a></b>",
+            "x = <a b=>",
+            "x = <a>{b</a>",
+            "x = <a>}</a>",
+            "x = <a {b} />",
+        ] {
+            let tokens = Lexer::new(source).tokenize();
+            assert!(
+                matches!(tokens[2].kind, TokenKind::Invalid(_)),
+                "{source}: {:?}",
+                tokens[2].kind
+            );
+        }
+    }
+
+    #[test]
+    fn test_deeply_nested_jsx_is_an_error_not_a_crash() {
+        let source = format!("x = {}{}", "<a>".repeat(200), "</a>".repeat(200));
+        let tokens = Lexer::new(&source).tokenize();
+        assert!(
+            matches!(&tokens[2].kind, TokenKind::Invalid(m) if m.contains("nested too deeply"))
+        );
     }
 }

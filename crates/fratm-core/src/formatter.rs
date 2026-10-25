@@ -220,7 +220,11 @@ impl<'a> Formatter<'a> {
             // After an inline block comment
             self.out.push(' ');
         }
-        self.out.push_str(&token.literal);
+        if matches!(kind, TokenKind::Jsx(_)) && token.literal.contains('\n') {
+            self.push_jsx(token);
+        } else {
+            self.out.push_str(&token.literal);
+        }
         self.space = false;
 
         match kind {
@@ -253,6 +257,29 @@ impl<'a> Formatter<'a> {
         }
         self.prev = Some(kind.clone());
         self.last = Some(token.clone());
+    }
+
+    /// A JSX element over several lines moves as a block: its later lines
+    /// shift by as much as its first line did, so the markup keeps its shape.
+    fn push_jsx(&mut self, token: &Token) {
+        let line_start = self.out.rfind('\n').map_or(0, |i| i + 1);
+        let new_column = self.out[line_start..].chars().count() as isize;
+        let shift = new_column - (token.span.column as isize - 1);
+        for (i, line) in token.literal.split('\n').enumerate() {
+            if i == 0 {
+                self.out.push_str(line);
+                continue;
+            }
+            self.out.push('\n');
+            let line = line.trim_end_matches([' ', '\t']);
+            if line.is_empty() {
+                continue;
+            }
+            let indent = line.len() - line.trim_start_matches(' ').len();
+            let indent = (indent as isize + shift).max(0) as usize;
+            self.out.push_str(&" ".repeat(indent));
+            self.out.push_str(line.trim_start_matches(' '));
+        }
     }
 
     fn push_frame(&mut self, base: usize, switch: bool, after_vedimm: bool, paren: bool) {
@@ -383,6 +410,22 @@ mod tests {
 
     fn fmt(source: &str) -> String {
         format(source).unwrap()
+    }
+
+    #[test]
+    fn test_moves_multiline_jsx_as_a_block() {
+        let source = "facc A() {\n  piglie (\n<div>\n  <b>{x}</b>\n\n</div>\n  )\n}\n";
+        let formatted = fmt(source);
+        assert_eq!(
+            formatted,
+            "facc A() {\n    piglie (\n        <div>\n          <b>{x}</b>\n\n        </div>\n    )\n}\n"
+        );
+        assert_eq!(fmt(&formatted), formatted);
+        // One-line JSX is kept as written
+        assert_eq!(
+            fmt("x = <i   class = \"a\">ciao</i>\n"),
+            "x = <i   class = \"a\">ciao</i>\n"
+        );
     }
 
     #[test]

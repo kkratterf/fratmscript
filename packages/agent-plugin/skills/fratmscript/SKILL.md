@@ -30,14 +30,15 @@ keywords change.
 - Never write `const`, `let`, `var`, `function`, `return`, `if`, `else`, `for`, `while`, `new`,
   `class`, `this`, `true`, `false`, `null`, `try`, `catch`, `throw`, `async`, `await`,
   `import`, `export`: use the table below.
-- One statement per line (or `;`). Keep every expression on one line: a newline after `+`, `&&`,
-  `?`, `:` or before `.map(...)` ends the statement. Split long expressions with variables.
-  Arrays, objects, call arguments and blocks may span lines.
+- One statement per line (or `;`). An expression goes on to the next line after a binary
+  operator, `=`, `?`, `:` or `=>`, before a line that starts with `.method()`, `?`, `:` or
+  `&&`/`||`, and anywhere inside `( )` and `[ ]`.
 - Braces are required: `si (x) { ... }`.
 - `chist è` cannot be reassigned, and a name cannot be declared twice in the same scope.
-- Not supported yet: the `in` operator (use `Object.hasOwn`), unary `+` (use `Number(x)`),
-  bitwise operators, labels, tagged templates, getters in object literals, default and
-  namespace imports. Check `fratm guida` for the current list.
+- JSX works in `.fratm` files for React or Preact: `piglie <button onClick={f}>Uè</button>`.
+  Tags stay HTML, hooks keep their React names (`useState`), `class` works on HTML tags. The
+  output imports `react/jsx-runtime`; `// @jsxImportSource preact` switches library.
+- Every modern JavaScript construct is supported; `fratm guida` lists the exact syntax.
 
 | FratmScript | JavaScript |
 | --- | --- |

@@ -10,10 +10,11 @@ const sources = import.meta.glob('../../../../examples/*.fratm', {
 }) as Record<string, string>
 
 /**
- * Examples that cannot run in the browser: 09 imports Node modules
- * (node:path, node:os) and 13 reads the terminal with readline.
+ * Examples that cannot run in the playground console: 09 imports Node modules
+ * (node:path, node:os), 13 reads the terminal with readline and 16 is a React
+ * component (it needs the component preview, #170).
  */
-const NODE_ONLY = new Set(['09_moduli', '13_pomodor_e_muzzarel'])
+const NODE_ONLY = new Set(['09_moduli', '13_pomodor_e_muzzarel', '16_pizzeria_jsx'])
 
 /** Picker names in each UI language; an example missing here uses its file's title comment. */
 const TITLES: Record<string, Record<Lang, string>> = {

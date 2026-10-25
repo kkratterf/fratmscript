@@ -57,6 +57,9 @@ impl CompileError {
 
 /// Get Napoletano message for error
 pub fn napoletanize_error(message: &str) -> String {
+    if let Some(jsx) = jsx_message(message) {
+        return jsx;
+    }
     let found = found_token(message);
     if let Some(c) = message.strip_prefix("Unknown character '") {
         return format!(
@@ -311,6 +314,71 @@ pub fn napoletanize_error(message: &str) -> String {
 
     // Default: return with some Napoletano flair
     format!("Uè, c'è nu problema: {}", message)
+}
+
+/// Errors of the JSX lexer. Tag and attribute names are quoted in the
+/// English message and kept as they are.
+fn jsx_message(message: &str) -> Option<String> {
+    let quoted: Vec<&str> = message.split('\'').skip(1).step_by(2).collect();
+    let first = quoted.first().copied().unwrap_or("");
+    let second = quoted.get(1).copied().unwrap_or("");
+    let text = if message.starts_with("The fragment '<>'") {
+        "'O frammento '<>' nun è chiuso: ce vo' '</>' 'a fine!".to_string()
+    } else if message.starts_with("Expected '>' after '/'") {
+        format!(
+            "Doppo '/' ce vo' '>': scrivi {} />",
+            quoted.last().copied().unwrap_or("")
+        )
+    } else if message.contains("' is closed by '</") {
+        format!(
+            "Hai araputo {} ma l'hai chiuso cu {}: 'e tag hann'a essere uguali!",
+            first, second
+        )
+    } else if message.starts_with("Expected '>' after '</") {
+        format!("Manca '>' pe chiudere {}>", second)
+    } else if message.starts_with("Only '{...props}' can go in braces") {
+        format!(
+            "Mmiez'all'attribute 'e {} dint'e graffe ce po' stà sulo {{...props}}. Pe n'attribute scrive nomme={{valore}}",
+            second
+        )
+    } else if message.starts_with("The tag '<") {
+        format!("'O tag {} nun è maje chiuso: ce vo' '>'!", first)
+    } else if message.starts_with("Unexpected '") && message.contains("in the tag '<") {
+        format!("Che ce fa '{}' dint'o tag {}?", first, second)
+    } else if message.starts_with("Unterminated string in the attribute") {
+        format!("'A stringa 'e l'attribute '{}' nun è chiusa!", first)
+    } else if message.starts_with("The attribute '") && message.contains("empty braces") {
+        format!(
+            "L'attribute '{}' tene 'e graffe vacante: miette nu valore dint'e {{ }}",
+            first
+        )
+    } else if message.starts_with("The attribute '") && message.contains("needs a value") {
+        format!(
+            "L'attribute '{}' vo' nu valore tra virgolette o tra graffe: {}=\"…\" o {}={{…}}",
+            first, first, first
+        )
+    } else if message.contains("' is never closed: add '</") {
+        format!("{} nun è maje chiuso: ce vo' {}!", first, second)
+    } else if message.starts_with("'{...lista}' is not allowed among the children") {
+        "'{...lista}' nun se po' mettere mmiez'e figlie: scrive {lista}".to_string()
+    } else if message.starts_with("Unexpected '}' in the text of a JSX element") {
+        "Che ce fa '}' dint'o testo? Si 'o vuò scrivere, miette {'}'}".to_string()
+    } else if message.starts_with("A '{' in JSX is never closed") {
+        "Hai araputo na graffa '{' dint'o JSX ma nun l'hai chiusa: ce vo' '}'!".to_string()
+    } else if message.starts_with("Expected a tag name") {
+        match quoted.first() {
+            Some(found) => format!(
+                "Doppo '<' ce vo' 'o nomme 'e nu tag, tipo <div>, ma aggio truvato '{}'!",
+                found
+            ),
+            None => "Doppo '<' ce vo' 'o nomme 'e nu tag, tipo <div>!".to_string(),
+        }
+    } else if message.starts_with("Expected '}' to close the JSX braces") {
+        "Ccà ce vo' '}' pe chiudere 'e graffe d'o JSX!".to_string()
+    } else {
+        return None;
+    };
+    Some(text)
 }
 
 const END_OF_FILE: &str = "'a fine d'o file";
@@ -605,6 +673,35 @@ mod tests {
     fn hint(source: &str) -> Option<String> {
         let error = crate::compile(source, Default::default()).unwrap_err();
         suggest(&error, source)
+    }
+
+    #[test]
+    fn test_jsx_errors_are_neapolitan() {
+        let message = |source: &str| {
+            crate::compile(source, Default::default())
+                .unwrap_err()
+                .to_string()
+        };
+        assert_eq!(
+            message("x = <div>ciao"),
+            "Riga 1, colonna 5: <div> nun è maje chiuso: ce vo' </div>!"
+        );
+        assert_eq!(
+            message("x = <b>ciao</i>"),
+            "Riga 1, colonna 5: Hai araputo <b> ma l'hai chiuso cu </i>: 'e tag hann'a essere uguali!"
+        );
+        assert_eq!(
+            message("x = <br/"),
+            "Riga 1, colonna 5: Doppo '/' ce vo' '>': scrivi <br />"
+        );
+        assert_eq!(
+            message("x = <a href=/>"),
+            "Riga 1, colonna 5: L'attribute 'href' vo' nu valore tra virgolette o tra graffe: href=\"…\" o href={…}"
+        );
+        assert_eq!(
+            message("x = <p>{a b}</p>"),
+            "Riga 1, colonna 11: Ccà ce vo' '}' pe chiudere 'e graffe d'o JSX!"
+        );
     }
 
     #[test]
