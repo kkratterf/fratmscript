@@ -415,6 +415,7 @@ Runtime errors keep the original JavaScript message in brackets.
 ## Tools
 
 ```text
+fratm nuovo app                         new React + Vite app in ./app (--senza-react, --semplice)
 fratm lancia main.fratm                 compile and run with Node.js (alias: run)
 fratm build main.fratm [-o out.js]      write JavaScript (--stdout prints it)
 fratm check a.fratm b.fratm             report errors, write nothing

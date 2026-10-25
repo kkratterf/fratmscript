@@ -184,7 +184,9 @@ jobs:
 
       - name: Build, test and package
         run: |
-          (cd packages/fratmscript && npm run build)
+          # The npm package also goes into the release: `fratm nuovo` projects
+          # install it from there while it is not on the npm registry
+          (cd packages/fratmscript && npm run build && npm test && npm pack --pack-destination "$GITHUB_WORKSPACE")
           cd packages/vscode-extension
           pnpm install --frozen-lockfile
           pnpm compile
@@ -195,6 +197,12 @@ jobs:
         with:
           name: vscode
           path: fratmscript-vscode-${{ env.TAG }}.vsix
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm
+          path: fratmscript-*.tgz
           if-no-files-found: error
 
   publish:

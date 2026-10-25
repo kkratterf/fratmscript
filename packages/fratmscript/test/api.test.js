@@ -72,6 +72,20 @@ test('vite plugin compiles .fratm files only', () => {
   assert.deepEqual(out.map.sources, ['/src/a.fratm']);
 });
 
+test('vite dev server compiles the .fratm entry of index.html', () => {
+  let middleware;
+  fratmscript().configureServer({ middlewares: { use: (fn) => (middleware = fn) } });
+  const url = (u) => {
+    const req = { url: u };
+    middleware(req, null, () => {});
+    return req.url;
+  };
+  assert.equal(url('/src/main.fratm'), '/src/main.fratm?import');
+  assert.equal(url('/src/main.fratm?t=1'), '/src/main.fratm?t=1&import');
+  assert.equal(url('/src/App.fratm?import'), '/src/App.fratm?import');
+  assert.equal(url('/src/main.js'), '/src/main.js');
+});
+
 test('vite plugin reports errors with their location', () => {
   const plugin = fratmscript();
   let reported;

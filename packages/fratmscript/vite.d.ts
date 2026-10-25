@@ -9,6 +9,7 @@ export interface FratmPluginOptions {
 export interface FratmPlugin {
   name: string;
   enforce: 'pre';
+  configureServer(server: { middlewares: { use(fn: (req: { url?: string }, res: unknown, next: () => void) => void): void } }): void;
   transform(this: unknown, source: string, id: string): { code: string; map: unknown } | null;
 }
 

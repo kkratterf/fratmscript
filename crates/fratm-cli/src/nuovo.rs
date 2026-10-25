@@ -1,15 +1,254 @@
 //! `fratm nuovo`: creates a new FratmScript project.
 //!
-//! The default template is a Vite app that imports `.fratm` files through the
-//! `fratmscript` plugin; `--semplice` writes just a `main.fratm` to run with
-//! `fratm lancia`.
+//! The default template is a React app built with Vite, written in `.fratm`
+//! files with JSX and compiled by the `fratmscript` plugin; `--senza-react`
+//! writes the same Vite setup with plain DOM code, and `--semplice` just a
+//! `main.fratm` to run with `fratm lancia`.
 
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-/// Files of the Vite template: (path, contents). `{{name}}` and `{{version}}`
-/// are replaced when the project is written.
+/// Files of the React template: (path, contents). `{{name}}` and
+/// `{{fratmscript}}` (the npm dependency) are replaced when the project is
+/// written.
+const REACT_FILES: &[(&str, &str)] = &[
+    (
+        "package.json",
+        r##"{
+  "name": "{{name}}",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "fratmscript": "{{fratmscript}}",
+    "vite": "^5.4.0"
+  }
+}
+"##,
+    ),
+    (
+        "vite.config.js",
+        r##"import fratmscript from 'fratmscript/vite';
+
+export default {
+  plugins: [fratmscript()],
+};
+"##,
+    ),
+    (
+        "index.html",
+        r##"<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{name}}</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.fratm"></script>
+  </body>
+</html>
+"##,
+    ),
+    (
+        "src/main.fratm",
+        r##"// 'O punto 'e partenza: index.html carica stu file,
+// e React disegna <App /> dint'o <div id="root">.
+chiamm { StrictMode } da "react"
+chiamm { createRoot } da "react-dom/client"
+chiamm App da "./App.fratm"
+chiamm "./stile.css"
+
+createRoot(document.getElementById("root")).render(
+    <StrictMode>
+        <App />
+    </StrictMode>
+)
+"##,
+    ),
+    (
+        "src/App.fratm",
+        r##"chiamm { useState } da "react"
+chiamm Pizza da "./components/Pizza.fratm"
+
+// 'O menù: na lista 'e oggetti, comme in JavaScript
+chist è MENU = [
+    { nomme: "Margherita", prezzo: 5, ingredienti: "pummarola, muzzarella, vasenicola" },
+    { nomme: "Marinara", prezzo: 4, ingredienti: "pummarola, aglio, arecheta" },
+    { nomme: "Diavola", prezzo: 7, ingredienti: "pummarola, muzzarella, salame piccante" },
+]
+
+// Nu componente è na funzione ca torna JSX: HTML dint'o codice
+mann for predefinit facc App() {
+    // useState: nu valore ca, quanno cagna, fa ridisegnà 'o componente
+    tien [ordine, setOrdine] = useState([])
+    chist è totale = ordine.reduce((somma, pizza) => somma + pizza.prezzo, 0)
+
+    facc ordina(pizza) {
+        setOrdine([...ordine, pizza])
+    }
+
+    piglie (
+        <main className="pizzeria">
+            <header>
+                <h1>{{name}} 🍕</h1>
+                <p>Scritto tutto in FratmScript: cagna <code>src/App.fratm</code> e salva.</p>
+            </header>
+            <ul className="menu">
+                {MENU.map((pizza) => (
+                    <Pizza key={pizza.nomme} pizza={pizza} onOrdina={() => ordina(pizza)} />
+                ))}
+            </ul>
+            <footer>
+                {ordine.length === 0
+                    ? "Ancora nisciuna pizza. Che te magne?"
+                    : `Pizze ordinate: ${ordine.length} · Totale: ${totale} €`}
+            </footer>
+        </main>
+    )
+}
+"##,
+    ),
+    (
+        "src/components/Pizza.fratm",
+        r##"// CSS modules: 'e classi 'e Pizza.module.css valeno sulo pe stu componente
+chiamm stile da "./Pizza.module.css"
+
+// 'E props arrivano comme n'oggetto: { pizza, onOrdina }
+mann for predefinit facc Pizza({ pizza, onOrdina }) {
+    piglie (
+        <li className={stile.carta}>
+            <div>
+                <h2 className={stile.nomme}>{pizza.nomme}</h2>
+                <p className={stile.ingredienti}>{pizza.ingredienti}</p>
+            </div>
+            <button className={stile.bottone} onClick={onOrdina}>
+                {pizza.prezzo} € · Ordina
+            </button>
+        </li>
+    )
+}
+"##,
+    ),
+    (
+        "src/components/Pizza.module.css",
+        r##".carta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #fff;
+  border: 1px solid #ecdcd2;
+  border-radius: 14px;
+}
+
+.nomme {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.ingredienti {
+  margin: 4px 0 0;
+  color: #7a6a62;
+  font-size: 0.9rem;
+}
+
+.bottone {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: #c8321e;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bottone:hover {
+  background: #a82816;
+}
+"##,
+    ),
+    (
+        "src/stile.css",
+        r##"/* Stile globale: CSS normale, importato da main.fratm */
+:root {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #2b1f1a;
+  background: #fbf5ef;
+}
+
+body {
+  margin: 0;
+}
+
+.pizzeria {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 16px;
+}
+
+.pizzeria h1 {
+  margin: 0 0 8px;
+  font-size: 2.2rem;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 32px 0;
+  padding: 0;
+  list-style: none;
+}
+
+footer {
+  font-weight: 600;
+}
+"##,
+    ),
+    (".gitignore", "node_modules\ndist\n"),
+    (
+        "README.md",
+        r##"# {{name}}
+
+A React app written in [FratmScript](https://github.com/kkratterf/fratmscript), made with `fratm nuovo`.
+
+```bash
+npm install
+npm run dev     # development server
+npm run build   # production build in dist/
+```
+
+- `src/main.fratm` starts the app, `src/App.fratm` is the main component and
+  `src/components/Pizza.fratm` a child component with props.
+- Components return JSX: HTML tags as usual, FratmScript inside `{ }`. Hooks keep
+  their React names (`useState`, `useEffect`).
+- Styles are plain CSS (`src/stile.css`, imported with `chiamm "./stile.css"`) and
+  CSS modules (`Pizza.module.css`, used as `className={stile.carta}`). Tailwind
+  works too: follow its Vite guide and use `className="…"`.
+- To use Preact instead of React, write `// @jsxImportSource preact` at the top
+  of each file, or pass `fratmscript({ jsxImportSource: 'preact' })` in
+  `vite.config.js`.
+"##,
+    ),
+];
+
+/// Files of the Vite template without React: (path, contents), with the same
+/// placeholders as `REACT_FILES`.
 const VITE_FILES: &[(&str, &str)] = &[
     (
         "package.json",
@@ -24,7 +263,7 @@ const VITE_FILES: &[(&str, &str)] = &[
     "preview": "vite preview"
   },
   "devDependencies": {
-    "fratmscript": "^{{version}}",
+    "fratmscript": "{{fratmscript}}",
     "vite": "^5.4.0"
   }
 }
@@ -123,8 +362,18 @@ stamm a dì(saluta(nomme))
 /// Which template `fratm nuovo` writes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Template {
+    React,
     Vite,
     Simple,
+}
+
+/// The `fratmscript` npm dependency for `version`. The package is not on the
+/// npm registry yet, so projects install it from the GitHub release, which
+/// carries the `npm pack` tarball (#167).
+pub fn fratmscript_dependency(version: &str) -> String {
+    format!(
+        "https://github.com/kkratterf/fratmscript/releases/download/v{version}/fratmscript-{version}.tgz"
+    )
 }
 
 /// Writes a new project in `dir` and returns the files it created.
@@ -138,9 +387,11 @@ pub fn create(dir: &Path, template: Template, version: &str) -> io::Result<Vec<P
     }
     let name = package_name(dir);
     let files = match template {
+        Template::React => REACT_FILES,
         Template::Vite => VITE_FILES,
         Template::Simple => SIMPLE_FILES,
     };
+    let dependency = fratmscript_dependency(version);
     let mut written = Vec::new();
     for (path, contents) in files {
         let target = dir.join(path);
@@ -149,7 +400,7 @@ pub fn create(dir: &Path, template: Template, version: &str) -> io::Result<Vec<P
         }
         let contents = contents
             .replace("{{name}}", &name)
-            .replace("{{version}}", version);
+            .replace("{{fratmscript}}", &dependency);
         fs::write(&target, contents)?;
         written.push(target);
     }
@@ -217,7 +468,10 @@ mod tests {
         let package = fs::read_to_string(dir.join("package.json")).unwrap();
         let json: serde_json::Value = serde_json::from_str(&package).unwrap();
         assert_eq!(json["name"], "vite-app");
-        assert_eq!(json["devDependencies"]["fratmscript"], "^1.2.3");
+        assert_eq!(
+            json["devDependencies"]["fratmscript"],
+            "https://github.com/kkratterf/fratmscript/releases/download/v1.2.3/fratmscript-1.2.3.tgz"
+        );
         assert!(!package.contains("{{"));
 
         let main = compile(
@@ -242,6 +496,59 @@ mod tests {
             "{}",
             pizze.code
         );
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn react_template_compiles_every_file_with_jsx() {
+        let dir = temp_dir("Pizzeria React");
+        let files = create(&dir, Template::React, "1.2.3").unwrap();
+        assert_eq!(files.len(), REACT_FILES.len());
+        for (path, _) in REACT_FILES {
+            let contents = fs::read_to_string(dir.join(path)).unwrap();
+            assert!(!contents.contains("{{"), "{path} has a placeholder left");
+        }
+
+        let package = fs::read_to_string(dir.join("package.json")).unwrap();
+        let json: serde_json::Value = serde_json::from_str(&package).unwrap();
+        assert_eq!(json["name"], "pizzeria-react");
+        assert!(json["dependencies"]["react"].is_string());
+        assert_eq!(
+            json["devDependencies"]["fratmscript"],
+            fratmscript_dependency("1.2.3")
+        );
+
+        let compiled = |path: &str| {
+            compile(
+                &fs::read_to_string(dir.join(path)).unwrap(),
+                CompileOptions::default(),
+            )
+            .unwrap_or_else(|e| panic!("{path}: {e}"))
+            .code
+        };
+        let main = compiled("src/main.fratm");
+        assert!(main.starts_with("import { jsx as _jsx"), "{main}");
+        assert!(main.contains("import App from \"./App.fratm\";"), "{main}");
+        assert!(main.contains("import \"./stile.css\";"), "{main}");
+        assert!(
+            main.contains("_jsx(StrictMode, { children: _jsx(App, {}) })"),
+            "{main}"
+        );
+        let app = compiled("src/App.fratm");
+        assert!(app.contains("export default function App()"), "{app}");
+        assert!(app.contains("\"pizzeria-react 🍕\""), "{app}");
+        assert!(
+            app.contains(
+                "_jsx(Pizza, { pizza: pizza, onOrdina: () => ordina(pizza) }, pizza.nomme)"
+            ),
+            "{app}"
+        );
+        let pizza = compiled("src/components/Pizza.fratm");
+        assert!(
+            pizza.contains("import stile from \"./Pizza.module.css\";"),
+            "{pizza}"
+        );
+        assert!(pizza.contains("className: stile.carta"), "{pizza}");
         fs::remove_dir_all(&dir).unwrap();
     }
 

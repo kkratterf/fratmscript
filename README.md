@@ -96,7 +96,7 @@ import fratmscript from 'fratmscript/vite';
 export default { plugins: [fratmscript()] };
 ```
 
-`fratm nuovo pizzeria` creates a ready-made Vite project with this config, an `index.html` and two `.fratm` modules; then `cd pizzeria && npm install && npm run dev`.
+`fratm nuovo pizzeria` creates a ready-made React app written in FratmScript: Vite with this config, `src/App.fratm` with JSX and `useState`, a component with a CSS module and a stylesheet. Then `cd pizzeria && npm install && npm run dev`. `fratm nuovo --senza-react` makes the same Vite project without React (plain DOM code), and `--semplice` just a `main.fratm`. Until `fratmscript` is on npm, the generated `package.json` installs it from the tarball attached to the matching GitHub release.
 
 Or, with no build step at all, in any HTML page:
 
@@ -130,7 +130,7 @@ FratmScript is ready for coding agents (Claude Code, Cursor, Codex, Copilot...),
 ## CLI Commands
 
 ```bash
-fratm nuovo <folder>                # New Vite project (fratm nuovo --semplice: just main.fratm)
+fratm nuovo <folder>                # New React + Vite app (--senza-react: no React, --semplice: just main.fratm)
 fratm lancia <file.fratm>           # Compile and launch
 fratm build <file.fratm>            # Compile to JavaScript
 fratm build <file> --sourcemap      # With source map
