@@ -81,6 +81,7 @@ pub mod checker;
 pub mod codegen;
 pub mod errors;
 pub mod formatter;
+pub mod gomorra;
 pub mod lexer;
 pub mod parser;
 pub mod runtime;
@@ -1328,6 +1329,49 @@ na famiglie Pizzaiolo figlio 'e Persona {
         assert_eq!(
             js("chiamm { a } da \"./a.js\""),
             "import { a } from \"./a.js\";\n"
+        );
+    }
+
+    #[test]
+    fn test_gomorra_queries_are_translated_at_compile_time() {
+        let code = js("chiamm { gomorra } da \"fratm\"\nchist è q = gomorra`ripigliammo nomme mmiez 'a pizze arò id = ${id}`");
+        assert_eq!(
+            code.lines().nth(1).unwrap(),
+            "const q = gomorra(\"SELECT nomme FROM pizze WHERE id = ?\", \"SELECT nomme FROM pizze WHERE id = $1\", [id]);"
+        );
+        // Without the import, gomorra is any other tag
+        assert_eq!(js("chist è q = gomorra`arò`"), "const q = gomorra`arò`;\n");
+        // `q.gomorra` is a property, not the tag
+        assert_eq!(
+            js("chiamm { gomorra } da \"fratm\"\nstamm a dì(q.gomorra)")
+                .lines()
+                .nth(1),
+            Some("console.log(q.gomorra);")
+        );
+    }
+
+    #[test]
+    fn test_gomorra_errors_point_into_the_query() {
+        let error = compile(
+            "chiamm { gomorra } da \"fratm\"\nchist è q = gomorra`ripigliammo nomme\n  mmiez 'a pizze arò`",
+            Default::default(),
+        )
+        .unwrap_err();
+        assert_eq!((error.line(), error.column()), (Some(3), Some(18)));
+        assert!(
+            error.to_string().contains("Doppo 'arò' ce vo' quaccosa"),
+            "{}",
+            error
+        );
+        let error = compile(
+            "chiamm { gomorra } da \"fratm\"\nchist è f = gomorra",
+            Default::default(),
+        )
+        .unwrap_err();
+        assert!(
+            error.to_string().contains("attaccato a na query"),
+            "{}",
+            error
         );
     }
 

@@ -1,0 +1,5 @@
+SELECT * FROM pizze WHERE forno = ? OR forno IS NULL LIMIT ? OFFSET ?
+SELECT * FROM pizze WHERE forno = $1 OR forno IS NULL LIMIT $2 OFFSET $3
+a legna | 10 | 20 3
+BEGIN COMMIT ROLLBACK
+INSERT INTO clienti VALUES (1, 'Gennaro ''o pizzaiuolo', TRUE)

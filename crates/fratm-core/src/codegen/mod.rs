@@ -10,6 +10,8 @@ pub struct CodeGen {
     source_map_builder: SourceMapBuilder,
     current_line: usize,
     current_col: usize,
+    /// Local names of the `gomorra` tag
+    gomorra: Vec<String>,
 }
 
 impl CodeGen {
@@ -21,10 +23,12 @@ impl CodeGen {
             source_map_builder: SourceMapBuilder::new(),
             current_line: 0,
             current_col: 0,
+            gomorra: Vec::new(),
         }
     }
 
     pub fn generate(&mut self, program: &Program) -> String {
+        self.gomorra = crate::gomorra::tag_names(program);
         for stmt in &program.statements {
             self.gen_statement(stmt);
             self.emit("\n");
@@ -630,8 +634,10 @@ impl CodeGen {
                 self.emit("}");
             }
             Expression::TaggedTemplate { tag, quasi, .. } => {
-                self.gen_callee(tag);
-                self.gen_expression(quasi);
+                if !self.gen_gomorra(tag, quasi) {
+                    self.gen_callee(tag);
+                    self.gen_expression(quasi);
+                }
             }
             Expression::Jsx { element, span } => {
                 self.add_mapping(span.line, span.column);
@@ -1281,6 +1287,44 @@ impl CodeGen {
     /// Callee or object of a member access: prefix operators need parentheses
     /// too (`(await p).x`, `(() => 1)()`), and so do numbers (`(5).toString()`,
     /// since `5.` would be read as the number).
+    /// `` gomorra`ripigliammo … arò id = ${id}` `` becomes
+    /// `gomorra("SELECT … WHERE id = ?", "SELECT … WHERE id = $1", [id])`.
+    /// Returns false when `tag` is not the gomorra of the fratm library.
+    fn gen_gomorra(&mut self, tag: &Expression, quasi: &Expression) -> bool {
+        let (
+            Expression::Identifier { name, .. },
+            Expression::Template {
+                quasis,
+                expressions,
+                ..
+            },
+        ) = (tag, quasi)
+        else {
+            return false;
+        };
+        if !self.gomorra.contains(name) {
+            return false;
+        }
+        // The checker reports queries that do not translate
+        let Ok(query) = crate::gomorra::translate(quasis) else {
+            return false;
+        };
+        self.emit(&js_name(name));
+        self.emit("(");
+        self.emit(&js_string(&query.sql));
+        self.emit(", ");
+        self.emit(&js_string(&query.text));
+        self.emit(", [");
+        for (i, e) in expressions.iter().enumerate() {
+            if i > 0 {
+                self.emit(", ");
+            }
+            self.gen_expression(e);
+        }
+        self.emit("])");
+        true
+    }
+
     fn gen_callee(&mut self, expr: &Expression) {
         let prefix = matches!(
             expr,

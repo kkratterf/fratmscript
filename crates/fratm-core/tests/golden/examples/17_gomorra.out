@@ -1,0 +1,8 @@
+SELECT nomme, prezzo FROM pizze WHERE prezzo >= ? AND nomme IS NOT NULL ORDER BY prezzo DESC LIMIT 3
+[ 6 ]
+SELECT nomme, prezzo FROM pizze WHERE prezzo >= $1 AND nomme IS NOT NULL ORDER BY prezzo DESC LIMIT 3
+CREATE TABLE IF NOT EXISTS pizze (id INTEGER PRIMARY KEY, nomme TEXT, prezzo REAL)
+INSERT INTO pizze (nomme, prezzo) VALUES (?, ?)
+UPDATE pizze SET prezzo = prezzo + 1 WHERE nomme LIKE ?
+DELETE FROM pizze WHERE id IN (?, ?)
+SELECT pizze.nomme, COUNT(*) AS ordini FROM pizze JOIN ordini WHERE ordini.pizza = pizze.id GROUP BY pizze.nomme

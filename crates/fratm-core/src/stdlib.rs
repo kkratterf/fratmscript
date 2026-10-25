@@ -45,6 +45,12 @@ pub const HELPERS: &[(&str, &str, &str)] = &[
         "(ms) => new Promise((risolvi) => setTimeout(risolvi, ms))",
         "na Promise ca se risolve doppo ms millisecondi: aspett aspetta(1000)",
     ),
+    // The compiler translates each gomorra`…` and passes the SQL here
+    (
+        "gomorra",
+        "(sql, text, params) => ({ sql, params, text, values: [...params] })",
+        "na query GomorraSQL: gomorra`ripigliammo nomme mmiez 'a pizze arò id = ${id}` → { sql, params, text, values }",
+    ),
 ];
 
 /// JavaScript source of a helper, if the library has it.

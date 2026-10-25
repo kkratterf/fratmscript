@@ -60,6 +60,10 @@ pub fn napoletanize_error(message: &str) -> String {
     if let Some(jsx) = jsx_message(message) {
         return jsx;
     }
+    // GomorraSQL errors are written in Neapolitan already
+    if let Some(gomorra) = message.strip_prefix("gomorra: ") {
+        return gomorra.to_string();
+    }
     let found = found_token(message);
     if let Some(c) = message.strip_prefix("Unknown character '") {
         return format!(

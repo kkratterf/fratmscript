@@ -1,0 +1,35 @@
+// ============================================
+// Example 17: GomorraSQL
+// gomorra`…`: SQL in Neapolitan, translated when the file is compiled.
+// Keywords from GomorraSQL by Donato Rimenti (github.com/aurasphere/gomorra-sql)
+// ============================================
+
+chiamm { gomorra } da "fratm"
+
+// Each ${…} becomes a parameter: the value never ends up in the SQL text
+chist è minimo = 6
+chist è care = gomorra`
+    ripigliammo nomme, prezzo mmiez 'a pizze
+    arò prezzo >= ${minimo} e nomme nun è nisciun
+    mettimmo in fila pe prezzo a scennere
+    nun cchiù 'e 3
+`
+stamm a dì(care.sql)
+stamm a dì(care.params)
+
+// The same query with $1, $2…, as PostgreSQL wants it
+stamm a dì(care.text)
+
+// Tables, rows, changes
+stamm a dì(gomorra`facimm 'a tavula pizze (id INTEGER PRIMARY KEY, nomme TEXT, prezzo REAL)`.sql)
+stamm a dì(gomorra`nzipp 'ngoppa pizze nomme, prezzo chist ${"margherita"}, ${5.5}`.sql)
+stamm a dì(gomorra`rifacimm pizze accunza prezzo accussì prezzo + 1 arò nomme assumiglia a ${"%fritta%"}`.sql)
+stamm a dì(gomorra`facimm na' strage mmiez 'a pizze arò id dint'a (${1}, ${2})`.sql)
+
+// Joins and counts
+stamm a dì(gomorra`
+    ripigliammo pizze.nomme, COUNT(*) comme ordini
+    mmiez 'a pizze pesc e pesc ordini
+    arò ordini.pizza = pizze.id
+    facimm 'e mucchie pe pizze.nomme
+`.sql)

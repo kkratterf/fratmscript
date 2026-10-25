@@ -67,7 +67,10 @@ keywords change.
 | `leva o.k` / `fermete` | `delete o.k` / `debugger` |
 
 `chiamm { a_caso, mischia, quanti, arrotonda, ripeti, aspetta, uno_a_caso } da "fratm"` gives small
-helpers; the compiler inlines them.
+helpers; the compiler inlines them. `chiamm { gomorra } da "fratm"` adds SQL in Neapolitan
+(GomorraSQL): ``gomorra`ripigliammo nomme mmiez 'a pizze arò id = ${id}` `` is translated at compile
+time to `{ sql, params, text, values }`, with every `${…}` as a bound parameter. Run `fratm guida`
+for the keyword list.
 
 ## Example
 

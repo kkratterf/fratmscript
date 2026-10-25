@@ -30,6 +30,7 @@ const TITLES: Record<string, Record<Lang, string>> = {
   '12_trycatch_validazione': { it: 'Try/catch e validazione', en: 'Try/catch and validation', nap: 'Pruvamm e cuntrolle' },
   '14_sintassi_moderna': { it: 'Sintassi moderna', en: 'Modern syntax', nap: 'Sintassi moderna' },
   '16_pizzeria_jsx': { it: 'Componente React (JSX)', en: 'React component (JSX)', nap: "'A pizzeria cu React" },
+  '17_gomorra': { it: 'Query SQL con GomorraSQL', en: 'SQL queries with GomorraSQL', nap: "'E query 'e GomorraSQL" },
 }
 
 export interface Example {

@@ -139,6 +139,19 @@ const syntaxReference: { category: Localized; items: SyntaxItem[] }[] = [
     { fratm: 'ripeti(volte, f)', js: 'for (…) f(i)', desc: { it: 'Ripete una funzione', en: 'Call a function n times', nap: 'Chiamma na funzione tante vote' }, insert: 'chiamm { ripeti } da "fratm"\n' },
     { fratm: 'aspetta(ms)', js: 'setTimeout Promise', desc: { it: 'Aspetta ms millisecondi (con aspett)', en: 'Wait ms milliseconds (with aspett)', nap: 'Aspetta ms millisecondi (cu aspett)' }, insert: 'chiamm { aspetta } da "fratm"\n' },
   ]},
+  // GomorraSQL keywords (crates/fratm-core/src/gomorra.rs), inside gomorra`…`
+  { category: { it: 'GomorraSQL (query SQL)', en: 'GomorraSQL (SQL queries)', nap: 'GomorraSQL (query SQL)' }, items: [
+    { fratm: 'gomorra`…`', js: '{ sql, params }', desc: { it: 'Query SQL in napoletano, ${…} sono parametri', en: 'SQL query in Neapolitan, ${…} are parameters', nap: "Query SQL in napoletano, 'e ${…} so' parametri" }, insert: 'chiamm { gomorra } da "fratm"\n' },
+    { fratm: "ripigliammo … mmiez 'a", js: 'SELECT … FROM', desc: { it: 'Leggi righe da una tabella', en: 'Read rows from a table', nap: "Piglia 'e righe 'e na tavula" }, insert: "gomorra`ripigliammo  mmiez 'a `" },
+    { fratm: 'arò · e · o', js: 'WHERE · AND · OR', desc: { it: 'Filtra le righe', en: 'Filter rows', nap: "Sceglie 'e righe" }, insert: 'arò ' },
+    { fratm: "nzipp 'ngoppa … chist", js: 'INSERT INTO … VALUES', desc: { it: 'Inserisci una riga', en: 'Insert a row', nap: 'Nzippa na riga' }, insert: "gomorra`nzipp 'ngoppa  chist `" },
+    { fratm: 'rifacimm … accunza … accussì', js: 'UPDATE … SET … =', desc: { it: 'Modifica righe', en: 'Update rows', nap: "Cagna 'e righe" }, insert: 'gomorra`rifacimm  accunza  accussì `' },
+    { fratm: "facimm na' strage mmiez 'a", js: 'DELETE FROM', desc: { it: 'Cancella righe', en: 'Delete rows', nap: "Leva 'e righe" }, insert: "gomorra`facimm na' strage mmiez 'a  arò `" },
+    { fratm: 'mettimmo in fila pe … a scennere', js: 'ORDER BY … DESC', desc: { it: 'Ordina (a salì = crescente)', en: 'Sort (a salì = ascending)', nap: "Mette in fila (a salì = 'a coppa)" }, insert: 'mettimmo in fila pe  a salì' },
+    { fratm: "nun cchiù 'e · zumpanno", js: 'LIMIT · OFFSET', desc: { it: 'Quante righe, quante saltarne', en: 'How many rows, how many to skip', nap: "Quante righe, quante zumpà" }, insert: "nun cchiù 'e " },
+    { fratm: "facimm 'a tavula", js: 'CREATE TABLE IF NOT EXISTS', desc: { it: 'Crea una tabella', en: 'Create a table', nap: 'Fa na tavula' }, insert: "gomorra`facimm 'a tavula  (id INTEGER PRIMARY KEY)`" },
+    { fratm: "è nisciun · assumiglia a · dint'a", js: 'IS NULL · LIKE · IN', desc: { it: 'Confronti', en: 'Comparisons', nap: 'Confronti' }, insert: 'è nisciun' },
+  ]},
 ]
 
 function matches(item: SyntaxItem, query: string, lang: Lang) {

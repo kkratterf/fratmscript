@@ -5,7 +5,8 @@
 //! `#private` names a class does not declare, `leva` on a plain name and
 //! exports of names that do not exist: all things JS would only reject when
 //! the generated code is loaded. It also rejects imports of helpers the
-//! `fratm` library does not have.
+//! `fratm` library does not have, and `` gomorra`…` `` queries that do not
+//! translate to SQL.
 
 use std::collections::{HashMap, HashSet};
 
@@ -39,6 +40,7 @@ pub fn check(program: &Program) -> Result<(), SemanticError> {
         labels: Vec::new(),
         private_names: Vec::new(),
         exports: Vec::new(),
+        gomorra: crate::gomorra::tag_names(program),
     };
     checker.statements(&program.statements);
     // Exports may name declarations further down, so check them last
@@ -66,6 +68,8 @@ struct Checker {
     private_names: Vec<HashSet<String>>,
     /// Top-level `mann for { … }` names, checked once everything is declared
     exports: Vec<(String, Span)>,
+    /// Local names of the `gomorra` tag, whose queries are checked here
+    gomorra: Vec<String>,
 }
 
 /// Where the statement being checked sits, for `piglie`, `aspett`, `rompe`,
@@ -631,9 +635,42 @@ impl Checker {
     /// open function scopes.
     fn expression(&mut self, expression: &Expression) {
         match expression {
+            Expression::TaggedTemplate { tag, quasi, .. }
+                if matches!(&**tag, Expression::Identifier { name, .. } if self.gomorra.contains(name)) =>
+            {
+                if let Expression::Template {
+                    quasis,
+                    expressions,
+                    span,
+                } = &**quasi
+                {
+                    if let Err(e) = crate::gomorra::translate(quasis) {
+                        let (line, column) =
+                            crate::gomorra::source_position(*span, expressions, &e.position);
+                        self.fail(SemanticError {
+                            message: format!("gomorra: {}", e.message),
+                            span: Span {
+                                line,
+                                column,
+                                ..*span
+                            },
+                        });
+                    }
+                }
+                self.expression(quasi);
+            }
             Expression::TaggedTemplate { tag, quasi, .. } => {
                 self.expression(tag);
                 self.expression(quasi);
+            }
+            // The SQL is written by the compiler, so the tag only goes before a query
+            Expression::Identifier { name, span } if self.gomorra.contains(name) => {
+                self.fail(SemanticError {
+                    message: format!(
+                        "gomorra: '{name}' se scrive sulo attaccato a na query: {name}`ripigliammo nomme mmiez 'a pizze arò id = ${{id}}`"
+                    ),
+                    span: *span,
+                })
             }
             Expression::Jsx { element, .. } => self.jsx(element),
             // `#saldo` read through `stu cos.#saldo` or in `#saldo dint'a o`
@@ -755,7 +792,10 @@ impl Checker {
                 }
             }
             Expression::Member {
-                object, property, ..
+                object,
+                property,
+                computed,
+                ..
             } => {
                 match &**object {
                     Expression::Super { span } => {
@@ -765,7 +805,12 @@ impl Checker {
                     }
                     _ => self.expression(object),
                 }
-                self.expression(property);
+                // `q.sql` names a property, not the variable `sql`; `#saldo` is checked
+                let plain_name = !computed
+                    && matches!(&**property, Expression::Identifier { name, .. } if !name.starts_with('#'));
+                if !plain_name {
+                    self.expression(property);
+                }
             }
             // The name of a class expression is visible only inside it
             Expression::Class {

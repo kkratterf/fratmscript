@@ -1,0 +1,14 @@
+chiamm { gomorra comme sql } da "fratm"
+
+facc pizzePe(forno, quante) {
+    piglie sql`ripigliammo tutto chillo ch'era 'o nuostro mmiez 'a pizze
+        arò forno = ${forno} o forno è nisciun
+        nun cchiù 'e ${quante} zumpanno ${quante * 2}`
+}
+
+chist è q = pizzePe("a legna", 10)
+stamm a dì(q.sql)
+stamm a dì(q.text)
+stamm a dì(q.params.join(" | "), q.values.length)
+stamm a dì(sql`ua uagliò`.sql, sql`iamme bello ia'`.sql, sql`sfaccimm`.sql)
+stamm a dì(sql`nzipp 'ngoppa clienti chist 1, "Gennaro 'o pizzaiuolo", overo`.sql)

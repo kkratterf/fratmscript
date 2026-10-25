@@ -385,6 +385,44 @@ chiamm { a_caso, mischia, quanti, aspetta } da "fratm"
 | `arrotonda(n, cifre = 0)` | rounds `n` to `cifre` decimal digits |
 | `ripeti(volte, fa)` | calls `fa(0)`, `fa(1)`, … `volte` times |
 | `aspetta(ms)` | a Promise that resolves after `ms` milliseconds: `aspett aspetta(1000)` |
+| ``gomorra`…` `` | a GomorraSQL query, see below |
+
+### GomorraSQL: SQL in Neapolitan
+
+`` gomorra`…` `` writes SQL in Neapolitan. The compiler translates each query when it compiles the file, so a typo in the query is a compile error with its line. Every `${…}` becomes a bound parameter and never ends up inside the SQL text, so there is no SQL injection. The result is a plain object that works with any driver: `sql` and `params` use `?` (SQLite, MySQL), `text` and `values` use `$1`, `$2`… (PostgreSQL `pg`).
+
+```fratm
+chiamm { gomorra } da "fratm"
+
+chist è minimo = 6
+chist è care = gomorra`
+    ripigliammo nomme, prezzo mmiez 'a pizze
+    arò prezzo >= ${minimo}
+    mettimmo in fila pe prezzo a scennere
+    nun cchiù 'e 3
+`
+// care.sql:    SELECT nomme, prezzo FROM pizze WHERE prezzo >= ? ORDER BY prezzo DESC LIMIT 3
+// care.params: [6]
+```
+
+| GomorraSQL | SQL | GomorraSQL | SQL |
+|------------|-----|------------|-----|
+| `ripigliammo` | `SELECT` | `arò` | `WHERE` |
+| `tutto chillo ch'era 'o nuostro` | `*` | `e`, `o`, `nun` | `AND`, `OR`, `NOT` |
+| `mmiez 'a` | `FROM` | `è`, `nun è` | `IS`, `IS NOT` |
+| `pesc e pesc` | `JOIN` | `nisciun` | `NULL` |
+| `nzipp 'ngoppa … chist` | `INSERT INTO … VALUES` | `overo`, `sfòls` | `TRUE`, `FALSE` |
+| `rifacimm … accunza … accussì` | `UPDATE … SET … =` | `assumiglia a` | `LIKE` |
+| `facimm na' strage mmiez 'a` | `DELETE FROM` | `dint'a` | `IN` |
+| `mettimmo in fila pe` | `ORDER BY` | `comme` | `AS` |
+| `a salì`, `a scennere` | `ASC`, `DESC` | `facimm 'a tavula` | `CREATE TABLE IF NOT EXISTS` |
+| `facimm 'e mucchie pe` | `GROUP BY` | `abbrucimm 'a tavula` | `DROP TABLE IF EXISTS` |
+| `nun cchiù 'e` | `LIMIT` | `ua uagliò` | `BEGIN` |
+| `zumpanno` | `OFFSET` | `iamme bello ia'`, `sfaccimm` | `COMMIT`, `ROLLBACK` |
+
+Strings in a query go in `"…"`. Other words pass through as SQL: column names, `COUNT(*)`, `PRIMARY KEY`, `RETURNING`. A query may span lines and use parentheses, and `nzipp 'ngoppa pizze nomme, prezzo chist ${a}, ${b}` gets the parentheses SQL needs.
+
+The keywords come from [GomorraSQL](https://github.com/aurasphere/gomorra-sql) by Donato Rimenti (MIT), a Java translator over JDBC; FratmScript ports its dialect to JavaScript and adds ordering, limits, grouping and tables.
 
 ### Console Methods
 ```fratm
@@ -450,6 +488,7 @@ fermete                      // debugger
 | `leva` | `delete` | "remove" |
 | `fermete` | `debugger` | "stop" |
 | `<div>…</div>`, `<Pizza />` | JSX (React/Preact) | markup in the code |
+| ``gomorra`ripigliammo …` `` | SQL query with bound parameters ([GomorraSQL](#gomorrasql-sql-in-neapolitan)) | Gomorrah |
 
 No accents on your keyboard? `sinno`, `sfols`, `di` (in `stamm a di`), `chist e` and `chè e` work like `sinnò`, `sfòls`, `dì`, `chist è` and `chè è`; `typeof` and `instanceof` are accepted for `chè è` and `è uno`.
 
@@ -527,6 +566,8 @@ Check the `examples/` folder for complete programs:
 13. `13_pomodor_e_muzzarel.fratm` - Interactive tic-tac-toe in the terminal
 14. `14_sintassi_moderna.fratm` - Arrows, templates, destructuring, spread, `?.`/`??`, regex
 15. `15_libreria.fratm` - The `fratm` library: `a_caso`, `mischia`, `quanti`, `aspetta`…
+16. `16_pizzeria_jsx.fratm` - A React component written with JSX
+17. `17_gomorra.fratm` - GomorraSQL: SQL queries in Neapolitan with bound parameters
 
 ---
 

@@ -392,6 +392,49 @@ aspett aspetta(10)
 | `arrotonda(n, cifre = 0)` | round to `cifre` decimals |
 | `ripeti(volte, fa)` | call `fa(0)` ... `fa(volte - 1)` |
 | `aspetta(ms)` | Promise resolved after `ms` milliseconds |
+| ``gomorra`…` `` | SQL query in Neapolitan (next section) |
+
+## GomorraSQL: SQL queries
+
+`` gomorra`…` `` (imported from `"fratm"`) is SQL written in Neapolitan, translated at compile time:
+a wrong query is a compile error with its line. Each `${…}` is a bound parameter, never pasted into
+the SQL. The value is `{ sql, params, text, values }`: `sql`/`params` with `?` (SQLite, MySQL),
+`text`/`values` with `$1` (PostgreSQL `pg`).
+
+```fratm
+chiamm { gomorra } da "fratm"
+
+chist è minimo = 6
+chist è q = gomorra`
+    ripigliammo nomme, prezzo mmiez 'a pizze
+    arò prezzo >= ${minimo} e nomme nun è nisciun
+    mettimmo in fila pe prezzo a scennere
+    nun cchiù 'e 10 zumpanno 0
+`
+stamm a dì(q.sql, q.params)
+stamm a dì(gomorra`nzipp 'ngoppa pizze nomme, prezzo chist ${"margherita"}, ${5.5}`.sql)
+stamm a dì(gomorra`rifacimm pizze accunza prezzo accussì ${7} arò nomme assumiglia a ${"%fritta%"}`.sql)
+stamm a dì(gomorra`facimm na' strage mmiez 'a pizze arò id dint'a (${1}, ${2})`.sql)
+stamm a dì(gomorra`facimm 'a tavula pizze (id INTEGER PRIMARY KEY, nomme TEXT, prezzo REAL)`.sql)
+```
+
+| GomorraSQL | SQL |
+| --- | --- |
+| `ripigliammo` · `tutto chillo ch'era 'o nuostro` · `mmiez 'a` · `pesc e pesc` · `arò` | `SELECT` · `*` · `FROM` · `JOIN` · `WHERE` |
+| `e` · `o` · `nun` · `è` · `nun è` · `nisciun` · `overo` · `sfòls` | `AND` · `OR` · `NOT` · `IS` · `IS NOT` · `NULL` · `TRUE` · `FALSE` |
+| `assumiglia a` · `dint'a` · `comme` | `LIKE` · `IN` · `AS` |
+| `mettimmo in fila pe` · `a salì` · `a scennere` · `facimm 'e mucchie pe` | `ORDER BY` · `ASC` · `DESC` · `GROUP BY` |
+| `nun cchiù 'e` · `zumpanno` | `LIMIT` · `OFFSET` |
+| `nzipp 'ngoppa t cols chist vals` | `INSERT INTO t (cols) VALUES (vals)` |
+| `rifacimm t accunza c accussì v` | `UPDATE t SET c = v` |
+| `facimm na' strage mmiez 'a t` | `DELETE FROM t` |
+| `facimm 'a tavula t (…)` · `abbrucimm 'a tavula t` | `CREATE TABLE IF NOT EXISTS` · `DROP TABLE IF EXISTS` |
+| `ua uagliò` · `iamme bello ia'` · `sfaccimm` | `BEGIN` · `COMMIT` · `ROLLBACK` |
+
+- Strings inside a query use `"…"` (an apostrophe starts Neapolitan words like `'a`). Prefer `${…}` for values.
+- Other words pass through as SQL: column names, `COUNT(*)`, `PRIMARY KEY`, `RETURNING id`.
+- Table and column names cannot be `${…}`; one statement per query, no `;`.
+- `gomorra` only works as a tag right before a template.
 
 ## Reading errors
 
