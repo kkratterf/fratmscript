@@ -2,7 +2,7 @@
   "name": "fratmscript-vscode",
   "displayName": "FratmScript",
   "description": "Syntax highlighting, snippets e Language Server per FratmScript - JavaScript in Napoletano",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "publisher": "fratmscript",
   "icon": "images/icon.png",
   "author": "FratmScript Team",
