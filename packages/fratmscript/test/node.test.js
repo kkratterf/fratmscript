@@ -41,7 +41,9 @@ test('compile errors are printed in Neapolitan with file, line and column', () =
   const result = run({ 'main.fratm': 'stamm a dì(1)\nchist è x = ' }, 'main.fratm');
   assert.equal(result.status, 1);
   const file = join(result.dir, 'main.fratm');
-  assert.ok(result.stderr.includes(`SyntaxError: FratmScript ${file}:2:`), result.stderr);
+  // Node 20 prints "SyntaxError [Error]:", later versions "SyntaxError:"
+  assert.match(result.stderr, /SyntaxError( \[Error\])?: FratmScript /);
+  assert.ok(result.stderr.includes(`FratmScript ${file}:2:`), result.stderr);
   assert.ok(result.stderr.includes('Ccà ce vo'), result.stderr);
   assert.ok(!result.stderr.includes('node-hooks'), result.stderr);
 });
