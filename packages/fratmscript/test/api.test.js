@@ -99,3 +99,55 @@ test('vite plugin reports errors with their location', () => {
   assert.equal(reported.id, '/src/b.fratm');
   assert.deepEqual(reported.loc, { file: '/src/b.fratm', line: 2, column: 5 });
 });
+
+test('the vite plugin serves a fetch app under /api from the dev server', async () => {
+  const { createServer } = await import('node:http');
+  const handlers = [];
+  const loaded = [];
+  const fakeVite = {
+    middlewares: { use: (fn) => handlers.push(fn) },
+    async ssrLoadModule(entry) {
+      loaded.push(entry);
+      return {
+        default: {
+          async fetch(request) {
+            const url = new URL(request.url);
+            const body = request.method === 'POST' ? await request.json() : null;
+            return Response.json({ path: url.pathname, query: url.search, body }, { status: body ? 201 : 200 });
+          },
+        },
+      };
+    },
+  };
+  fratmscript({ api: 'server/api.fratm' }).configureServer(fakeVite);
+  assert.equal(handlers.length, 2);
+  const http = createServer((req, res) => {
+    const run = (i) => (i < handlers.length ? handlers[i](req, res, (e) => (e ? res.writeHead(500).end(String(e)) : run(i + 1))) : res.writeHead(404).end('vite'));
+    run(0);
+  });
+  await new Promise((resolve) => http.listen(0, resolve));
+  const base = `http://localhost:${http.address().port}`;
+  try {
+    const get = await fetch(`${base}/api/pizze?caro=1`);
+    assert.equal(get.status, 200);
+    assert.deepEqual(await get.json(), { path: '/api/pizze', query: '?caro=1', body: null });
+    const post = await fetch(`${base}/api/ordini`, { method: 'POST', body: JSON.stringify({ pizza: 1 }) });
+    assert.equal(post.status, 201);
+    assert.deepEqual((await post.json()).body, { pizza: 1 });
+    // Other paths stay with Vite
+    assert.equal(await (await fetch(`${base}/apiario`)).text(), 'vite');
+    assert.deepEqual(loaded, ['/server/api.fratm', '/server/api.fratm']);
+  } finally {
+    http.close();
+  }
+});
+
+test('the vite plugin explains an api module without a fetch app', async () => {
+  const handlers = [];
+  fratmscript({ api: { entry: 'server/x.fratm', prefix: '/dati' } }).configureServer({
+    middlewares: { use: (fn) => handlers.push(fn) },
+    ssrLoadModule: async () => ({ default: 42 }),
+  });
+  const error = await new Promise((resolve) => handlers[1]({ url: '/dati/x', headers: {} }, {}, resolve));
+  assert.match(error.message, /server\/x\.fratm adda mannà for predefinit n'app cu fetch\(\)/);
+});

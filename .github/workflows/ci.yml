@@ -160,6 +160,28 @@ jobs:
           npm run build
           grep -q "Pizze sfurnate" dist/assets/*.js
 
+      # The full-stack template uses node:sqlite, which needs Node 22.13+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build and run the full-stack project made with fratm nuovo --completa
+        run: |
+          cargo run -q -p fratm-cli --locked -- nuovo --completa "$RUNNER_TEMP/trattoria"
+          cd "$RUNNER_TEMP/trattoria"
+          npm install --no-audit --no-fund "$RUNNER_TEMP"/fratmscript-*.tgz
+          npm run build
+          grep -q "/api/pizze" dist/assets/*.js
+          PORT=3123 npm start > server.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf localhost:3123/api/pizze > pizze.json && break; sleep 1; done
+          cat server.log
+          grep -q "Margherita" pizze.json
+          curl -sf -X POST -H 'content-type: application/json' -d '{"pizza":1}' localhost:3123/api/ordini
+          curl -sf localhost:3123/api/ordini | grep -q '"pizze":1'
+          curl -sf localhost:3123/ | grep -q '<div id="root">'
+          kill %1
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:

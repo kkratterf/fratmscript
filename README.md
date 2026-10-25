@@ -96,7 +96,7 @@ import fratmscript from 'fratmscript/vite';
 export default { plugins: [fratmscript()] };
 ```
 
-`fratm nuovo pizzeria` creates a ready-made React app written in FratmScript: Vite with this config, `src/App.fratm` with JSX and `useState`, a component with a CSS module and a stylesheet. Then `cd pizzeria && npm install && npm run dev`. `fratm nuovo --senza-react` makes the same Vite project without React (plain DOM code), and `--semplice` just a `main.fratm`. Until `fratmscript` is on npm, the generated `package.json` installs it from the tarball attached to the matching GitHub release.
+`fratm nuovo pizzeria` creates a ready-made React app written in FratmScript: Vite with this config, `src/App.fratm` with JSX and `useState`, a component with a CSS module and a stylesheet. Then `cd pizzeria && npm install && npm run dev`. `fratm nuovo --completa` adds the back end: a [Hono](https://hono.dev) API in `server/api.fratm` that keeps its data in SQLite with `apri_db` and `gomorra` queries, served by the same `npm run dev` and by `npm start` in production (Node 22.13+). `fratm nuovo --senza-react` makes the Vite project without React (plain DOM code), and `--semplice` just a `main.fratm`. Until `fratmscript` is on npm, the generated `package.json` installs it from the tarball attached to the matching GitHub release.
 
 Server code runs in Node without the `fratm` binary: `node --import fratmscript/node server.fratm` compiles each `.fratm` module as it is loaded.
 
@@ -132,7 +132,7 @@ FratmScript is ready for coding agents (Claude Code, Cursor, Codex, Copilot...),
 ## CLI Commands
 
 ```bash
-fratm nuovo <folder>                # New React + Vite app (--senza-react: no React, --semplice: just main.fratm)
+fratm nuovo <folder>                # New React + Vite app (--completa: + API and database, --senza-react: no React, --semplice: just main.fratm)
 fratm lancia <file.fratm>           # Compile and launch
 fratm build <file.fratm>            # Compile to JavaScript
 fratm build <file> --sourcemap      # With source map

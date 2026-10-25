@@ -2,7 +2,8 @@
 //!
 //! The default template is a React app built with Vite, written in `.fratm`
 //! files with JSX and compiled by the `fratmscript` plugin; `--senza-react`
-//! writes the same Vite setup with plain DOM code, and `--semplice` just a
+//! writes the same Vite setup with plain DOM code, `--completa` adds an API
+//! and a SQLite database to the React app, and `--semplice` writes just a
 //! `main.fratm` to run with `fratm lancia`.
 
 use std::fs;
@@ -351,6 +352,228 @@ The code is in `src/*.fratm`; the `fratmscript` Vite plugin compiles it to JavaS
     ),
 ];
 
+/// Files of the full-stack template that `--completa` adds to the React
+/// template or writes instead of its file with the same path.
+const FULL_FILES: &[(&str, &str)] = &[
+    (
+        "package.json",
+        r##"{
+  "name": "{{name}}",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "node --import fratmscript/node server/avvia.fratm"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.0",
+    "fratmscript": "{{fratmscript}}",
+    "hono": "^4.6.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.0",
+    "vite": "^5.4.0"
+  }
+}
+"##,
+    ),
+    (
+        "vite.config.js",
+        r##"import fratmscript from 'fratmscript/vite';
+import react from '@vitejs/plugin-react';
+
+export default {
+  plugins: [
+    // api: the Hono app in server/api.fratm answers /api/… on the dev server
+    fratmscript({ api: 'server/api.fratm' }),
+    // react() adds Fast Refresh: saving a .fratm component keeps its state
+    react({ include: /\.(fratm|[jt]sx?)$/ }),
+  ],
+};
+"##,
+    ),
+    (
+        "src/App.fratm",
+        r##"chiamm { useEffect, useState } da "react"
+chiamm Pizza da "./components/Pizza.fratm"
+
+// 'O menù e 'o conto arrivano 'a l'API (server/api.fratm), ca 'e legge 'a SQLite
+mann for predefinit facc App() {
+    tien [menu, setMenu] = useState([])
+    tien [conto, setConto] = useState({ pizze: 0, totale: 0 })
+    tien [errore, setErrore] = useState(nisciun)
+
+    mo vir facc aggiorna() {
+        pruvamm {
+            chist è [pizze, ordini] = aspett Promise.all([
+                fetch("/api/pizze").then((r) => r.json()),
+                fetch("/api/ordini").then((r) => r.json()),
+            ])
+            setMenu(pizze)
+            setConto(ordini)
+        } e si schiatta (e) {
+            setErrore("Nun riesco a parlà cu 'o server: " + e.message)
+        }
+    }
+
+    // Na vota sola, quanno 'o componente compare
+    useEffect(() => {
+        aggiorna()
+    }, [])
+
+    mo vir facc ordina(pizza) {
+        aspett fetch("/api/ordini", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ pizza: pizza.id }),
+        })
+        aspett aggiorna()
+    }
+
+    piglie (
+        <main className="pizzeria">
+            <header>
+                <h1>{{name}} 🍕</h1>
+                <p>
+                    Front end in <code>src/</code>, API e database in <code>server/</code>: tutto FratmScript.
+                </p>
+            </header>
+            {errore && <p style={{ color: "#a82816" }}>{errore}</p>}
+            <ul className="menu">
+                {menu.map((pizza) => (
+                    <Pizza key={pizza.id} pizza={pizza} onOrdina={() => ordina(pizza)} />
+                ))}
+            </ul>
+            <footer>
+                {conto.pizze === 0
+                    ? "Ancora nisciuna pizza. Che te magne?"
+                    : `Pizze ordinate: ${conto.pizze} · Totale: ${conto.totale} €`}
+            </footer>
+        </main>
+    )
+}
+"##,
+    ),
+    (
+        "server/api.fratm",
+        r##"// L'API: n'app Hono cu 'e dati int'a SQLite.
+// npm run dev 'a monta ncopp' 'o server 'e Vite (vite.config.js),
+// npm start 'a serve cu server/avvia.fratm.
+chiamm { Hono } da "hono"
+chiamm { apri_db, gomorra } da "fratm"
+
+chist è db = apri_db(process.env.DATABASE ?? "pizzeria.db")
+
+db.esegui(gomorra`
+    facimm 'a tavula pizze (
+        id INTEGER PRIMARY KEY,
+        nomme TEXT NOT NULL,
+        prezzo REAL NOT NULL,
+        ingredienti TEXT
+    )
+`)
+db.esegui(gomorra`facimm 'a tavula ordini (id INTEGER PRIMARY KEY, pizza INTEGER NOT NULL)`)
+
+// 'A primma vota 'o menù è vacante: mettimmoce tre pizze
+chist è { quante } = db.ripiglia_uno(gomorra`ripigliammo COUNT(*) comme quante mmiez 'a pizze`)
+si (quante === 0) {
+    pe ogni (chist è [nomme, prezzo, ingredienti] dint [
+        ["Margherita", 5, "pummarola, muzzarella, vasenicola"],
+        ["Marinara", 4, "pummarola, aglio, arecheta"],
+        ["Diavola", 7, "pummarola, muzzarella, salame piccante"],
+    ]) {
+        db.esegui(gomorra`nzipp 'ngoppa pizze nomme, prezzo, ingredienti chist ${nomme}, ${prezzo}, ${ingredienti}`)
+    }
+}
+
+chist è api = nu bell Hono().basePath("/api")
+
+api.get("/pizze", (c) => {
+    piglie c.json(db.ripiglia(gomorra`
+        ripigliammo id, nomme, prezzo, ingredienti mmiez 'a pizze
+        mettimmo in fila pe prezzo
+    `))
+})
+
+api.get("/ordini", (c) => {
+    piglie c.json(db.ripiglia_uno(gomorra`
+        ripigliammo COUNT(*) comme pizze, COALESCE(SUM(pizze.prezzo), 0) comme totale
+        mmiez 'a ordini pesc e pesc pizze
+        arò ordini.pizza = pizze.id
+    `))
+})
+
+api.post("/ordini", mo vir (c) => {
+    chist è { pizza } = aspett c.req.json()
+    chist è trovata = db.ripiglia_uno(gomorra`ripigliammo id mmiez 'a pizze arò id = ${pizza}`)
+    si (trovata === nisciun) {
+        piglie c.json({ errore: "Sta pizza nun sta int'o menù" }, 404)
+    }
+    chist è { ultimo_id } = db.esegui(gomorra`nzipp 'ngoppa ordini pizza chist ${pizza}`)
+    piglie c.json({ id: ultimo_id }, 201)
+})
+
+mann for predefinit api
+"##,
+    ),
+    (
+        "server/avvia.fratm",
+        r##"// Produzione: npm run build, po' npm start.
+// Nu server sulo serve l'app React 'a dist/ e l'API.
+chiamm { Hono } da "hono"
+chiamm { serve } da "@hono/node-server"
+chiamm { serveStatic } da "@hono/node-server/serve-static"
+chiamm api da "./api.fratm"
+
+chist è app = nu bell Hono()
+app.route("/", api)
+app.use("/*", serveStatic({ root: "./dist" }))
+// Ogni indirizzo ca nun è nu file torna l'app
+app.get("*", serveStatic({ path: "./dist/index.html" }))
+
+chist è porta = Number(process.env.PORT ?? 3000)
+serve({ fetch: app.fetch, port: porta }, () => {
+    stamm a dì(`🍕 {{name}} sta ncopp' a http://localhost:${porta}`)
+})
+"##,
+    ),
+    (".gitignore", "node_modules\ndist\n*.db\n"),
+    (
+        "README.md",
+        r##"# {{name}}
+
+A full-stack app written in [FratmScript](https://github.com/kkratterf/fratmscript), made with `fratm nuovo --completa`. Needs Node 22.13 or newer.
+
+```bash
+npm install
+npm run dev     # one development server: the React app and the API
+npm run build   # production build of the app in dist/
+npm start       # serves dist/ and the API on http://localhost:3000
+```
+
+- `src/` is the React front end: `App.fratm` reads the menu from `/api/pizze`
+  and sends orders to `/api/ordini`.
+- `server/api.fratm` is the API, a [Hono](https://hono.dev) app. Its data lives
+  in SQLite (`pizzeria.db`, or the file in `$DATABASE`), opened with `apri_db`
+  and queried in Neapolitan SQL with `gomorra`…``.
+- In development the `fratmscript` Vite plugin mounts the API on the dev server
+  (`fratmscript({ api: 'server/api.fratm' })`); edit a server file and the next
+  request uses it.
+- `npm start` runs `server/avvia.fratm` with `node --import fratmscript/node`,
+  which compiles `.fratm` files as Node loads them.
+- Node prints a warning that SQLite is experimental: `node:sqlite` is built in
+  and needs no package, but it is still young.
+"##,
+    ),
+];
+
 const SIMPLE_FILES: &[(&str, &str)] = &[(
     "main.fratm",
     r##"// Lancialo cu: fratm lancia main.fratm
@@ -368,6 +591,8 @@ stamm a dì(saluta(nomme))
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Template {
     React,
+    /// React plus a Hono API and a SQLite database (`--completa`)
+    Full,
     Vite,
     Simple,
 }
@@ -391,10 +616,19 @@ pub fn create(dir: &Path, template: Template, version: &str) -> io::Result<Vec<P
         ));
     }
     let name = package_name(dir);
-    let files = match template {
-        Template::React => REACT_FILES,
-        Template::Vite => VITE_FILES,
-        Template::Simple => SIMPLE_FILES,
+    let files: Vec<(&str, &str)> = match template {
+        Template::React => REACT_FILES.to_vec(),
+        Template::Full => {
+            let mut files: Vec<(&str, &str)> = REACT_FILES
+                .iter()
+                .filter(|(path, _)| FULL_FILES.iter().all(|(p, _)| p != path))
+                .copied()
+                .collect();
+            files.extend_from_slice(FULL_FILES);
+            files
+        }
+        Template::Vite => VITE_FILES.to_vec(),
+        Template::Simple => SIMPLE_FILES.to_vec(),
     };
     let dependency = fratmscript_dependency(version);
     let mut written = Vec::new();
@@ -560,6 +794,88 @@ mod tests {
             "{pizza}"
         );
         assert!(pizza.contains("className: stile.carta"), "{pizza}");
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn full_template_adds_an_api_and_a_database() {
+        let dir = temp_dir("Trattoria");
+        let files = create(&dir, Template::Full, "1.2.3").unwrap();
+        let mut paths: Vec<String> = files
+            .iter()
+            .map(|f| {
+                f.strip_prefix(&dir)
+                    .unwrap()
+                    .to_string_lossy()
+                    .replace('\\', "/")
+            })
+            .collect();
+        paths.sort();
+        let mut expected: Vec<&str> = REACT_FILES.iter().map(|(p, _)| *p).collect();
+        expected.extend(["server/api.fratm", "server/avvia.fratm"]);
+        expected.sort();
+        assert_eq!(paths, expected);
+        for path in &paths {
+            let contents = fs::read_to_string(dir.join(path)).unwrap();
+            // `style={{ … }}` in JSX is fine, the placeholders are not
+            for placeholder in ["{{name}}", "{{fratmscript}}"] {
+                assert!(
+                    !contents.contains(placeholder),
+                    "{path} has {placeholder} left"
+                );
+            }
+        }
+
+        let package = fs::read_to_string(dir.join("package.json")).unwrap();
+        let json: serde_json::Value = serde_json::from_str(&package).unwrap();
+        assert_eq!(json["name"], "trattoria");
+        assert_eq!(
+            json["scripts"]["start"],
+            "node --import fratmscript/node server/avvia.fratm"
+        );
+        // npm start runs the server with fratmscript/node, so it is a runtime dependency
+        assert_eq!(
+            json["dependencies"]["fratmscript"],
+            fratmscript_dependency("1.2.3")
+        );
+        assert!(json["dependencies"]["hono"].is_string());
+        assert!(json["dependencies"]["@hono/node-server"].is_string());
+        let config = fs::read_to_string(dir.join("vite.config.js")).unwrap();
+        assert!(
+            config.contains("fratmscript({ api: 'server/api.fratm' })"),
+            "{config}"
+        );
+
+        let compiled = |path: &str| {
+            compile(
+                &fs::read_to_string(dir.join(path)).unwrap(),
+                CompileOptions::default(),
+            )
+            .unwrap_or_else(|e| panic!("{path}: {e}"))
+            .code
+        };
+        let app = compiled("src/App.fratm");
+        assert!(app.contains("fetch(\"/api/pizze\")"), "{app}");
+        assert!(app.contains("\"trattoria 🍕\""), "{app}");
+        let api = compiled("server/api.fratm");
+        assert!(api.contains("export default api;"), "{api}");
+        assert!(
+            api.contains("SELECT id, nomme, prezzo, ingredienti FROM pizze ORDER BY prezzo"),
+            "{api}"
+        );
+        assert!(
+            api.contains("INSERT INTO ordini (pizza) VALUES (?)\", \"INSERT INTO ordini (pizza) VALUES ($1)\", [pizza]"),
+            "{api}"
+        );
+        let server = compiled("server/avvia.fratm");
+        assert!(
+            server.contains("import api from \"./api.fratm\";"),
+            "{server}"
+        );
+        assert!(
+            server.contains("serve({ fetch: app.fetch, port: porta }"),
+            "{server}"
+        );
         fs::remove_dir_all(&dir).unwrap();
     }
 

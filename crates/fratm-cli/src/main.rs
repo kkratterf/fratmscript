@@ -74,14 +74,17 @@ enum Commands {
         #[arg(long)]
         check: bool,
     },
-    /// Create a new project (a React app with Vite; --senza-react or --semplice for less)
+    /// Create a new project (a React app with Vite; --completa adds an API and a database, --senza-react or --semplice for less)
     #[command(name = "nuovo", alias = "new")]
     Nuovo {
         /// Folder to create
         dir: PathBuf,
         /// A Vite app with plain DOM code instead of React
-        #[arg(long, conflicts_with = "semplice")]
+        #[arg(long, conflicts_with_all = ["semplice", "completa"])]
         senza_react: bool,
+        /// A full-stack app: React, a Hono API and a SQLite database (Node 22.13+)
+        #[arg(long, conflicts_with = "semplice")]
+        completa: bool,
         /// Only a main.fratm to run with `fratm lancia`, no Vite
         #[arg(long)]
         semplice: bool,
@@ -117,8 +120,9 @@ fn main() {
         Commands::Nuovo {
             dir,
             senza_react,
+            completa,
             semplice,
-        } => new_project(&dir, senza_react, semplice),
+        } => new_project(&dir, senza_react, completa, semplice),
         Commands::Repl => run_repl(),
         Commands::Tokens { file } => show_tokens(&file),
         Commands::Ast { file } => show_ast(&file),
@@ -386,9 +390,11 @@ fn check_files(paths: &[PathBuf], json: bool) {
     );
 }
 
-fn new_project(dir: &Path, senza_react: bool, semplice: bool) {
+fn new_project(dir: &Path, senza_react: bool, completa: bool, semplice: bool) {
     let template = if semplice {
         nuovo::Template::Simple
+    } else if completa {
+        nuovo::Template::Full
     } else if senza_react {
         nuovo::Template::Vite
     } else {

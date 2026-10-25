@@ -63,6 +63,27 @@ export default {
 };
 ```
 
+### An API on the dev server
+
+`api` mounts a server written in FratmScript on the Vite dev server, so one `npm run dev` serves both the app and its API. The module's default export must have a `fetch(request)` method that returns a `Response`, as a [Hono](https://hono.dev) app does. It answers the requests under `/api`, and it is reloaded when you edit it.
+
+```js
+export default {
+  plugins: [fratmscript({ api: 'server/api.fratm' })],
+  // or fratmscript({ api: { entry: 'server/api.fratm', prefix: '/dati' } })
+};
+```
+
+```fratm
+// server/api.fratm
+chiamm { Hono } da "hono"
+chist è api = nu bell Hono().basePath("/api")
+api.get("/pizze", (c) => c.json(["Margherita", "Marinara"]))
+mann for predefinit api
+```
+
+In production run the same module with `node --import fratmscript/node` and a Node adapter such as `@hono/node-server`. `fratm nuovo --completa` sets all of this up.
+
 ## Run .fratm files in Node
 
 ```bash

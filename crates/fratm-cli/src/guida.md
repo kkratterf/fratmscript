@@ -365,7 +365,9 @@ mann for predefinit facc Menu({ pizze }) {
   when a tag name or `>` follows right away, so `a < b` and `i <n` stay comparisons.
 - To try a component, open the playground: code that imports `"react"` and exports a default
   component is drawn in a live preview, with its `console.log` output in the console. Run a
-  whole app with `fratm nuovo`.
+  whole app with `fratm nuovo`, or a full-stack one with `fratm nuovo --completa`: React in `src/`,
+  a Hono API in `server/api.fratm` with SQLite (`apri_db` + `gomorra`), one `npm run dev`, and
+  `npm start` (`node --import fratmscript/node server/avvia.fratm`) in production.
 
 ## The `fratm` library
 
@@ -483,7 +485,7 @@ Runtime errors keep the original JavaScript message in brackets.
 ## Tools
 
 ```text
-fratm nuovo app                         new React + Vite app in ./app (--senza-react, --semplice)
+fratm nuovo app                         new React + Vite app in ./app (--completa, --senza-react, --semplice)
 fratm lancia main.fratm                 compile and run with Node.js (alias: run)
 fratm build main.fratm [-o out.js]      write JavaScript (--stdout prints it)
 fratm check a.fratm b.fratm             report errors, write nothing
