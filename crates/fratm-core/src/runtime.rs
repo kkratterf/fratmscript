@@ -28,16 +28,10 @@ fn translate(message: &str) -> Option<String> {
 
     // ReferenceError
     if let Some(name) = m.strip_suffix(" is not defined") {
-        return Some(format!(
-            "'{}' nun esiste: nun l'hê maje dichiarato cu 'chist è' o 'tien'",
-            unquote(name)
-        ));
+        return Some(not_declared(&unquote(name)));
     }
     if let Some(name) = m.strip_prefix("Can't find variable: ") {
-        return Some(format!(
-            "'{}' nun esiste: nun l'hê maje dichiarato cu 'chist è' o 'tien'",
-            name
-        ));
+        return Some(not_declared(name));
     }
     if let Some(rest) = m.strip_prefix("Cannot access ") {
         if let Some(name) = rest.strip_suffix(" before initialization") {
@@ -140,6 +134,25 @@ fn empty_value_message(verb: &str, value: &str, prop: &str) -> String {
     }
 }
 
+/// Message for a name that was never declared. A JS keyword used as a name
+/// is escaped to `$true`, `$this`…: then the dialect keyword is named.
+fn not_declared(name: &str) -> String {
+    match name
+        .strip_prefix('$')
+        .and_then(crate::errors::fratm_for_javascript)
+    {
+        Some(phrase) => format!(
+            "'{}' nun esiste: in FratmScript se scrive '{}'",
+            &name[1..],
+            phrase
+        ),
+        None => format!(
+            "'{}' nun esiste: nun l'hê maje dichiarato cu 'chist è' o 'tien'",
+            name
+        ),
+    }
+}
+
 fn unquote(s: &str) -> String {
     s.trim()
         .trim_matches(|c| c == '\'' || c == '"' || c == '`')
@@ -162,6 +175,13 @@ mod tests {
              (ReferenceError: nonEsiste is not defined)"
         );
         assert!(nap("ReferenceError", "Can't find variable: x").starts_with("'x' nun esiste"));
+        assert_eq!(
+            nap("ReferenceError", "$true is not defined"),
+            "'true' nun esiste: in FratmScript se scrive 'overo' \
+             (ReferenceError: $true is not defined)"
+        );
+        assert!(nap("ReferenceError", "Can't find variable: $this")
+            .starts_with("'this' nun esiste: in FratmScript se scrive 'stu cos'"));
         assert!(
             nap("ReferenceError", "Cannot access 'x' before initialization")
                 .starts_with("'x' l'hê usato primma")
