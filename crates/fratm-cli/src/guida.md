@@ -442,7 +442,8 @@ as the command `fratm` with the argument `mcp`.
 
 Install the CLI: `curl -fsSL https://raw.githubusercontent.com/kkratterf/fratmscript/main/install.sh | sh`
 (macOS/Linux) or `cargo install --git https://github.com/kkratterf/fratmscript fratm-cli`.
-In JavaScript: the `fratmscript` npm package (`compile(source)`) and its Vite plugin.
+In JavaScript: the `fratmscript` npm package (`compile(source)`), its Vite plugin
+(`fratmscript/vite`) and `node --import fratmscript/node main.fratm` to run `.fratm` in Node.
 
 ## A complete program
 

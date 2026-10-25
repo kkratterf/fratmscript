@@ -53,6 +53,14 @@ import { saluta } from './saluto.fratm';
 
 Compile errors show up in the Vite overlay with their line and column, and source maps point at the `.fratm` files. The plugin has no dependency on Vite, so it also works as a Rollup plugin.
 
+## Run .fratm files in Node
+
+```bash
+node --import fratmscript/node server.fratm
+```
+
+`fratmscript/node` registers a module hook (Node 20.6 or later) that compiles every `.fratm` file when it is loaded, so `.fratm` modules can import each other, npm packages and `node:` modules. Stack traces point at the `.fratm` lines, and compile errors are printed in Neapolitan with file, line and column.
+
 ## In a web page, with a script tag
 
 No build step: load `browser.js` and write FratmScript in `<script type="text/fratmscript">` tags, inline or with `src`. They run in document order once the page has loaded; compile errors and uncaught runtime errors are printed in Neapolitan in the console, and dev tools show the `.fratm` source.

@@ -27,6 +27,10 @@
       "types": "./vite.d.ts",
       "default": "./vite.js"
     },
+    "./node": {
+      "types": "./node.d.ts",
+      "default": "./node.js"
+    },
     "./web": {
       "types": "./web.d.ts",
       "default": "./web.js"
@@ -41,6 +45,8 @@
     "index.d.ts",
     "vite.js",
     "vite.d.ts",
+    "node.js",
+    "node.d.ts",
     "web.js",
     "web.d.ts",
     "browser.js",
