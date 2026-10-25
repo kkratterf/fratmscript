@@ -2,6 +2,10 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { loadWasm, compile, isCompilerLoaded } from '@/lib/compiler'
 import { runInWorker, SYNC_TIME_LIMIT_MS, TOTAL_TIME_LIMIT_MS, type LogEntry, type RunEnd } from '@/lib/runner'
 import { parseSourceMap, originalPosition, sourceLinePerGeneratedLine } from '@/lib/sourcemap'
+import { usesPreview, type PreviewEnvelope } from '@/lib/preview'
+import { toLogValue } from '@/lib/logValue'
+
+type SourceMap = NonNullable<ReturnType<typeof parseSourceMap>>
 import type { Message } from '@/lib/i18n'
 
 export type PlaygroundError =
@@ -9,6 +13,7 @@ export type PlaygroundError =
   | { kind: 'runtime'; name: string; message: string; line?: number; column?: number }
   | { kind: 'timeout'; seconds: number }
   | { kind: 'load' }
+  | { kind: 'previewLoad'; message: string }
 
 /**
  * How long a run may take before the UI switches to "running" (Stop button,
@@ -35,6 +40,8 @@ interface CompilerState {
   statusText: Message
   /** A run is in progress, even while the UI still shows the previous result */
   busy: boolean
+  /** Code that imports React renders here instead of running in the console */
+  preview: { id: number; code: string } | null
 }
 
 export function useCompiler() {
@@ -51,10 +58,13 @@ export function useCompiler() {
     status: 'loading',
     statusText: { key: 'status.loading' },
     busy: false,
+    preview: null,
   })
 
   const stopRef = useRef<(() => void) | null>(null)
   const runIdRef = useRef(0)
+  // Source map of the code in the preview, to point its errors at the .fratm lines
+  const previewMapRef = useRef<SourceMap | null>(null)
 
   useEffect(() => {
     loadWasm().then(({ loaded, version }) => {
@@ -99,6 +109,7 @@ export function useCompiler() {
         status: 'error',
         statusText: { key: 'status.compileError' },
         busy: false,
+        preview: null,
       }))
       return
     }
@@ -109,6 +120,29 @@ export function useCompiler() {
       return sourceMap ? originalPosition(sourceMap, line, column ?? 1) ?? {} : {}
     }
 
+    if (usesPreview(result.code)) {
+      // The iframe reports back through handlePreviewMessage
+      previewMapRef.current = sourceMap
+      stopRef.current = () => {
+        runIdRef.current++
+        setState(prev => ({ ...prev, preview: null, busy: false, status: 'ready', statusText: { key: 'status.stopped' }, notice: { key: 'notice.stopped' } }))
+      }
+      setState(prev => ({
+        ...prev,
+        jsOutput: result.code!,
+        jsLineMap: sourceMap ? sourceLinePerGeneratedLine(sourceMap) : [],
+        compileTime: result.compileTime,
+        consoleLogs: [],
+        errors: [],
+        notice: null,
+        preview: { id: runId, code: result.code! },
+        busy: true,
+        status: 'running',
+        statusText: { key: 'status.previewLoading' },
+      }))
+      return
+    }
+
     // The previous console, errors and status stay on screen until this run
     // reports something or outlasts RUNNING_UI_DELAY_MS, whichever comes first.
     setState(prev => ({
@@ -117,6 +151,7 @@ export function useCompiler() {
       jsLineMap: sourceMap ? sourceLinePerGeneratedLine(sourceMap) : [],
       compileTime: result.compileTime,
       busy: true,
+      preview: null,
     }))
     let fresh = true
     /** Returns an updater that drops the previous run's output, only the first time. */
@@ -206,6 +241,47 @@ export function useCompiler() {
     stopRef.current = stop
   }, [])
 
+  const handlePreviewMessage = useCallback((msg: PreviewEnvelope) => {
+    if (msg.__fratmPreview !== runIdRef.current) return
+    const finish = (prev: CompilerState): CompilerState => {
+      if (!prev.busy) return prev
+      stopRef.current = null
+      const failed = prev.errors.length > 0
+      return {
+        ...prev,
+        busy: false,
+        status: failed ? 'error' : 'ready',
+        statusText: { key: failed ? 'status.runtimeError' : 'status.previewReady' },
+      }
+    }
+    switch (msg.type) {
+      case 'log': {
+        const entry: LogEntry = { type: msg.level, args: msg.args.map(arg => toLogValue(arg)) }
+        setState(prev => ({ ...prev, consoleLogs: [...prev.consoleLogs, entry] }))
+        break
+      }
+      case 'error': {
+        const map = previewMapRef.current
+        const pos = msg.line !== undefined && map ? originalPosition(map, msg.line, msg.column ?? 1) ?? {} : {}
+        setState(prev => {
+          const next: CompilerState = { ...prev, errors: [...prev.errors, { kind: 'runtime', name: msg.name, message: msg.message, ...pos }] }
+          // Errors after the first render (in an event handler) also land here
+          return prev.busy ? finish(next) : { ...next, status: 'error', statusText: { key: 'status.runtimeError' } }
+        })
+        break
+      }
+      case 'rendered':
+        setState(finish)
+        break
+      case 'no-component':
+        setState(prev => finish({ ...prev, notice: { key: 'notice.noComponent' } }))
+        break
+      case 'load-failed':
+        setState(prev => finish({ ...prev, preview: null, errors: [...prev.errors, { kind: 'previewLoad', message: msg.message }] }))
+        break
+    }
+  }, [])
+
   const stop = useCallback(() => {
     stopRef.current?.()
   }, [])
@@ -219,5 +295,6 @@ export function useCompiler() {
     runCode,
     stop,
     clearConsole,
+    handlePreviewMessage,
   }
 }

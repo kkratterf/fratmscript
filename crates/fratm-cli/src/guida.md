@@ -363,6 +363,9 @@ mann for predefinit facc Menu({ pizze }) {
   styles are objects: `style={{ color: "red" }}`.
 - A `<` starts JSX only where a value can start (after `=`, `(`, `,`, `piglie`, `=>`, ...) and
   when a tag name or `>` follows right away, so `a < b` and `i <n` stay comparisons.
+- To try a component, open the playground: code that imports `"react"` and exports a default
+  component is drawn in a live preview, with its `console.log` output in the console. Run a
+  whole app with `fratm nuovo`.
 
 ## The `fratm` library
 

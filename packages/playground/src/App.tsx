@@ -456,6 +456,8 @@ function App() {
                   stale={isStale && !isRunning}
                   source={code}
                   onHighlight={handleHighlight}
+                  preview={compiler.preview}
+                  onPreviewMessage={compiler.handlePreviewMessage}
                 />
               </div>
             </div>

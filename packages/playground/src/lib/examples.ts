@@ -10,11 +10,10 @@ const sources = import.meta.glob('../../../../examples/*.fratm', {
 }) as Record<string, string>
 
 /**
- * Examples that cannot run in the playground console: 09 imports Node modules
- * (node:path, node:os), 13 reads the terminal with readline and 16 is a React
- * component (it needs the component preview, #170).
+ * Examples that cannot run in the playground: 09 imports Node modules
+ * (node:path, node:os) and 13 reads the terminal with readline.
  */
-const NODE_ONLY = new Set(['09_moduli', '13_pomodor_e_muzzarel', '16_pizzeria_jsx'])
+const NODE_ONLY = new Set(['09_moduli', '13_pomodor_e_muzzarel'])
 
 /** Picker names in each UI language; an example missing here uses its file's title comment. */
 const TITLES: Record<string, Record<Lang, string>> = {
@@ -30,6 +29,7 @@ const TITLES: Record<string, Record<Lang, string>> = {
   '11_oop_avanzato': { it: 'OOP avanzata', en: 'Advanced OOP', nap: 'Famiglie cchiù toste' },
   '12_trycatch_validazione': { it: 'Try/catch e validazione', en: 'Try/catch and validation', nap: 'Pruvamm e cuntrolle' },
   '14_sintassi_moderna': { it: 'Sintassi moderna', en: 'Modern syntax', nap: 'Sintassi moderna' },
+  '16_pizzeria_jsx': { it: 'Componente React (JSX)', en: 'React component (JSX)', nap: "'A pizzeria cu React" },
 }
 
 export interface Example {

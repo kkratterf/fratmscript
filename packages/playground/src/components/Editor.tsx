@@ -3,64 +3,161 @@ import { EditorState, Compartment, Prec, StateEffect, StateField } from '@codemi
 import { EditorView, Decoration, type DecorationSet, keymap, highlightSpecialChars, drawSelection, highlightActiveLine, lineNumbers } from '@codemirror/view'
 import { defaultKeymap, indentWithTab, history, historyKeymap } from '@codemirror/commands'
 import { lintGutter, setDiagnostics, type Diagnostic } from '@codemirror/lint'
-import { HighlightStyle, syntaxHighlighting, StreamLanguage } from '@codemirror/language'
+import { HighlightStyle, syntaxHighlighting, StreamLanguage, type StringStream } from '@codemirror/language'
 import { tags } from '@lezer/highlight'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 import { keywordHelp, setKeywordLanguage } from '@/lib/keywordHelp'
 import { useI18n } from '@/lib/i18n'
 
-// FratmScript language definition for StreamLanguage
-const fratmScriptLanguage = StreamLanguage.define({
-  token(stream) {
+// FratmScript language definition for StreamLanguage.
+// JSX is tracked with a stack of contexts: inside a tag (`<a href="…"`),
+// among an element's children, or in a `{ … }` expression nested in JSX.
+type JsxContext =
+  | { kind: 'tag' }
+  | { kind: 'children' }
+  | { kind: 'expr'; depth: number }
+
+interface FratmState {
+  jsx: JsxContext[]
+  /** The last token ends a value (name, number, `)`), so `<` compares */
+  afterValue: boolean
+}
+
+const JSX_NAME = /^[\p{L}_$][\p{L}\p{N}_$.:-]*/u
+
+/** Tokens of plain FratmScript code (also inside JSX `{ … }`). */
+function codeToken(stream: StringStream, state: FratmState): string | null {
+  // Comments
+  if (stream.match('//')) {
+    stream.skipToEnd()
+    return 'comment'
+  }
+
+  // Strings
+  if (stream.match(/"([^"\\]|\\.)*"/)) return 'string'
+  if (stream.match(/'([^'\\]|\\.)*'/)) return 'string'
+
+  // Numbers
+  if (stream.match(/\d+\.?\d*/)) return 'number'
+
+  // JSX: `<` followed by a tag name or `>`, where an expression can start
+  if (!state.afterValue && stream.match(/^<(?=[\p{L}_$>])/u, false)) {
+    stream.next()
+    state.jsx.push({ kind: 'tag' })
+    return 'angleBracket'
+  }
+
+  // Keywords - FratmScript specific
+  if (stream.match(/\b(chist|è|tien|facc|piglie|si|sinnò|sinno|pe|ogni|mentre|che)\b/)) return 'keyword'
+  if (stream.match(/\b(overo|sfòls|sfols|nisciun|boh)\b/)) return 'atom'
+  if (stream.match(/\b(stamm|dì|di|avvis|scrive)\b/)) return 'builtin'
+  if (stream.match(/\b(mo|vir|aspett)\b/)) return 'keyword'
+  if (stream.match(/\b(pruvamm|schiatta|aropp|iett)\b/)) return 'keyword'
+  if (stream.match(/\b(vedimm|caso|primm|fa|dint)\b/)) return 'keyword'
+  if (stream.match(/\b(damme|miette|fisso|figlio)\b/)) return 'keyword'
+  if (stream.match(/\b(nu|bell|na|famiglie|stu|cos)\b/)) return 'keyword'
+  if (stream.match(/\b(chiamm|da|mann|for|predefinit)\b/)) return 'keyword'
+  if (stream.match(/\b(rompe|salta|fermete)\b/)) return 'keyword'
+  if (stream.match(/\b(e|o|no|manco|pure)\b/)) return 'operator'
+  if (stream.match(/\b(leva|caccia)\b/)) return 'keyword'
+  if (stream.match(/\b(costruttore)\b/)) return 'def'
+
+  // Operators
+  if (stream.match(/[+\-*/%=<>!&|?:]+/)) return 'operator'
+
+  // Punctuation
+  if (stream.match(/[{}()\[\],;.]/)) return 'punctuation'
+
+  // Identifiers
+  if (stream.match(/[a-zA-Z_àèéìòù][a-zA-Z0-9_àèéìòù]*/)) return 'variable'
+
+  // Skip unknown character
+  stream.next()
+  return null
+}
+
+/** Tokens inside `<tag …>`: name, attributes, values, until `>` or `/>`. */
+function tagToken(stream: StringStream, state: FratmState): string | null {
+  if (stream.match('/>')) {
+    state.jsx.pop()
+    return 'angleBracket'
+  }
+  if (stream.eat('>')) {
+    state.jsx[state.jsx.length - 1] = { kind: 'children' }
+    return 'angleBracket'
+  }
+  if (stream.eat('{')) {
+    state.jsx.push({ kind: 'expr', depth: 0 })
+    return 'brace'
+  }
+  if (stream.match(/"[^"]*"/) || stream.match(/'[^']*'/)) return 'string'
+  if (stream.eat('=')) return 'operator'
+  const name = stream.match(JSX_NAME) as RegExpMatchArray | null
+  if (name) {
+    // The tag name comes right after `<`; attribute names come later
+    const start = stream.string.slice(0, stream.start).trimEnd()
+    if (start.endsWith('<')) return /^[A-Z]|\./.test(name[0]) ? 'typeName' : 'tagName'
+    return 'attributeName'
+  }
+  stream.next()
+  return null
+}
+
+/** Tokens among an element's children: text, `{ … }`, nested and closing tags. */
+function childrenToken(stream: StringStream, state: FratmState): string | null {
+  if (stream.match(/^<\/[\p{L}\p{N}_$.:-]*\s*>/u)) {
+    // The closing tag ends the children and the element
+    state.jsx.pop()
+    return 'tagName'
+  }
+  if (stream.match(/^<(?=[\p{L}_$>])/u)) {
+    state.jsx.push({ kind: 'tag' })
+    return 'angleBracket'
+  }
+  if (stream.eat('{')) {
+    state.jsx.push({ kind: 'expr', depth: 0 })
+    return 'brace'
+  }
+  if (stream.match(/&(?:[a-zA-Z][a-zA-Z0-9]*|#\d+|#x[0-9a-fA-F]+);/)) return 'character'
+  stream.match(/^[^<{&]+/) || stream.next()
+  return 'content'
+}
+
+const fratmScriptLanguage = StreamLanguage.define<FratmState>({
+  startState: () => ({ jsx: [], afterValue: false }),
+  copyState: state => ({ jsx: state.jsx.map(context => ({ ...context })), afterValue: state.afterValue }),
+  token(stream, state) {
+    const context = state.jsx[state.jsx.length - 1]
+    if (context?.kind === 'children') return childrenToken(stream, state)
     // Skip whitespace
     if (stream.eatSpace()) return null
-
-    // Comments
-    if (stream.match('//')) {
-      stream.skipToEnd()
-      return 'comment'
+    if (context?.kind === 'tag') return tagToken(stream, state)
+    if (context?.kind === 'expr') {
+      if (stream.peek() === '}' && context.depth === 0) {
+        stream.next()
+        state.jsx.pop()
+        state.afterValue = false
+        return 'brace'
+      }
+      if (stream.peek() === '{') context.depth++
+      if (stream.peek() === '}') context.depth--
     }
-
-    // Strings
-    if (stream.match(/"([^"\\]|\\.)*"/)) return 'string'
-    if (stream.match(/'([^'\\]|\\.)*'/)) return 'string'
-
-    // Numbers
-    if (stream.match(/\d+\.?\d*/)) return 'number'
-
-    // Keywords - FratmScript specific
-    if (stream.match(/\b(chist|è|tien|facc|piglie|si|sinnò|sinno|pe|ogni|mentre|che)\b/)) return 'keyword'
-    if (stream.match(/\b(overo|sfòls|sfols|nisciun|boh)\b/)) return 'atom'
-    if (stream.match(/\b(stamm|dì|di|avvis|scrive)\b/)) return 'builtin'
-    if (stream.match(/\b(mo|vir|aspett)\b/)) return 'keyword'
-    if (stream.match(/\b(pruvamm|schiatta|aropp|iett)\b/)) return 'keyword'
-    if (stream.match(/\b(vedimm|caso|primm|fa|dint)\b/)) return 'keyword'
-    if (stream.match(/\b(damme|miette|fisso|figlio)\b/)) return 'keyword'
-    if (stream.match(/\b(nu|bell|na|famiglie|stu|cos)\b/)) return 'keyword'
-    if (stream.match(/\b(chiamm|da|mann|for|predefinit)\b/)) return 'keyword'
-    if (stream.match(/\b(rompe|salta|fermete)\b/)) return 'keyword'
-    if (stream.match(/\b(e|o|no|manco|pure)\b/)) return 'operator'
-    if (stream.match(/\b(leva|caccia)\b/)) return 'keyword'
-    if (stream.match(/\b(costruttore)\b/)) return 'def'
-
-    // Operators
-    if (stream.match(/[+\-*/%=<>!&|?:]+/)) return 'operator'
-
-    // Punctuation
-    if (stream.match(/[{}()\[\],;.]/)) return 'punctuation'
-
-    // Identifiers
-    if (stream.match(/[a-zA-Z_àèéìòù][a-zA-Z0-9_àèéìòù]*/)) return 'variable'
-
-    // Skip unknown character
-    stream.next()
-    return null
+    const style = codeToken(stream, state)
+    const text = stream.current()
+    if (style !== 'comment' && style !== 'angleBracket') {
+      state.afterValue = style === 'variable' || style === 'number' || style === 'string' || style === 'atom' || /^[)\]]$/.test(text)
+    }
+    return style
   },
 })
 
 // Dark theme colors using COSS palette
 const darkHighlighting = HighlightStyle.define([
+  { tag: tags.tagName, color: '#f87171' },
+  { tag: tags.attributeName, color: '#fbbf24' },
+  { tag: tags.angleBracket, color: '#9ca3af' },
+  { tag: tags.character, color: '#fbbf24' },
   { tag: tags.keyword, color: '#a78bfa' }, // purple-400
   { tag: tags.atom, color: '#60a5fa' }, // blue-400
   { tag: tags.number, color: '#fbbf24' }, // amber-400
@@ -80,6 +177,10 @@ const darkHighlighting = HighlightStyle.define([
 
 // Light theme colors using COSS palette
 const lightHighlighting = HighlightStyle.define([
+  { tag: tags.tagName, color: '#dc2626' },
+  { tag: tags.attributeName, color: '#b45309' },
+  { tag: tags.angleBracket, color: '#6b7280' },
+  { tag: tags.character, color: '#b45309' },
   { tag: tags.keyword, color: '#7c3aed' }, // purple-600
   { tag: tags.atom, color: '#2563eb' }, // blue-600
   { tag: tags.number, color: '#b45309' }, // amber-700

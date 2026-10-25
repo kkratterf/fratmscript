@@ -7,6 +7,8 @@ import { ValueTree, isExpandable } from '@/components/ValueTree'
 import { inspectSource, translateRuntimeError } from '@/lib/compiler'
 import { InspectView, type SourceRange } from '@/components/InspectView'
 import { useI18n, type Message, type MessageKey } from '@/lib/i18n'
+import { PreviewFrame } from '@/components/PreviewFrame'
+import type { PreviewEnvelope } from '@/lib/preview'
 
 interface OutputPanelProps {
   jsOutput: string
@@ -28,6 +30,9 @@ interface OutputPanelProps {
   source: string
   /** Highlights a source range in the editor (null clears) */
   onHighlight: (range: SourceRange | null) => void
+  /** Component to render in the preview, when the code uses React */
+  preview?: { id: number; code: string } | null
+  onPreviewMessage?: (message: PreviewEnvelope) => void
 }
 
 type CodeView = 'js' | 'tokens' | 'tree'
@@ -43,6 +48,7 @@ const ERROR_TITLES: Record<PlaygroundError['kind'], MessageKey> = {
   runtime: 'error.runtime',
   timeout: 'error.timeout',
   load: 'error.load',
+  previewLoad: 'error.previewLoad',
 }
 
 /**
@@ -139,7 +145,9 @@ export function ErrorCard({ error, onErrorClick }: { error: PlaygroundError; onE
       ? t('error.timeoutMessage', { seconds: error.seconds })
       : error.kind === 'load'
         ? t('error.loadMessage')
-        : error.message
+        : error.kind === 'previewLoad'
+          ? t('error.previewLoadMessage', { message: error.message })
+          : error.message
   const Icon = error.kind === 'timeout' ? Timer : CircleAlert
 
   return (
@@ -176,7 +184,7 @@ export function ErrorCard({ error, onErrorClick }: { error: PlaygroundError; onE
   )
 }
 
-export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, onErrorClick, onClearConsole, jsLineMap, cursorLine, show = 'all', stale = false, source, onHighlight }: OutputPanelProps) {
+export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, onErrorClick, onClearConsole, jsLineMap, cursorLine, show = 'all', stale = false, source, onHighlight, preview, onPreviewMessage }: OutputPanelProps) {
   const { t } = useI18n()
   const [mapLines, setMapLines] = useState(false)
   const [codeView, setCodeView] = useState<CodeView>('js')
@@ -192,6 +200,17 @@ export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, 
       className={cn('flex flex-col h-full transition-opacity duration-200', stale && 'opacity-60')}
       title={stale ? t('output.stale') : undefined}
     >
+      {/* A React component: what it draws comes first */}
+      {showConsole && preview && onPreviewMessage && (
+        <section className="p-4 border-border border-b">
+          <h2 className="flex items-center gap-2 mb-3 text-muted-foreground text-xs uppercase tracking-wider">
+            <span className="bg-primary rounded-full w-2 h-2" />
+            {t('preview.title')}
+          </h2>
+          <PreviewFrame key={preview.id} id={preview.id} code={preview.code} onMessage={onPreviewMessage} />
+        </section>
+      )}
+
       {/* Errors first: they are what you need to see */}
       {showConsole && errors.length > 0 && (
         <section className="flex flex-col gap-2 p-4 border-border border-b" aria-live="polite">

@@ -81,6 +81,7 @@ const it = {
   'output.fromLine': 'Dalla riga {line}',
   'output.line': 'Riga {line}',
   'output.lineColumn': 'Riga {line}, colonna {column}',
+  'preview.title': 'Anteprima',
 
   'error.compile': 'Errore di compilazione',
   'error.runtime': 'Errore in esecuzione',
@@ -88,10 +89,13 @@ const it = {
   'error.load': 'Compilatore non disponibile',
   'error.loadMessage': 'Non è stato possibile scaricare il compilatore di FratmScript. Controlla la connessione e ricarica la pagina.',
   'error.timeoutMessage': 'Il codice è andato avanti per più di {seconds}s senza finire ed è stato fermato. C\'è un ciclo infinito?',
+  'error.previewLoad': 'Anteprima non disponibile',
+  'error.previewLoadMessage': 'Non è stato possibile scaricare React per l\'anteprima ({message}). Controlla la connessione e riprova.',
 
   'notice.truncated': 'Output della console troncato dopo {limit} messaggi.',
   'notice.asyncTimeout': 'Fermato dopo {seconds}s: c\'erano ancora timer o promise in sospeso.',
   'notice.stopped': 'Esecuzione fermata.',
+  'notice.noComponent': 'Il codice usa React ma non esporta un componente: aggiungi mann for predefinit facc App() { … }.',
 
   'status.loading': 'Caricamento…',
   'status.ready': 'Compilatore pronto',
@@ -105,6 +109,8 @@ const it = {
   'status.staleAuto': 'Codice cambiato, aggiorno…',
   'status.staleManual': 'Codice cambiato: il risultato non è aggiornato, premi Esegui',
   'status.compiledIn': 'Compilato in {ms}ms',
+  'status.previewLoading': 'Carico l\'anteprima…',
+  'status.previewReady': 'Anteprima pronta',
 
   'syntax.button': 'Guida alla sintassi',
   'syntax.title': 'Guida alla sintassi di FratmScript',
@@ -225,6 +231,7 @@ const en: Record<MessageKey, string> = {
   'output.fromLine': 'From line {line}',
   'output.line': 'Line {line}',
   'output.lineColumn': 'Line {line}, column {column}',
+  'preview.title': 'Preview',
 
   'error.compile': 'Compilation error',
   'error.runtime': 'Runtime error',
@@ -232,10 +239,13 @@ const en: Record<MessageKey, string> = {
   'error.load': 'Compiler not available',
   'error.loadMessage': 'The FratmScript compiler could not be downloaded. Check your connection and reload the page.',
   'error.timeoutMessage': 'The code ran for more than {seconds}s without finishing, so it was stopped. Is there an infinite loop?',
+  'error.previewLoad': 'Preview unavailable',
+  'error.previewLoadMessage': 'React could not be downloaded for the preview ({message}). Check your connection and try again.',
 
   'notice.truncated': 'Console output truncated after {limit} messages.',
   'notice.asyncTimeout': 'Stopped after {seconds}s: timers or promises were still pending.',
   'notice.stopped': 'Execution stopped.',
+  'notice.noComponent': 'The code uses React but exports no component: add mann for predefinit facc App() { … }.',
 
   'status.loading': 'Loading…',
   'status.ready': 'Compiler ready',
@@ -249,6 +259,8 @@ const en: Record<MessageKey, string> = {
   'status.staleAuto': 'Code changed, updating…',
   'status.staleManual': 'Code changed: output is out of date, press Run',
   'status.compiledIn': 'Compiled in {ms}ms',
+  'status.previewLoading': 'Loading the preview…',
+  'status.previewReady': 'Preview ready',
 
   'syntax.button': 'Syntax help',
   'syntax.title': 'FratmScript syntax reference',
@@ -367,6 +379,7 @@ const nap: Record<MessageKey, string> = {
   'output.fromLine': "D'a riga {line}",
   'output.line': 'Riga {line}',
   'output.lineColumn': 'Riga {line}, colonna {column}',
+  'preview.title': 'Comme se vede',
 
   'error.compile': "Errore 'e compilazione",
   'error.runtime': 'Errore mentre gira',
@@ -374,10 +387,13 @@ const nap: Record<MessageKey, string> = {
   'error.load': "'O compilatore nun ce sta",
   'error.loadMessage': "Nun se pò scarica 'o compilatore 'e FratmScript. Controlla 'a connessione e ricarica 'a paggina.",
   'error.timeoutMessage': "'O codice è ghiuto annanze cchiù 'e {seconds}s senza fernì, e l'aggio fermato. Ce sta nu ciclo ca nun fernesce maje?",
+  'error.previewLoad': "L'anteprima nun parte",
+  'error.previewLoadMessage': "Nun so' riuscito a scarrecà React pe l'anteprima ({message}). Guarda 'a connessione e pruova n'ata vota.",
 
   'notice.truncated': "'A console s'è fermata doppo {limit} messaggi.",
   'notice.asyncTimeout': 'Fermato doppo {seconds}s: ce stevano ancora timer o promise appise.',
   'notice.stopped': 'Fermato.',
+  'notice.noComponent': "'O codice usa React ma nun manna fore nisciun componente: miette mann for predefinit facc App() { … }.",
 
   'status.loading': 'Sto caricanno…',
   'status.ready': "'O compilatore è pronto",
@@ -391,6 +407,8 @@ const nap: Record<MessageKey, string> = {
   'status.staleAuto': "'O codice è cagnato, sto aggiurnanno…",
   'status.staleManual': "'O codice è cagnato: 'o risultato è viecchio, pigia Lancia",
   'status.compiledIn': 'Compilato in {ms}ms',
+  'status.previewLoading': "Sto carrecanno l'anteprima…",
+  'status.previewReady': "L'anteprima è pronta",
 
   'syntax.button': "Guida d'a sintassi",
   'syntax.title': "Guida d'a sintassi 'e FratmScript",
