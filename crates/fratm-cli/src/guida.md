@@ -405,6 +405,9 @@ mann for predefinit facc Menu({ pizze }) {
 - Styles: import plain CSS (`chiamm "./stile.css"`) or CSS modules
   (`chiamm stile da "./App.module.css"`, then `className={stile.titolo}`) through Vite; inline
   styles are objects: `style={{ color: "red" }}`.
+- Tailwind CSS: `fratm nuovo --tailwind` sets it up (Vite plugin, `@import "tailwindcss"` in
+  `src/stile.css`); it finds classes in `.fratm` files. `chiamm "tailwindcss/index.css"` in a
+  `.fratm` file turns it on too, and is what switches Tailwind on in the playground preview.
 - A `<` starts JSX only where a value can start (after `=`, `(`, `,`, `piglie`, `=>`, ...) and
   when a tag name or `>` follows right away, so `a < b` and `i <n` stay comparisons.
 - To try a component, open the playground: code that imports `"react"` and exports a default
@@ -740,7 +743,7 @@ Runtime errors keep the original JavaScript message in brackets.
 ## Tools
 
 ```text
-fratm nuovo app                         new React + Vite app in ./app (--completa, --senza-react, --semplice)
+fratm nuovo app                         new React + Vite app in ./app (--completa, --tailwind, --senza-react, --semplice)
 fratm lancia main.fratm                 compile and run with Node.js (alias: run)
 fratm build main.fratm [-o out.js]      write JavaScript (--stdout prints it)
 fratm check a.fratm b.fratm             report errors, write nothing

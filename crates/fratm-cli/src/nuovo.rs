@@ -242,8 +242,9 @@ npm run build   # production build in dist/
 - Components return JSX: HTML tags as usual, FratmScript inside `{ }`. Hooks keep
   their React names (`useState`, `useEffect`).
 - Styles are plain CSS (`src/stile.css`, imported with `chiamm "./stile.css"`) and
-  CSS modules (`Pizza.module.css`, used as `className={stile.carta}`). Tailwind
-  works too: follow its Vite guide and use `className="…"`.
+  CSS modules (`Pizza.module.css`, used as `className={stile.carta}`). With
+  `fratm nuovo --tailwind` the project has Tailwind CSS too: utility classes in
+  `className="…"` work in every `.fratm` file.
 - `npm run dev` has Fast Refresh: save a component and the page updates without
   losing its state (`@vitejs/plugin-react` in `vite.config.js`).
 - To use Preact instead of React, write `// @jsxImportSource preact` at the top
@@ -603,9 +604,59 @@ pub fn fratmscript_dependency(version: &str) -> String {
     format!("^{version}")
 }
 
+/// Versions of Tailwind CSS that `--tailwind` adds
+const TAILWIND_VERSION: &str = "^4.1.0";
+
+/// Adds Tailwind CSS v4 to the files of a React template: the Vite plugin,
+/// the import in the global stylesheet and utility classes on the footer.
+fn add_tailwind(path: &str, contents: String) -> String {
+    match path {
+        "package.json" => contents.replacen(
+            "\"devDependencies\": {\n",
+            &format!(
+                "\"devDependencies\": {{\n    \"@tailwindcss/vite\": \"{TAILWIND_VERSION}\",\n    \"tailwindcss\": \"{TAILWIND_VERSION}\",\n"
+            ),
+            1,
+        ),
+        "vite.config.js" => {
+            let contents = contents.replacen(
+                "import react from '@vitejs/plugin-react';\n",
+                "import react from '@vitejs/plugin-react';\nimport tailwindcss from '@tailwindcss/vite';\n",
+                1,
+            );
+            if contents.contains("plugins: [\n") {
+                contents.replacen(
+                    "plugins: [\n",
+                    "plugins: [\n    // Tailwind: utility classes in className=\"…\"\n    tailwindcss(),\n",
+                    1,
+                )
+            } else {
+                contents.replacen("plugins: [", "plugins: [tailwindcss(), ", 1)
+            }
+        }
+        // Tailwind finds the classes in every file of the project, .fratm
+        // files included; @source says so for whoever reads the stylesheet
+        "src/stile.css" => format!(
+            "@import \"tailwindcss\";\n@source \"./**/*.fratm\";\n\n{contents}"
+        ),
+        "src/App.fratm" => contents.replacen(
+            "<footer>",
+            "<footer className=\"mt-8 rounded-xl bg-red-700 px-4 py-3 text-white shadow-lg\">",
+            1,
+        ),
+        _ => contents,
+    }
+}
+
 /// Writes a new project in `dir` and returns the files it created.
-/// Fails if `dir` exists and is not empty.
-pub fn create(dir: &Path, template: Template, version: &str) -> io::Result<Vec<PathBuf>> {
+/// Fails if `dir` exists and is not empty. `tailwind` adds Tailwind CSS to
+/// the React templates.
+pub fn create(
+    dir: &Path,
+    template: Template,
+    version: &str,
+    tailwind: bool,
+) -> io::Result<Vec<PathBuf>> {
     if dir.exists() && fs::read_dir(dir)?.next().is_some() {
         return Err(io::Error::new(
             io::ErrorKind::AlreadyExists,
@@ -634,9 +685,12 @@ pub fn create(dir: &Path, template: Template, version: &str) -> io::Result<Vec<P
         if let Some(parent) = target.parent() {
             fs::create_dir_all(parent)?;
         }
-        let contents = contents
+        let mut contents = contents
             .replace("{{name}}", &name)
             .replace("{{fratmscript}}", &dependency);
+        if tailwind && matches!(template, Template::React | Template::Full) {
+            contents = add_tailwind(path, contents);
+        }
         fs::write(&target, contents)?;
         written.push(target);
     }
@@ -696,9 +750,40 @@ mod tests {
     }
 
     #[test]
+    fn tailwind_is_added_to_the_react_templates() {
+        for template in [Template::React, Template::Full] {
+            let dir = temp_dir(&format!("Tailwind {template:?}"));
+            create(&dir, template, "1.2.3", true).unwrap();
+            let package = fs::read_to_string(dir.join("package.json")).unwrap();
+            let json: serde_json::Value = serde_json::from_str(&package).unwrap();
+            assert_eq!(json["devDependencies"]["tailwindcss"], TAILWIND_VERSION);
+            assert_eq!(
+                json["devDependencies"]["@tailwindcss/vite"],
+                TAILWIND_VERSION
+            );
+            let config = fs::read_to_string(dir.join("vite.config.js")).unwrap();
+            assert!(
+                config.contains("import tailwindcss from '@tailwindcss/vite';"),
+                "{config}"
+            );
+            assert!(config.contains("tailwindcss(),"), "{config}");
+            let css = fs::read_to_string(dir.join("src/stile.css")).unwrap();
+            assert!(css.starts_with("@import \"tailwindcss\";"), "{css}");
+            let app = fs::read_to_string(dir.join("src/App.fratm")).unwrap();
+            assert!(app.contains("className=\"mt-8 rounded-xl"), "{app}");
+            compile(&app, CompileOptions::default()).unwrap();
+        }
+        // Without the flag nothing changes
+        let dir = temp_dir("Pizzeria liscia");
+        create(&dir, Template::React, "1.2.3", false).unwrap();
+        let package = fs::read_to_string(dir.join("package.json")).unwrap();
+        assert!(!package.contains("tailwind"), "{package}");
+    }
+
+    #[test]
     fn vite_template_compiles_and_fills_placeholders() {
         let dir = temp_dir("Vite App");
-        let files = create(&dir, Template::Vite, "1.2.3").unwrap();
+        let files = create(&dir, Template::Vite, "1.2.3", false).unwrap();
         assert_eq!(files.len(), VITE_FILES.len());
 
         let package = fs::read_to_string(dir.join("package.json")).unwrap();
@@ -735,7 +820,7 @@ mod tests {
     #[test]
     fn react_template_compiles_every_file_with_jsx() {
         let dir = temp_dir("Pizzeria React");
-        let files = create(&dir, Template::React, "1.2.3").unwrap();
+        let files = create(&dir, Template::React, "1.2.3", false).unwrap();
         assert_eq!(files.len(), REACT_FILES.len());
         for (path, _) in REACT_FILES {
             let contents = fs::read_to_string(dir.join(path)).unwrap();
@@ -794,7 +879,7 @@ mod tests {
     #[test]
     fn full_template_adds_an_api_and_a_database() {
         let dir = temp_dir("Trattoria");
-        let files = create(&dir, Template::Full, "1.2.3").unwrap();
+        let files = create(&dir, Template::Full, "1.2.3", false).unwrap();
         let mut paths: Vec<String> = files
             .iter()
             .map(|f| {
@@ -876,7 +961,7 @@ mod tests {
     #[test]
     fn simple_template_is_one_file() {
         let dir = temp_dir("semplice");
-        create(&dir, Template::Simple, "1.2.3").unwrap();
+        create(&dir, Template::Simple, "1.2.3", false).unwrap();
         let entries: Vec<_> = fs::read_dir(&dir).unwrap().collect();
         assert_eq!(entries.len(), 1);
         let main = compile(
@@ -897,7 +982,7 @@ mod tests {
         let dir = temp_dir("piena");
         fs::create_dir_all(&dir).unwrap();
         fs::write(dir.join("main.fratm"), "stamm a dì(1)\n").unwrap();
-        let error = create(&dir, Template::Simple, "1.2.3").unwrap_err();
+        let error = create(&dir, Template::Simple, "1.2.3", false).unwrap_err();
         assert_eq!(error.kind(), io::ErrorKind::AlreadyExists);
         assert_eq!(
             fs::read_to_string(dir.join("main.fratm")).unwrap(),
@@ -907,7 +992,7 @@ mod tests {
 
         // An empty folder is fine
         fs::create_dir_all(&dir).unwrap();
-        create(&dir, Template::Simple, "1.2.3").unwrap();
+        create(&dir, Template::Simple, "1.2.3", false).unwrap();
         fs::remove_dir_all(&dir).unwrap();
     }
 }

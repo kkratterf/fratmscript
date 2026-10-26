@@ -96,7 +96,7 @@ import fratmscript from 'fratmscript/vite';
 export default { plugins: [fratmscript()] };
 ```
 
-`fratm nuovo pizzeria` creates a ready-made React app written in FratmScript: Vite with this config, `src/App.fratm` with JSX and `useState`, a component with a CSS module and a stylesheet. Then `cd pizzeria && npm install && npm run dev`. `fratm nuovo --completa` adds the back end: a [Hono](https://hono.dev) API in `server/api.fratm` that keeps its data in SQLite with `apri_db` and `gomorra` queries, served by the same `npm run dev` and by `npm start` in production (Node 22.13+). `fratm nuovo --senza-react` makes the Vite project without React (plain DOM code), and `--semplice` just a `main.fratm`. The generated `package.json` takes `fratmscript` from npm, at the version of your `fratm` (`^X.Y.Z`).
+`fratm nuovo pizzeria` creates a ready-made React app written in FratmScript: Vite with this config, `src/App.fratm` with JSX and `useState`, a component with a CSS module and a stylesheet. Then `cd pizzeria && npm install && npm run dev`. `fratm nuovo --completa` adds the back end: a [Hono](https://hono.dev) API in `server/api.fratm` that keeps its data in SQLite with `apri_db` and `gomorra` queries, served by the same `npm run dev` and by `npm start` in production (Node 22.13+). `--tailwind` (also with `--completa`) adds [Tailwind CSS](https://tailwindcss.com) v4 with its Vite plugin: utility classes in `className="…"` work in every `.fratm` file. `fratm nuovo --senza-react` makes the Vite project without React (plain DOM code), and `--semplice` just a `main.fratm`. The generated `package.json` takes `fratmscript` from npm, at the version of your `fratm` (`^X.Y.Z`).
 
 Server code runs in Node without the `fratm` binary: `node --import fratmscript/node server.fratm` compiles each `.fratm` module as it is loaded.
 
@@ -132,7 +132,7 @@ FratmScript is ready for coding agents (Claude Code, Cursor, Codex, Copilot...),
 ## CLI Commands
 
 ```bash
-fratm nuovo <folder>                # New React + Vite app (--completa: + API and database, --senza-react: no React, --semplice: just main.fratm)
+fratm nuovo <folder>                # New React + Vite app (--completa: + API and database, --tailwind: + Tailwind CSS, --senza-react: no React, --semplice: just main.fratm)
 fratm lancia <file.fratm>           # Compile and launch
 fratm build <file.fratm>            # Compile to JavaScript
 fratm build <file> --sourcemap      # With source map

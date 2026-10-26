@@ -172,6 +172,13 @@ jobs:
           npm install --no-audit --no-fund "$RUNNER_TEMP"/fratmscript-*.tgz
           npm run build
           grep -q "Pizze sfurnate" dist/assets/*.js
+          # Tailwind must find the classes written in .fratm files
+          cd "$GITHUB_WORKSPACE"
+          cargo run -q -p fratm-cli --locked -- nuovo --tailwind "$RUNNER_TEMP/pasticceria"
+          cd "$RUNNER_TEMP/pasticceria"
+          npm install --no-audit --no-fund "$RUNNER_TEMP"/fratmscript-*.tgz
+          npm run build
+          grep -q "bg-red-700" dist/assets/*.css
 
       # The full-stack template uses node:sqlite, which needs Node 22.13+
       - name: Setup Node.js 22

@@ -75,7 +75,7 @@ enum Commands {
         #[arg(long)]
         check: bool,
     },
-    /// Create a new project (a React app with Vite; --completa adds an API and a database, --senza-react or --semplice for less)
+    /// Create a new project (a React app with Vite; --completa adds an API and a database, --tailwind adds Tailwind CSS, --senza-react or --semplice for less)
     #[command(name = "nuovo", alias = "new")]
     Nuovo {
         /// Folder to create
@@ -89,6 +89,9 @@ enum Commands {
         /// Only a main.fratm to run with `fratm lancia`, no Vite
         #[arg(long)]
         semplice: bool,
+        /// Add Tailwind CSS (v4, with its Vite plugin) to the React app
+        #[arg(long, conflicts_with_all = ["semplice", "senza_react"])]
+        tailwind: bool,
     },
     /// Translate a GomorraSQL query to SQL, or run queries on a SQLite file with --db
     Gomorra {
@@ -134,7 +137,8 @@ fn main() {
             senza_react,
             completa,
             semplice,
-        } => new_project(&dir, senza_react, completa, semplice),
+            tailwind,
+        } => new_project(&dir, senza_react, completa, semplice, tailwind),
         Commands::Gomorra { query, db, pg } => run_gomorra(query, db.as_deref(), pg),
         Commands::Repl => run_repl(),
         Commands::Tokens { file } => show_tokens(&file),
@@ -403,7 +407,7 @@ fn check_files(paths: &[PathBuf], json: bool) {
     );
 }
 
-fn new_project(dir: &Path, senza_react: bool, completa: bool, semplice: bool) {
+fn new_project(dir: &Path, senza_react: bool, completa: bool, semplice: bool, tailwind: bool) {
     let template = if semplice {
         nuovo::Template::Simple
     } else if completa {
@@ -413,7 +417,7 @@ fn new_project(dir: &Path, senza_react: bool, completa: bool, semplice: bool) {
     } else {
         nuovo::Template::React
     };
-    let files = match nuovo::create(dir, template, fratm_core::version()) {
+    let files = match nuovo::create(dir, template, fratm_core::version(), tailwind) {
         Ok(files) => files,
         Err(e) => {
             eprintln!("{} {}", "✗".red().bold(), e);

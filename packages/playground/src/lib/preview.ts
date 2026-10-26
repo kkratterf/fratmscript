@@ -22,6 +22,21 @@ export const IMPORT_MAP = {
   },
 }
 
+/**
+ * Tailwind's browser build, loaded only for code that imports Tailwind: it
+ * scans the rendered page and writes the CSS of the classes it finds.
+ */
+export const TAILWIND_VERSION = '4.1.11'
+const TAILWIND_SCRIPT = `https://cdn.jsdelivr.net/npm/@tailwindcss/browser@${TAILWIND_VERSION}`
+
+/**
+ * `chiamm "tailwindcss/index.css"` (what a Vite project imports) or
+ * `chiamm "tailwindcss"` turns Tailwind on in the preview.
+ */
+export function usesTailwind(code: string): boolean {
+  return /^import "tailwindcss(?:\/index\.css)?";?$/m.test(code)
+}
+
 /** Compiled code that should run in the preview: it imports React. */
 export function usesPreview(code: string): boolean {
   return /^import\b[^\n]*\bfrom "react(?:\/[\w-]+)?";?$/m.test(code)
@@ -122,12 +137,17 @@ function previewMain(id: number, code: string, sourceUrl: string) {
 export function previewDocument(id: number, code: string, dark: boolean): string {
   // `</script` inside the JSON would end the script tag early
   const json = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c')
+  const tailwind = usesTailwind(code)
+  // The browser build does the work, so the import itself is an empty module
+  const importMap = tailwind
+    ? { imports: { ...IMPORT_MAP.imports, 'tailwindcss': 'data:text/javascript,', 'tailwindcss/index.css': 'data:text/javascript,' } }
+    : IMPORT_MAP
   return `<!doctype html>
 <html lang="it"${dark ? ' class="dark"' : ''}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script type="importmap">${json(IMPORT_MAP)}</script>
+<script type="importmap">${json(importMap)}</script>${tailwind ? `\n<script src="${TAILWIND_SCRIPT}"></script>` : ''}
 <style>
   :root { color-scheme: ${dark ? 'dark' : 'light'}; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.5; }
   body { margin: 16px; background: ${dark ? '#0a0a0a' : '#ffffff'}; color: ${dark ? '#e5e7eb' : '#1f2937'}; }
