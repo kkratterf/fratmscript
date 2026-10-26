@@ -24,7 +24,12 @@ export function StatusBar({ status, statusText, compileTime }: StatusBarProps) {
         <span className="truncate">{statusText}</span>
       </div>
       <div className="flex items-center gap-3 shrink-0">
-        {compileTime && <span className="max-sm:hidden">{compileTime}</span>}
+        {compileTime && (
+          <>
+            <span className="max-sm:hidden">{compileTime}</span>
+            <div role="separator" aria-orientation="vertical" className="max-sm:hidden bg-border w-px h-3.5" />
+          </>
+        )}
         <MadeBy />
       </div>
     </footer>
