@@ -58,6 +58,19 @@ jobs:
             exit 1
           fi
 
+      - name: Check create-fratm has the same version
+        run: |
+          create_version=$(node -p "require('./packages/create-fratm/package.json').version")
+          create_dep=$(node -p "require('./packages/create-fratm/package.json').dependencies.fratmscript")
+          if [ "$create_version" != "$VERSION" ]; then
+            echo "::error::packages/create-fratm/package.json has version $create_version, but the release asks for $VERSION"
+            exit 1
+          fi
+          if [ "$create_dep" != "^$VERSION" ]; then
+            echo "::error::packages/create-fratm depends on fratmscript $create_dep, not ^$VERSION"
+            exit 1
+          fi
+
       - name: Check the agent plugin has the same version
         run: |
           plugin_version=$(node -p "require('./packages/agent-plugin/.claude-plugin/plugin.json').version")
@@ -238,7 +251,7 @@ jobs:
             "${flags[@]}"
 
   publish-npm:
-    name: Publish the npm package
+    name: Publish the npm packages
     needs: publish
     runs-on: ubuntu-latest
     permissions:
@@ -279,6 +292,9 @@ jobs:
           npm test
           tag=latest
           if [ "$PRERELEASE" = "true" ]; then tag=next; fi
+          npm publish --provenance --access public --tag "$tag"
+          # create-fratm depends on the version just published
+          cd ../create-fratm
           npm publish --provenance --access public --tag "$tag"
 
   publish-vscode:

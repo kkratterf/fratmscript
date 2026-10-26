@@ -1,0 +1,35 @@
+{
+  "name": "create-fratm",
+  "version": "0.10.2",
+  "description": "Create a FratmScript app: npm create fratm@latest mia-app",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kkratterf/fratmscript.git",
+    "directory": "packages/create-fratm"
+  },
+  "homepage": "https://github.com/kkratterf/fratmscript/tree/main/packages/create-fratm#readme",
+  "keywords": [
+    "fratmscript",
+    "napoletano",
+    "create",
+    "scaffold",
+    "template"
+  ],
+  "bin": {
+    "create-fratm": "index.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "fratmscript": "^0.10.2"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}

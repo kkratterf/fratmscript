@@ -89,6 +89,7 @@ pub mod runtime;
 pub mod sourcemap;
 pub mod stdlib;
 pub mod stile;
+pub mod template;
 
 use codegen::CodeGen;
 use errors::CompileError;

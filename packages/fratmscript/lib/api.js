@@ -47,5 +47,12 @@ export function createApi(wasm) {
     return wasm.runtimeError(name, message);
   }
 
-  return { compile, format, version, runtimeError };
+  function scaffold(options = {}) {
+    const { template = 'react', name = 'app', tailwind = false } = options;
+    const files = JSON.parse(wasm.scaffold(String(template), String(name), Boolean(tailwind)));
+    if (files === null) throw new Error(`Unknown template '${template}'`);
+    return files;
+  }
+
+  return { compile, format, version, runtimeError, scaffold };
 }

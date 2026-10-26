@@ -55,3 +55,15 @@ export function version(): string;
  * their message.
  */
 export function runtimeError(error: unknown): string;
+
+export interface ScaffoldOptions {
+  /** `react` (default), `completa` (React + API + SQLite), `senza-react` or `semplice` */
+  template?: 'react' | 'completa' | 'senza-react' | 'semplice';
+  /** Folder name, which becomes the package name */
+  name?: string;
+  /** Adds Tailwind CSS to the React templates */
+  tailwind?: boolean;
+}
+
+/** The files of a new project, like `fratm nuovo` (used by `npm create fratm`). */
+export function scaffold(options?: ScaffoldOptions): { path: string; contents: string }[];

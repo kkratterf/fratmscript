@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { compile, format, version, runtimeError } from '../index.js';
+import { compile, format, version, runtimeError, scaffold } from '../index.js';
 import fratmscript from '../vite.js';
 
 test('compile returns code, a source map and no errors', () => {
@@ -150,4 +150,19 @@ test('the vite plugin explains an api module without a fetch app', async () => {
   });
   const error = await new Promise((resolve) => handlers[1]({ url: '/dati/x', headers: {} }, {}, resolve));
   assert.match(error.message, /server\/x\.fratm adda mannà for predefinit n'app cu fetch\(\)/);
+});
+
+test('scaffold returns the files of fratm nuovo', () => {
+  const files = scaffold({ template: 'completa', name: 'Mia Pizzeria', tailwind: true });
+  const paths = files.map((f) => f.path);
+  assert.ok(paths.includes('src/App.fratm'));
+  assert.ok(paths.includes('server/api.fratm'));
+  const pkg = JSON.parse(files.find((f) => f.path === 'package.json').contents);
+  assert.equal(pkg.name, 'mia-pizzeria');
+  assert.equal(pkg.dependencies.fratmscript, `^${version()}`);
+  assert.ok(pkg.devDependencies.tailwindcss);
+  for (const file of files.filter((f) => f.path.endsWith('.fratm'))) {
+    assert.deepEqual(compile(file.contents).errors, [], file.path);
+  }
+  assert.throws(() => scaffold({ template: 'angular' }), /Unknown template/);
 });

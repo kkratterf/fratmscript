@@ -744,6 +744,7 @@ Runtime errors keep the original JavaScript message in brackets.
 
 ```text
 fratm nuovo app                         new React + Vite app in ./app (--completa, --tailwind, --senza-react, --semplice)
+npm create fratm@latest app             the same project without the CLI (same options)
 fratm lancia main.fratm                 compile and run with Node.js (alias: run)
 fratm build main.fratm [-o out.js]      write JavaScript (--stdout prints it)
 fratm check a.fratm b.fratm             report errors, write nothing

@@ -112,6 +112,22 @@ pub fn runtime_error(name: &str, message: &str) -> String {
     fratm_core::runtime::napoletanize_runtime_error(name, message)
 }
 
+/// The files of a new project, like `fratm nuovo`, as a JSON string:
+/// `[{ path, contents }]`, or `null` for an unknown template (`react`,
+/// `completa`, `senza-react`, `semplice`). Used by `npm create fratm`.
+#[wasm_bindgen]
+pub fn scaffold(template: &str, folder: &str, tailwind: bool) -> String {
+    let Some(template) = fratm_core::template::Template::from_name(template) else {
+        return "null".to_string();
+    };
+    let files: Vec<serde_json::Value> =
+        fratm_core::template::files(template, folder, fratm_core::version(), tailwind)
+            .into_iter()
+            .map(|(path, contents)| serde_json::json!({ "path": path, "contents": contents }))
+            .collect();
+    serde_json::Value::Array(files).to_string()
+}
+
 /// Tokenize source code (for syntax highlighting)
 #[wasm_bindgen]
 pub fn tokenize(source: &str) -> JsValue {

@@ -156,6 +156,13 @@ jobs:
           npm test
           npm pack --dry-run
 
+      - name: Test create-fratm against this build
+        run: |
+          cd packages/create-fratm
+          npm install --no-audit --no-fund --no-save ../fratmscript
+          npm test
+          npm pack --dry-run
+
       - name: Build the projects made with fratm nuovo
         run: |
           cd packages/fratmscript

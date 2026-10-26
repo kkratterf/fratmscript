@@ -15,6 +15,7 @@ FratmScript is a Neapolitan-flavoured language that transpiles to JavaScript.
 | `packages/playground` | React + Vite + CodeMirror playground, deployed to GitHub Pages from `main` |
 | `packages/playground/public/pkg` | WASM build of `fratm-wasm` (generated, git-ignored) |
 | `packages/fratmscript` | npm package: WASM compiler, JS API and Vite plugin (`wasm/` is generated, git-ignored) |
+| `packages/create-fratm` | npm package behind `npm create fratm`: writes a project with the templates of `fratm nuovo` |
 | `packages/vscode-extension` | VS Code extension (grammar, snippets, LSP) |
 | `packages/agent-plugin` | Claude Code plugin for AI agents: the `fratmscript` skill and the `fratm mcp` server (marketplace in `.claude-plugin/marketplace.json`) |
 | `crates/fratm-cli/src/guida.md` | Language reference for AI agents: `fratm guida`, the MCP server and the site's `llms-full.txt` |
@@ -45,7 +46,7 @@ just wasm                                  # rebuilds packages/playground/public
 cd packages/playground && pnpm install --frozen-lockfile && pnpm build
 ```
 
-npm package (needs `wasm-pack`, Node 20): `cd packages/fratmscript && npm run build && npm test`.
+npm package (needs `wasm-pack`, Node 20): `cd packages/fratmscript && npm run build && npm test`. Then `cd packages/create-fratm && npm install --no-save ../fratmscript && npm test`.
 
 VS Code extension (needs the npm package's WASM build first): `cd packages/vscode-extension && pnpm install && pnpm compile && pnpm test`.
 
