@@ -512,9 +512,15 @@ impl Translator<'_> {
             return Err(self.error(&message, at));
         };
         let (property, value) = part.split_at(colon);
+        let name = property.iter().collect::<String>().trim().to_string();
+        // `transition` and `will-change` take property names as values
+        let takes_properties = matches!(
+            lookup(PROPERTIES, &name).unwrap_or(&name),
+            "transition" | "transition-property" | "will-change"
+        );
         self.words(property, |w, _, _| lookup(PROPERTIES, w));
         self.out.push(':');
-        self.value(&value[1..]);
+        self.value(&value[1..], takes_properties);
         Ok(())
     }
 
@@ -523,7 +529,9 @@ impl Translator<'_> {
     }
 
     /// A value: keywords translated, `url(…)`, strings and comments kept.
-    fn value(&mut self, part: &[char]) {
+    /// With `properties`, property names are translated as well, for the
+    /// values that name a property.
+    fn value(&mut self, part: &[char], properties: bool) {
         let mut i = 0;
         while i < part.len() {
             let c = part[i];
@@ -558,7 +566,10 @@ impl Translator<'_> {
                 let translated = (!word.starts_with(|c: char| c.is_ascii_digit())
                     && !matches!(prev, '#' | '.' | HOLE | '@' | '$')
                     && next != HOLE)
-                    .then(|| lookup(VALUES, &word))
+                    .then(|| {
+                        lookup(VALUES, &word)
+                            .or_else(|| properties.then(|| lookup(PROPERTIES, &word)).flatten())
+                    })
                     .flatten();
                 self.out.push_str(translated.unwrap_or(&word));
                 i = end;
@@ -841,6 +852,23 @@ mod tests {
         assert_eq!(
             css("@layer base { core { spazio: 0 } }"),
             "@layer base { main { padding: 0 } }"
+        );
+    }
+
+    #[test]
+    fn values_that_name_a_property() {
+        assert_eq!(
+            css("core { transizione: culore 1s facile, sfunno-culore .2s }"),
+            "main { transition: color 1s ease, background-color .2s }"
+        );
+        assert_eq!(
+            css("core { will-change: trasforma, opacità }"),
+            "main { will-change: transform, opacity }"
+        );
+        // Everywhere else a property name is not a value
+        assert_eq!(
+            css("core { sfunno: culore }"),
+            "main { background: culore }"
         );
     }
 

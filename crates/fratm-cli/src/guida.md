@@ -480,6 +480,8 @@ stile`
 - Everything else passes through: class names (`.pizza`), ids, units, `#fff`, English CSS, custom
   properties (`--accento`, whose values are translated). Strings, comments and `url(…)` are kept.
 - `${…}` values stay in place; a word glued to `${…}` is not translated.
+- In the value of `transizione` (`transition`), `transition-property` and `will-change`, property
+  names are translated too: `transizione: culore 1s` → `transition: color 1s`.
 - Inside `@keyframes`, `da` and `a` are `from` and `to`; percentages stay.
 - Compile errors: a `}` that closes nothing, a missing `}`, a declaration without `:`, an
   unclosed comment or string. `stile(css)` called as a function takes plain CSS as it is.
