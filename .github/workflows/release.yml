@@ -1,8 +1,19 @@
 name: Release
 
-# Started by hand with the version to publish (e.g. 0.2.0).
-# The version must already be set in the workspace Cargo.toml.
+# Runs by itself when a push to main changes the version in the workspace
+# Cargo.toml ([workspace.package] version), that is when the
+# `chore(release): vX.Y.Z` bump PR is merged: if the tag vX.Y.Z does not
+# exist yet, it publishes that version. A version with a suffix
+# (0.11.0-beta.1) becomes a pre-release. Pushes that leave the version alone,
+# or whose tag already exists, publish nothing.
+#
+# It can also be started by hand (workflow_dispatch) with the version to
+# publish (e.g. 0.2.0), for a dry run or to retry a failed release. The
+# version must already be set in the workspace Cargo.toml.
 on:
+  push:
+    branches: [main]
+    paths: [Cargo.toml]
   workflow_dispatch:
     inputs:
       version:
@@ -14,6 +25,11 @@ on:
         required: false
         type: boolean
         default: false
+      dry_run:
+        description: "Dry run: verify and build everything, publish nothing (the files stay as workflow artifacts)"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -22,14 +38,62 @@ concurrency:
   group: release
   cancel-in-progress: false
 
-env:
-  VERSION: ${{ inputs.version }}
-  TAG: v${{ inputs.version }}
-
 jobs:
+  # Works out what to publish: the inputs when started by hand, the version in
+  # Cargo.toml on a push (skipped when its tag already exists).
+  plan:
+    name: Decide what to release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      prerelease: ${{ steps.plan.outputs.prerelease }}
+      dry_run: ${{ steps.plan.outputs.dry_run }}
+      publish: ${{ steps.plan.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Plan
+        id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_PRERELEASE: ${{ inputs.prerelease }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            version="$INPUT_VERSION"
+            prerelease="$INPUT_PRERELEASE"
+            dry_run="$INPUT_DRY_RUN"
+            publish=true
+          else
+            version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)
+            case "$version" in *-*) prerelease=true ;; *) prerelease=false ;; esac
+            dry_run=false
+            if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+              publish=false
+              echo "::notice::v$version is already released: nothing to publish"
+            else
+              publish=true
+              echo "::notice::Cargo.toml is at $version and v$version does not exist yet: publishing it"
+            fi
+          fi
+          {
+            echo "version=$version"
+            echo "prerelease=${prerelease:-false}"
+            echo "dry_run=${dry_run:-false}"
+            echo "publish=$publish"
+          } >> "$GITHUB_OUTPUT"
+
   verify:
     name: Verify version and tests
+    needs: plan
+    if: needs.plan.outputs.publish == 'true'
     runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      TAG: v${{ needs.plan.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -101,8 +165,11 @@ jobs:
 
   build-cli:
     name: Build fratm (${{ matrix.target }})
-    needs: verify
+    needs: [plan, verify]
     runs-on: ${{ matrix.os }}
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      TAG: v${{ needs.plan.outputs.version }}
     strategy:
       fail-fast: true
       matrix:
@@ -150,8 +217,11 @@ jobs:
 
   build-wasm:
     name: Build WASM package
-    needs: verify
+    needs: [plan, verify]
     runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      TAG: v${{ needs.plan.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -175,8 +245,11 @@ jobs:
 
   build-vscode:
     name: Build the VS Code extension
-    needs: verify
+    needs: [plan, verify]
     runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      TAG: v${{ needs.plan.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -219,10 +292,14 @@ jobs:
 
   publish:
     name: Tag and publish the release
-    needs: [build-cli, build-wasm, build-vscode]
+    needs: [plan, build-cli, build-wasm, build-vscode]
+    if: needs.plan.outputs.dry_run != 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      TAG: v${{ needs.plan.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -240,7 +317,7 @@ jobs:
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
-          PRERELEASE: ${{ inputs.prerelease }}
+          PRERELEASE: ${{ needs.plan.outputs.prerelease }}
         run: |
           flags=()
           if [ "$PRERELEASE" = "true" ]; then flags+=(--prerelease); fi
@@ -252,12 +329,14 @@ jobs:
 
   publish-npm:
     name: Publish the npm packages
-    needs: publish
+    needs: [plan, publish]
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      TAG: v${{ needs.plan.outputs.version }}
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - name: Skip without an npm token
@@ -285,7 +364,7 @@ jobs:
       - name: Build, test and publish
         if: env.NODE_AUTH_TOKEN != ''
         env:
-          PRERELEASE: ${{ inputs.prerelease }}
+          PRERELEASE: ${{ needs.plan.outputs.prerelease }}
         run: |
           cd packages/fratmscript
           npm run build
@@ -299,9 +378,11 @@ jobs:
 
   publish-vscode:
     name: Publish the VS Code extension
-    needs: publish
+    needs: [plan, publish]
     runs-on: ubuntu-latest
     env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      TAG: v${{ needs.plan.outputs.version }}
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
     steps:

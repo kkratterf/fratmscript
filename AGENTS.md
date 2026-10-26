@@ -111,8 +111,11 @@ Agent platforms that assign their own branch names (e.g. `claude/...`) are fine;
 
 - SemVer, tags `vX.Y.Z` (older `@0.1.0`-style tags are kept as they are).
 - Minor release = a version milestone, cut when all `P0` issues of that version label are closed and `main` is green. Patch release when a user-facing fix lands.
-- First a version-bump PR (`chore(release): vX.Y.Z`) that updates `[workspace.package] version` in `Cargo.toml` and `version` in `packages/playground/package.json`, `packages/fratmscript/package.json`, `packages/vscode-extension/package.json` and `packages/agent-plugin/.claude-plugin/plugin.json` (the release workflow checks all of them).
-- The release is created by the manual `release.yml` workflow (`workflow_dispatch`), which tags, builds the binaries and WASM package, and generates notes.
+- First a version-bump PR (`chore(release): vX.Y.Z`) that updates `[workspace.package] version` in `Cargo.toml` and `version` in `packages/playground/package.json`, `packages/fratmscript/package.json`, `packages/create-fratm/package.json` (plus its `fratmscript` dependency, `^X.Y.Z`), `packages/vscode-extension/package.json` and `packages/agent-plugin/.claude-plugin/plugin.json` (the release workflow checks all of them except the playground). Refresh `Cargo.lock` too (`cargo check`), since the release builds with `--locked`.
+- Merging that PR **is** the release. `release.yml` runs on every push to `main` that changes `Cargo.toml`; when the tag `vX.Y.Z` for the version in it does not exist yet it verifies the versions, runs the tests, builds the CLI binaries, the WASM package and the VS Code extension, tags, generates notes, publishes the GitHub Release and then the npm packages and the extension. A version with a suffix (`0.11.0-beta.1`) becomes a pre-release (npm tag `next`). A push that leaves the version alone, or whose tag already exists, publishes nothing.
+- So **never change the version in `Cargo.toml` outside a `chore(release)` PR**, and do not merge a bump PR you were not asked to release: the merge publishes to GitHub, npm and the extension marketplaces, and that cannot be undone.
+- Dry run before a risky release: start `release.yml` by hand (Actions → Release → Run workflow, or `gh workflow run release.yml -f version=X.Y.Z -f dry_run=true`) on a branch where the bump is already applied. It verifies and builds everything and keeps the files as workflow artifacts, but tags and publishes nothing.
+- If a release fails halfway, fix the cause and start `release.yml` by hand with the same version (no dry run) to retry. If the GitHub Release was already created, only the npm or extension jobs need a re-run (Re-run failed jobs).
 - **No `CHANGELOG.md`.** The changelog lives only in GitHub Release notes.
 
 ## Merging
