@@ -45,7 +45,8 @@ keywords change.
   preview); classes go in `className="…"`.
 - CSS in Neapolitan: `chiamm { stile } da "fratm"` then
   ``stile`buttone:passanno { culore: russo; spazio: 8px }` `` (adds `button:hover { color: red;
-  padding: 8px }` to the page). Plain CSS words pass through; tables in `fratm guida`.
+  padding: 8px }` to the page). The `;` is optional: a new line ends a declaration. Plain CSS
+  words pass through; tables in `fratm guida`.
 - Every modern JavaScript construct is supported; `fratm guida` lists the exact syntax.
 
 | FratmScript | JavaScript |

@@ -10,25 +10,25 @@ chiamm { stile } da "fratm"
 // The rules are added to the page once; plain CSS works here too
 stile`
   core.pizzeria {
-    scrittura: system-ui, sans-serif;
-    larghezza-massima: 420px;
-    margine: 0 automatico;
-    spazio: 16px;
+    scrittura: system-ui, sans-serif
+    larghezza-massima: 420px
+    margine: 0 automatico
+    spazio: 16px
   }
   voce {
-    mostra: flessibile;
-    giustifica: spartuto;
-    allinea-cose: miezo;
-    spazio: 8px 0;
-    bordo-sotto: 1px continuo #e2e0da;
+    mostra: flessibile
+    giustifica: spartuto
+    allinea-cose: miezo
+    spazio: 8px 0
+    bordo-sotto: 1px continuo #e2e0da
   }
   buttone {
-    sfunno-culore: #c8321e;
-    culore: janco;
-    bordo: nisciuno;
-    bordo-tunno: 6px;
-    spazio: 6px 12px;
-    cursore: manella;
+    sfunno-culore: #c8321e
+    culore: janco
+    bordo: nisciuno
+    bordo-tunno: 6px
+    spazio: 6px 12px
+    cursore: manella
   }
   buttone:passanno { opacità: 0.85 }
   scritta.totale { scrittura-peso: grassetto }

@@ -1,0 +1,15 @@
+
+  main.pizzeria {
+    background-color: white;
+    padding: 16px;
+    display: flex
+  }
+  button:hover {
+    color: red;
+    cursor: pointer
+  }
+  @media (max-width: 600px) {
+    main.pizzeria { padding: 8px }
+  }
+
+h1 { color: #1d4ed8 }

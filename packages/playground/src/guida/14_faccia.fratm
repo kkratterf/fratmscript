@@ -1,0 +1,22 @@
+// 'O CSS napulitano: stile`…` se traduce quanno 'o codice se compila
+chiamm { stile } da "fratm"
+
+chist è css = stile`
+  core.pizzeria {
+    sfunno-culore: janco
+    spazio: 16px
+    mostra: flessibile
+  }
+  buttone:passanno {
+    culore: russo
+    cursore: manella
+  }
+  @quanno (larghezza-massima: 600px) {
+    core.pizzeria { spazio: 8px }
+  }
+`
+stamm a dì(css)
+
+// 'E valori ponno arrivà d'o codice
+tien culore = "#1d4ed8"
+stamm a dì(stile`titolo { culore: ${culore} }`)

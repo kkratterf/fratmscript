@@ -6,14 +6,14 @@ stile(`
     font-family: system-ui, sans-serif;
     max-width: 420px;
     margin: 0 auto;
-    padding: 16px;
+    padding: 16px
   }
   li {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 8px 0;
-    border-bottom: 1px solid #e2e0da;
+    border-bottom: 1px solid #e2e0da
   }
   button {
     background-color: #c8321e;
@@ -21,7 +21,7 @@ stile(`
     border: none;
     border-radius: 6px;
     padding: 6px 12px;
-    cursor: pointer;
+    cursor: pointer
   }
   button:hover { opacity: 0.85 }
   p.totale { font-weight: bold }

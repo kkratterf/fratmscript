@@ -461,13 +461,19 @@ stile`
   buttone { culore: ${accento}; bordo-tunno: 6px; cursore: manella }
   buttone:passanno { culore: russo !importante }
   @quanno schermo e (larghezza-massima: 600px) {
-    scatola { larghezza: 100% }
+    scatola {
+      larghezza: 100%
+      spazio: 8px
+    }
   }
 `
 ```
 
 - Translated: property names (before `:`), value keywords, pseudo-classes after `:`/`::`,
-  `@quanno` (`@media`) and the Neapolitan JSX tag names used as type selectors.
+  `@quanno` (and `@media`) and the Neapolitan JSX tag names used as type selectors.
+- As in the rest of the language the `;` between declarations is optional: a new line ends a
+  declaration, and the generated CSS gets its `;`. A value may still wrap over several lines, and
+  so may a list of selectors.
 - Everything else passes through: class names (`.pizza`), ids, units, `#fff`, English CSS, custom
   properties (`--accento`, whose values are translated). Strings, comments and `url(…)` are kept.
 - `${…}` values stay in place; a word glued to `${…}` is not translated.
