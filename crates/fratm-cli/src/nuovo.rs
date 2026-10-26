@@ -704,10 +704,7 @@ mod tests {
         let package = fs::read_to_string(dir.join("package.json")).unwrap();
         let json: serde_json::Value = serde_json::from_str(&package).unwrap();
         assert_eq!(json["name"], "vite-app");
-        assert_eq!(
-            json["devDependencies"]["fratmscript"],
-            "^1.2.3"
-        );
+        assert_eq!(json["devDependencies"]["fratmscript"], "^1.2.3");
         assert!(!package.contains("{{"));
 
         let main = compile(
