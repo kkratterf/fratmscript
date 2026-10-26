@@ -456,6 +456,19 @@ mod tests {
     }
 
     #[test]
+    fn test_jsx_enumerated_values_are_translated() {
+        assert_eq!(
+            jsx_js("x = <modulo metodo=\"post\"><miett tipo=\"fattimiei\" /><citofono tipo=\"manna\">Trase</citofono></modulo>"),
+            "x = _jsxs(\"form\", { method: \"post\", children: [_jsx(\"input\", { type: \"password\" }), _jsx(\"button\", { type: \"submit\", children: \"Trase\" })] });\n"
+        );
+        // Components get their props as written
+        assert_eq!(
+            jsx_js("x = <Campo tipo=\"fattimiei\" />"),
+            "x = _jsx(Campo, { tipo: \"fattimiei\" });\n"
+        );
+    }
+
+    #[test]
     fn test_jsx_words_from_older_versions_compile_with_warnings() {
         let result = compile(
             "x = <scatola><buttone quanno-se-clicca={f} stile={{ color: \"red\" }}>A</buttone><buttone>B</buttone></scatola>",

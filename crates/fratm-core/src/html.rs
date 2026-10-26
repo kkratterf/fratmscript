@@ -378,6 +378,20 @@ pub fn attribute<'a>(name: &'a str, tag: &str) -> &'a str {
         .unwrap_or(name)
 }
 
+/// The HTML value for the Neapolitan value `value` of the attribute `name`
+/// (Neapolitan, HTML or React name) on the HTML tag `tag`, as htmlemmurt
+/// translates it: `tipo="fattimiei"` on `<miett>` is `password`. `None` when
+/// the value is not one of the attribute's Neapolitan values.
+pub fn value(name: &str, tag: &str, value: &str) -> Option<&'static str> {
+    ATTRIBUTES
+        .iter()
+        .find(|a| (a.nap == name || a.html == name || a.react == name) && applies(a, tag))?
+        .values
+        .iter()
+        .find(|(nap, _)| *nap == value)
+        .map(|(_, html)| *html)
+}
+
 /// JSX tag names from v0.11 and v0.12, replaced by the shared vocabulary:
 /// (old name, HTML tag, new name). They keep compiling to the same tag, with
 /// a warning. They are not part of htmlemmurt's vocabulary.
@@ -493,6 +507,17 @@ pub fn jsx_attribute<'a>(name: &'a str, tag: &str) -> (&'a str, Option<String>) 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn enumerated_values_become_html() {
+        assert_eq!(value("tipo", "input", "fattimiei"), Some("password"));
+        assert_eq!(value("type", "input", "spunta"), Some("checkbox"));
+        assert_eq!(value("tipo", "button", "manna"), Some("submit"));
+        // HTML values, unknown words and attributes without values pass through
+        assert_eq!(value("tipo", "input", "password"), None);
+        assert_eq!(value("tipo", "input", "pizza"), None);
+        assert_eq!(value("classe", "div", "testo"), None);
+    }
 
     #[test]
     fn old_jsx_words_keep_compiling_with_a_warning() {

@@ -1070,6 +1070,13 @@ impl CodeGen {
                 }
                 JsxAttribute::Named { name, value, .. } => {
                     separator(self);
+                    // `tipo="fattimiei"` → `type: "password"`, as in htmlemmurt
+                    let html_value = match (html_tag, value) {
+                        (Some(tag), Some(Expression::String { value, .. })) => {
+                            crate::html::value(name, tag, value)
+                        }
+                        _ => None,
+                    };
                     let name = match html_tag {
                         Some(tag) => {
                             let (prop, warning) = crate::html::jsx_attribute(name, tag);
@@ -1084,9 +1091,10 @@ impl CodeGen {
                         self.emit(&js_string(name));
                     }
                     self.emit(": ");
-                    match value {
-                        Some(value) => self.gen_expression(value),
-                        None => self.emit("true"),
+                    match (html_value, value) {
+                        (Some(html), _) => self.emit(&js_string(html)),
+                        (None, Some(value)) => self.gen_expression(value),
+                        (None, None) => self.emit("true"),
                     }
                 }
                 JsxAttribute::Spread(e) => {

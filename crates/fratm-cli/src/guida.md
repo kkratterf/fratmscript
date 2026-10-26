@@ -469,6 +469,9 @@ mann for predefinit facc Menu({ pizze }) {
 - Attributes and events of HTML tags have Neapolitan names (the output always has the React
   name; React names, `class`, `for`, `data-*` and `aria-*` work as written). On a component
   (`<Pizza tipo="x" />`) every prop is passed as written.
+- A quoted value from an attribute's list is translated too, as in htmlemmurt pages:
+  `<miett tipo="fattimiei" />` is `type: "password"`, `<citofono tipo="manna">` is
+  `type: "submit"`. HTML values and other strings stay as written.
 
   | FratmScript | React |
   | --- | --- |
