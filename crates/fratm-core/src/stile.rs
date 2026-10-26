@@ -188,12 +188,25 @@ pub const PSEUDO: &[(&str, &str)] = &[
     ("segnaposto", "placeholder"),
 ];
 
-/// (Neapolitan word, CSS word) inside an `@quanno` (`@media`) prelude
+/// (Neapolitan word, CSS word) inside the prelude of a [`CONDITION_RULES`]
+/// at-rule, where property names and value keywords are translated too
 const MEDIA: &[(&str, &str)] = &[
     ("schermo", "screen"),
     ("stampa", "print"),
     ("tutto", "all"),
     ("e", "and"),
+    ("o", "or"),
+    ("nun", "not"),
+];
+
+/// (at-rule as written, CSS at-rule) for the at-rules whose prelude holds
+/// conditions: `@quanno` is the Neapolitan `@media`, and the English names
+/// are translated as well so that English CSS keeps working.
+const CONDITION_RULES: &[(&str, &str)] = &[
+    ("@quanno", "@media"),
+    ("@media", "@media"),
+    ("@supports", "@supports"),
+    ("@container", "@container"),
 ];
 
 #[derive(Debug, Clone, PartialEq)]
@@ -460,15 +473,14 @@ impl Translator<'_> {
             return Ok(());
         }
         if kind == Segment::Prelude {
-            // `@media` works too, so English CSS stays valid
-            let media = ["@quanno", "@media"].into_iter().find(|rule| {
+            let condition = CONDITION_RULES.iter().find(|(rule, _)| {
                 trimmed.starts_with(rule)
                     && !is_word_char(part_char(part, first.unwrap_or(0) + rule.len()))
             });
-            if let Some(rule) = media {
+            if let Some((rule, css)) = condition {
                 let at = first.unwrap_or(0);
                 self.copy(&part[..at]);
-                self.out.push_str("@media");
+                self.out.push_str(css);
                 let rest = &part[at + rule.len()..];
                 self.words(rest, |w, _, _| {
                     lookup(MEDIA, w)
@@ -807,6 +819,28 @@ mod tests {
         assert_eq!(
             css("@media (larghezza-minima: 600px) { core { spazio: 0 } }"),
             "@media (min-width: 600px) { main { padding: 0 } }"
+        );
+        // `@supports` and `@container` hold conditions as well
+        assert_eq!(
+            css("@supports (mostra: griglia) { core { mostra: griglia } }"),
+            "@supports (display: grid) { main { display: grid } }"
+        );
+        assert_eq!(
+            css("@supports nun (mostra: griglia) { core { mostra: flessibile } }"),
+            "@supports not (display: grid) { main { display: flex } }"
+        );
+        assert_eq!(
+            css("@container (larghezza-minima: 400px) { scritta { spazio: 0 } }"),
+            "@container (min-width: 400px) { p { padding: 0 } }"
+        );
+        assert_eq!(
+            css("@quanno stampa o schermo { core { spazio: 0 } }"),
+            "@media print or screen { main { padding: 0 } }"
+        );
+        // Other at-rules still pass through
+        assert_eq!(
+            css("@layer base { core { spazio: 0 } }"),
+            "@layer base { main { padding: 0 } }"
         );
     }
 

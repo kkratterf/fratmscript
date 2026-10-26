@@ -470,7 +470,10 @@ stile`
 ```
 
 - Translated: property names (before `:`), value keywords, pseudo-classes after `:`/`::`,
-  `@quanno` (and `@media`) and the Neapolitan JSX tag names used as type selectors.
+  `@quanno` (`@media`) and the Neapolitan JSX tag names used as type selectors.
+- The conditions of `@quanno`, `@media`, `@supports` and `@container` are translated too
+  (`@supports (mostra: griglia)` → `@supports (display: grid)`), with `e` and, `o` or, `nun` not.
+  Every other at-rule passes through as it is.
 - As in the rest of the language the `;` between declarations is optional: a new line ends a
   declaration, and the generated CSS gets its `;`. A value may still wrap over several lines, and
   so may a list of selectors.
@@ -659,7 +662,8 @@ stile`
 | `doppo` | `after` |
 | `segnaposto` | `placeholder` |
 
-`@quanno` media queries also take `schermo` (screen), `stampa` (print), `tutto` (all), `e` (and).
+`@quanno` media queries also take `schermo` (screen), `stampa` (print), `tutto` (all), `e` (and),
+`o` (or), `nun` (not).
 
 ## GomorraSQL: SQL queries
 
