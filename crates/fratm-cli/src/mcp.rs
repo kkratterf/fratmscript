@@ -24,7 +24,9 @@ const INSTRUCTIONS: &str = "FratmScript is JavaScript with Neapolitan keywords (
 Before writing FratmScript, read the reference (tool fratm_reference or resource fratm://guida): \
 JavaScript keywords like const, function, return, if, new, this, true are NOT valid. \
 Then check or run your code with fratm_check / fratm_run and fix it from the errors \
-(they carry line, column and a hint).";
+(they carry line, column and a hint). For a web app, fratm_nuovo gives the files of a \
+React + Vite project (Neapolitan JSX tags, optional Tailwind); fratm_stile and fratm_gomorra \
+check CSS and SQL written in Neapolitan.";
 
 /// Serves requests from stdin until it is closed.
 pub fn serve() {
@@ -187,7 +189,106 @@ fn tools() -> Value {
             },
             "annotations": read_only,
         },
+        {
+            "name": "fratm_stile",
+            "title": "Translate CSS in Neapolitan",
+            "description": "Translate CSS written in Neapolitan (the text inside stile`…`, without ${…}) to the CSS the compiler emits, to check it before using it. Returns {ok, css, error}; error has a Neapolitan message, line and column inside the CSS.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "css": {
+                        "type": "string",
+                        "description": "CSS in Neapolitan, e.g. buttone:passanno { culore: russo }",
+                    },
+                },
+                "required": ["css"],
+            },
+            "annotations": read_only,
+        },
+        {
+            "name": "fratm_nuovo",
+            "title": "Files of a new FratmScript project",
+            "description": "The files `fratm nuovo` would write for a new project, as {ok, files: [{path, contents}]}; nothing is written. template: react (React + Vite, default), completa (React + a Hono API with SQLite), senza-react (Vite without React), semplice (one main.fratm). Write the files, then run npm install and npm run dev.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Project folder name; the package name comes from it",
+                    },
+                    "template": {
+                        "type": "string",
+                        "enum": ["react", "completa", "senza-react", "semplice"],
+                        "description": "Which project (default react)",
+                    },
+                    "tailwind": {
+                        "type": "boolean",
+                        "description": "Add Tailwind CSS (react and completa only)",
+                    },
+                },
+                "required": ["name"],
+            },
+            "annotations": read_only,
+        },
     ])
+}
+
+/// A tool result: the JSON as text and as structured content.
+fn tool_result(result: Value) -> Value {
+    let text = serde_json::to_string_pretty(&result).unwrap_or_default();
+    json!({
+        "content": [{ "type": "text", "text": text }],
+        "structuredContent": result,
+        "isError": false,
+    })
+}
+
+/// A call whose arguments are wrong: the message, for the agent to fix them.
+fn argument_error(message: &str) -> Value {
+    json!({ "content": [{ "type": "text", "text": message }], "isError": true })
+}
+
+fn stile(arguments: &Value) -> Value {
+    let Some(css) = arguments["css"].as_str() else {
+        return argument_error("give 'css' (CSS in Neapolitan)");
+    };
+    tool_result(match fratm_core::stile::translate(&[css.to_string()]) {
+        Ok(mut chunks) => json!({ "ok": true, "css": chunks.remove(0), "error": null }),
+        Err(e) => json!({
+            "ok": false,
+            "css": null,
+            "error": {
+                "message": e.message,
+                "line": e.position.line + 1,
+                "column": e.position.column + 1,
+            },
+        }),
+    })
+}
+
+fn nuovo(arguments: &Value) -> Value {
+    let Some(name) = arguments["name"].as_str().filter(|n| !n.trim().is_empty()) else {
+        return argument_error("give 'name' (the project folder)");
+    };
+    let template_name = arguments["template"].as_str().unwrap_or("react");
+    let Some(template) = fratm_core::template::Template::from_name(template_name) else {
+        return argument_error("'template' is one of react, completa, senza-react, semplice");
+    };
+    let tailwind = arguments["tailwind"].as_bool().unwrap_or(false);
+    if tailwind
+        && !matches!(
+            template,
+            fratm_core::template::Template::React | fratm_core::template::Template::Full
+        )
+    {
+        return argument_error("'tailwind' works with the react and completa templates");
+    }
+    let files: Vec<Value> =
+        fratm_core::template::files(template, name, fratm_core::version(), tailwind)
+            .into_iter()
+            .map(|(path, contents)| json!({ "path": path, "contents": contents }))
+            .collect();
+    tool_result(json!({ "ok": true, "files": files }))
 }
 
 /// The program a tool call is about: its source, and the file it came from.
@@ -209,6 +310,12 @@ fn call_tool(params: &Value) -> Result<Value, (i64, String)> {
     let arguments = &params["arguments"];
     if name == "fratm_reference" {
         return Ok(json!({ "content": [{ "type": "text", "text": crate::GUIDA }] }));
+    }
+    if name == "fratm_stile" {
+        return Ok(stile(arguments));
+    }
+    if name == "fratm_nuovo" {
+        return Ok(nuovo(arguments));
     }
     if name == "fratm_gomorra" {
         let Some(query) = arguments["query"].as_str() else {
@@ -344,7 +451,9 @@ mod tests {
                 "fratm_compile",
                 "fratm_run",
                 "fratm_format",
-                "fratm_gomorra"
+                "fratm_gomorra",
+                "fratm_stile",
+                "fratm_nuovo"
             ]
         );
     }
@@ -407,5 +516,70 @@ mod tests {
     fn missing_source_is_a_tool_error() {
         let result = call("fratm_check", json!({}));
         assert_eq!(result["isError"], true);
+    }
+
+    #[test]
+    fn stile_translates_or_explains_the_css() {
+        let result = call(
+            "fratm_stile",
+            json!({ "css": "buttone:passanno {\n  culore: russo\n  spazio: 8px\n}" }),
+        );
+        assert_eq!(result["isError"], false);
+        assert_eq!(
+            result["structuredContent"]["css"],
+            "button:hover {\n  color: red;\n  padding: 8px\n}"
+        );
+        let result = call("fratm_stile", json!({ "css": "core {\n  culore russo\n}" }));
+        let error = &result["structuredContent"]["error"];
+        assert_eq!(result["structuredContent"]["ok"], false);
+        assert_eq!(
+            (error["line"].as_u64(), error["column"].as_u64()),
+            (Some(2), Some(3))
+        );
+        assert!(error["message"]
+            .as_str()
+            .unwrap()
+            .contains("nun è na proprietà"));
+        assert_eq!(call("fratm_stile", json!({}))["isError"], true);
+    }
+
+    #[test]
+    fn nuovo_gives_the_files_without_writing_them() {
+        let result = call(
+            "fratm_nuovo",
+            json!({ "name": "Pizzeria Mia", "tailwind": true }),
+        );
+        assert_eq!(result["isError"], false);
+        let files = result["structuredContent"]["files"].as_array().unwrap();
+        let file = |path: &str| {
+            files
+                .iter()
+                .find(|f| f["path"] == path)
+                .unwrap_or_else(|| panic!("no {path}"))["contents"]
+                .as_str()
+                .unwrap()
+                .to_string()
+        };
+        let package: Value = serde_json::from_str(&file("package.json")).unwrap();
+        assert_eq!(package["name"], "pizzeria-mia");
+        assert!(package["devDependencies"]["tailwindcss"].is_string());
+        fratm_core::compile(&file("src/App.fratm"), Default::default()).unwrap();
+        assert!(!std::path::Path::new("Pizzeria Mia").exists());
+
+        let simple = call(
+            "fratm_nuovo",
+            json!({ "name": "uno", "template": "semplice" }),
+        );
+        let files = simple["structuredContent"]["files"].as_array().unwrap();
+        assert_eq!(files.len(), 1);
+        assert_eq!(files[0]["path"], "main.fratm");
+
+        for wrong in [
+            json!({}),
+            json!({ "name": "x", "template": "angular" }),
+            json!({ "name": "x", "template": "semplice", "tailwind": true }),
+        ] {
+            assert_eq!(call("fratm_nuovo", wrong)["isError"], true);
+        }
     }
 }

@@ -25,6 +25,18 @@ keywords change.
 4. Fix errors from the JSON: `line`, `column`, `message` (in Neapolitan) and `suggestion`.
    A suggestion like `In FratmScript 'const' se scrive 'chist è'` names the word to use.
 
+## A web app
+
+1. Start from a project, never from scratch: `fratm nuovo app --tailwind` (or
+   `npm create fratm@latest app --tailwind`; `--completa` adds a Hono API on SQLite). Without a
+   shell, the `fratm_nuovo` tool returns the files to write.
+2. `npm install`, then `npm run dev` in `app`. Components are `src/*.fratm`.
+3. Write tags with their Neapolitan names (`<core>`, `<scatola>`, `<buttone>`, `<immagine>`; the
+   full table is in `fratm guida`, do not invent one), attributes and events with their React
+   names (`className`, `onClick`). Class names and Tailwind classes are never translated.
+4. Check each `stile` block with the `fratm_stile` tool and each `gomorra` query with
+   `fratm_gomorra` before using it, and each file with `fratm check --json`.
+
 ## Rules that differ from JavaScript
 
 - Never write `const`, `let`, `var`, `function`, `return`, `if`, `else`, `for`, `while`, `new`,

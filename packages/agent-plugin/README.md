@@ -3,7 +3,7 @@
 A [Claude Code](https://code.claude.com) plugin that teaches agents to write FratmScript and lets them check and run it:
 
 - the `fratmscript` skill: language rules, keyword table, example and workflow;
-- the `fratm` MCP server (`fratm mcp`): tools `fratm_reference`, `fratm_check`, `fratm_compile`, `fratm_run`, `fratm_format`, `fratm_gomorra`.
+- the `fratm` MCP server (`fratm mcp`): tools `fratm_reference`, `fratm_check`, `fratm_compile`, `fratm_run`, `fratm_format`, `fratm_gomorra` (SQL in Neapolitan), `fratm_stile` (CSS in Neapolitan) and `fratm_nuovo` (the files of a new web app).
 
 ## Install
 

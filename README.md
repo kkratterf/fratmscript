@@ -118,7 +118,7 @@ Or, with no build step at all, in any HTML page:
 FratmScript is ready for coding agents (Claude Code, Cursor, Codex, Copilot...), both to discover it and to write it correctly:
 
 - **Reference for LLMs**: [`llms.txt`](https://kkratterf.github.io/fratmscript/llms.txt) and the full [`llms-full.txt`](https://kkratterf.github.io/fratmscript/llms-full.txt) (rules that differ from JavaScript, every construct with an example, error glossary), plus the keyword map [`keywords.json`](https://kkratterf.github.io/fratmscript/keywords.json). `fratm guida` prints the same reference offline.
-- **MCP server**: `fratm mcp` gives agents the tools `fratm_reference`, `fratm_check`, `fratm_compile`, `fratm_run`, `fratm_format` and `fratm_gomorra` (checks a GomorraSQL query), with errors as JSON (line, column, hint). In Claude Code: `claude mcp add fratm -- fratm mcp`.
+- **MCP server**: `fratm mcp` gives agents the tools `fratm_reference`, `fratm_check`, `fratm_compile`, `fratm_run`, `fratm_format`, `fratm_gomorra` (checks a GomorraSQL query), `fratm_stile` (checks CSS in Neapolitan) and `fratm_nuovo` (the files of a new web app, without writing them), with errors as JSON (line, column, hint). In Claude Code: `claude mcp add fratm -- fratm mcp`.
 - **Claude Code plugin** with a `fratmscript` skill and the MCP server:
 
   ```text

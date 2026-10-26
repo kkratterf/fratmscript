@@ -112,6 +112,8 @@ function llms(): string {
 
 Only the keywords change: operators, literals and every JavaScript built-in stay the same. JavaScript keywords such as \`const\`, \`function\`, \`return\`, \`if\`, \`new\`, \`this\` or \`true\` are not valid FratmScript. Read the full reference before writing code, then check or run it with the \`fratm\` CLI or its MCP server and fix it from the errors (Neapolitan message, line, column and hint).
 
+Web apps: \`.fratm\` files take JSX with Neapolitan HTML tags (\`<scatola>\` is \`div\`, \`<buttone>\` is \`button\`), CSS in Neapolitan with the \`stile\` template tag (\`culore: russo\` is \`color: red\`), Tailwind CSS classes, and SQL in Neapolitan with GomorraSQL. \`fratm nuovo app --tailwind\` or \`npm create fratm@latest app\` starts a React + Vite project, \`--completa\` adds a Hono API on SQLite. Everything is translated at compile time, so the page has standard HTML and CSS.
+
 ## Docs
 
 - [Full reference for LLMs](${SITE}llms-full.txt): keywords, rules that differ from JavaScript, examples for every construct, error glossary, CLI and MCP usage, and the guide's runnable examples
@@ -121,7 +123,7 @@ Only the keywords change: operators, literals and every JavaScript built-in stay
 ## Tools
 
 - [Install the CLI](${REPO}#install): \`curl -fsSL https://raw.githubusercontent.com/kkratterf/fratmscript/main/install.sh | sh\`, or \`cargo install --git ${REPO} fratm-cli\`
-- MCP server: \`fratm mcp\` (stdio) with tools fratm_reference, fratm_check, fratm_compile, fratm_run, fratm_format, fratm_gomorra; Claude Code: \`claude mcp add fratm -- fratm mcp\`
+- MCP server: \`fratm mcp\` (stdio) with tools fratm_reference, fratm_check, fratm_compile, fratm_run, fratm_format, fratm_gomorra (SQL), fratm_stile (CSS), fratm_nuovo (files of a new project); Claude Code: \`claude mcp add fratm -- fratm mcp\`
 - [Claude Code plugin with a FratmScript skill](${REPO}/tree/main/packages/agent-plugin): \`/plugin marketplace add kkratterf/fratmscript\` then \`/plugin install fratmscript@fratmscript\`
 - CLI for scripts: \`fratm check --json\`, \`fratm build --json\`, \`fratm lancia --json --timeout 10 -\` (reads stdin), \`fratm guida\` prints the reference
 

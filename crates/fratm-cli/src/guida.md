@@ -29,6 +29,11 @@ Playground: https://kkratterf.github.io/fratmscript/ · Repo: https://github.com
    `` String.raw`a\nb` ``.
 7. Compiler and runtime error messages are in Neapolitan, with line and column. See "Reading
    errors" below; most errors also carry a hint that starts with 💡.
+8. **Web pages:** write JSX tags with their Neapolitan names (`<scatola>`, `<buttone>`, table in
+   "JSX" below; never invent one: an unknown lowercase name stays as it is in the DOM). Attributes
+   and event props keep their React names (`className`, `onClick`, `type`). Class names, ids and
+   Tailwind classes are never translated: `className="mt-4"` and `.pizza` stay as they are.
+   In `` stile`…` `` only the words of the CSS tables change; check a block with `fratm_stile`.
 
 ## Keywords
 
@@ -781,8 +786,18 @@ echo 'stamm a dì(1 + 1)' | fratm lancia --json -
 
 `fratm mcp` is a Model Context Protocol server with the tools `fratm_reference`, `fratm_check`,
 `fratm_compile`, `fratm_run` (10 s timeout by default) and `fratm_format`; each takes `source`
-or `path`. `fratm_gomorra` takes a `query` and returns its SQL, or the error with its position. Add it to Claude Code with `claude mcp add fratm -- fratm mcp`, or to any MCP client
+or `path`. `fratm_gomorra` takes a `query` and returns its SQL, and `fratm_stile` takes `css`
+(the text inside `` stile`…` ``) and returns the CSS, or the error with its position.
+`fratm_nuovo` takes `name`, `template` (`react`, `completa`, `senza-react`, `semplice`) and
+`tailwind` and returns the files of a new project as `[{ path, contents }]` without writing
+them. Add it to Claude Code with `claude mcp add fratm -- fratm mcp`, or to any MCP client
 as the command `fratm` with the argument `mcp`.
+
+A web app, step by step: `fratm nuovo app --tailwind` (or `npm create fratm@latest app --tailwind`,
+or the files of `fratm_nuovo`), then `npm install` and `npm run dev` in `app`. Components live in
+`src/*.fratm` (JSX with Neapolitan tags), styles in `src/stile.css`, Tailwind classes in
+`className`, or rules in `` stile`…` ``. `--completa` adds `server/api.fratm`, a Hono API on
+SQLite with `apri_db` and `gomorra`.
 
 Install the CLI: `curl -fsSL https://raw.githubusercontent.com/kkratterf/fratmscript/main/install.sh | sh`
 (macOS/Linux) or `cargo install --git https://github.com/kkratterf/fratmscript fratm-cli`.
