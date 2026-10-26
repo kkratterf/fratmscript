@@ -14,6 +14,8 @@ pub struct CodeGen {
     gomorra: Vec<String>,
     /// Local names of the `stile` tag
     stile: Vec<String>,
+    /// Non-fatal warnings, such as JSX words from older versions
+    warnings: Vec<String>,
 }
 
 impl CodeGen {
@@ -27,6 +29,20 @@ impl CodeGen {
             current_col: 0,
             gomorra: Vec::new(),
             stile: Vec::new(),
+            warnings: Vec::new(),
+        }
+    }
+
+    /// The warnings collected by `generate`, each one once.
+    pub fn warnings(&self) -> &[String] {
+        &self.warnings
+    }
+
+    fn warn(&mut self, warning: Option<String>) {
+        if let Some(warning) = warning {
+            if !self.warnings.contains(&warning) {
+                self.warnings.push(warning);
+            }
         }
     }
 
@@ -1016,9 +1032,17 @@ impl CodeGen {
         } else {
             "_jsx("
         });
+        let html_tag = match element.name.as_deref() {
+            Some(name) if intrinsic => {
+                let (html, warning) = crate::html::jsx_tag(name);
+                self.warn(warning);
+                Some(html)
+            }
+            _ => None,
+        };
         match &element.name {
             None => self.emit("_Fragment"),
-            Some(name) if intrinsic => self.emit(&js_string(crate::html::tag(name))),
+            Some(_) if intrinsic => self.emit(&js_string(html_tag.unwrap_or_default())),
             Some(name) => {
                 for (i, part) in name.split('.').enumerate() {
                     if i == 0 {
@@ -1046,9 +1070,13 @@ impl CodeGen {
                 }
                 JsxAttribute::Named { name, value, .. } => {
                     separator(self);
-                    let name = match (intrinsic, element.name.as_deref()) {
-                        (true, Some(tag)) => crate::html::attribute(name, crate::html::tag(tag)),
-                        _ => name,
+                    let name = match html_tag {
+                        Some(tag) => {
+                            let (prop, warning) = crate::html::jsx_attribute(name, tag);
+                            self.warn(warning);
+                            prop
+                        }
+                        None => name,
                     };
                     if is_plain_name(name) {
                         self.emit(name);

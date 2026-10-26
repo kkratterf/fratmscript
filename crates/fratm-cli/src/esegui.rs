@@ -77,6 +77,9 @@ pub fn run(source: &str, options: RunOptions) -> Outcome {
         Ok(result) => result,
         Err(e) => return Outcome::CompileError(e),
     };
+    for warning in &result.warnings {
+        eprintln!("Attenzione: {warning}");
+    }
 
     let id = std::process::id();
     let temp_path = options.dir.join(format!(".fratm_temp_{}.js", id));

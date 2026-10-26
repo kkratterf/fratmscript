@@ -267,7 +267,7 @@ pub fn compile(source: &str, options: CompileOptions) -> Result<CompileResult, C
     Ok(CompileResult {
         code,
         source_map,
-        warnings: vec![],
+        warnings: codegen.warnings().to_vec(),
     })
 }
 
@@ -453,6 +453,38 @@ mod tests {
         );
         // Components keep their names, even when they read like a tag
         assert_eq!(jsx_js("x = <Cascett />"), "x = _jsx(Cascett, {});\n");
+    }
+
+    #[test]
+    fn test_jsx_words_from_older_versions_compile_with_warnings() {
+        let result = compile(
+            "x = <scatola><buttone quanno-se-clicca={f} stile={{ color: \"red\" }}>A</buttone><buttone>B</buttone></scatola>",
+            Default::default(),
+        )
+        .unwrap();
+        assert_eq!(
+            result.code.strip_prefix(JSX_IMPORT).unwrap(),
+            "x = _jsxs(\"div\", { children: [_jsx(\"button\", { onClick: f, style: { color: \"red\" }, children: \"A\" }), _jsx(\"button\", { children: \"B\" })] });\n"
+        );
+        assert_eq!(
+            result.warnings,
+            [
+                "<scatola> è vecchio, mo se dice <cascett>",
+                "<buttone> è vecchio, mo se dice <citofono>",
+                "'quanno-se-clicca' è vecchio, mo se dice 'quanno-tuocche'",
+                "'stile' è vecchio, mo se dice 'cess'",
+            ]
+        );
+        // A word that changed meaning compiles to its new tag and says so
+        let result = compile("x = <casella valore={v} />", Default::default()).unwrap();
+        assert!(result.code.contains("_jsx(\"td\""), "{}", result.code);
+        assert_eq!(
+            result.warnings,
+            ["<casella> mo è <td>: si vulive <input>, scrive <miett>"]
+        );
+        // Current words and components have no warnings
+        let result = compile("x = <cascett><Scatola /></cascett>", Default::default()).unwrap();
+        assert!(result.warnings.is_empty(), "{:?}", result.warnings);
     }
 
     #[test]

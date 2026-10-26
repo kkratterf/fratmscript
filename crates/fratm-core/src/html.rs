@@ -378,9 +378,177 @@ pub fn attribute<'a>(name: &'a str, tag: &str) -> &'a str {
         .unwrap_or(name)
 }
 
+/// JSX tag names from v0.11 and v0.12, replaced by the shared vocabulary:
+/// (old name, HTML tag, new name). They keep compiling to the same tag, with
+/// a warning. They are not part of htmlemmurt's vocabulary.
+pub const DEPRECATED_TAGS: &[(&str, &str, &str)] = &[
+    ("scatola", "div", "cascett"),
+    ("piezzo", "span", "scatulell"),
+    ("scritta", "p", "chiacchier"),
+    ("titolo2", "h2", "luccolo"),
+    ("titolo3", "h3", "luccoliello"),
+    ("titolo4", "h4", "luccolillo"),
+    ("titolo5", "h5", "luccolino"),
+    ("titolo6", "h6", "luccolicchio"),
+    ("buttone", "button", "citofono"),
+    ("quaderno", "textarea", "ragionamento"),
+    ("lista", "ul", "list"),
+    ("collegamento", "a", "vattenn"),
+    ("immagine", "img", "cartulin"),
+    ("pede", "footer", "pere"),
+    ("sezione", "section", "piezz"),
+    ("articolo", "article", "fattariello"),
+    ("navigazione", "nav", "tomtom"),
+    ("acapo", "br", "acap"),
+    ("linea", "hr", "stacc"),
+    ("forte", "strong", "fort"),
+    ("tabella", "table", "tavulat"),
+    ("riga", "tr", "fila"),
+    ("cella", "td", "casella"),
+    ("capocella", "th", "capocasella"),
+];
+
+/// JSX tag names that meant another element in v0.11 and v0.12:
+/// (name, HTML tag before, word for that tag now). They compile to their
+/// new tag, with a warning.
+pub const CHANGED_TAGS: &[(&str, &str, &str)] = &[
+    ("titolo", "h1", "luccolone"),
+    ("casella", "input", "miett"),
+    ("capa", "header", "cappiell"),
+];
+
+/// JSX attribute names from v0.11 and v0.12, replaced by the shared
+/// vocabulary: (old name, React prop, new name). They keep compiling to the
+/// same prop, with a warning.
+pub const DEPRECATED_ATTRIBUTES: &[(&str, &str, &str)] = &[
+    ("segnaposto", "placeholder", "esempio"),
+    ("fonte", "src", "da"),
+    ("indirizzo", "href", "addo"),
+    ("testo-alternativo", "alt", "spiegazione"),
+    ("disattivato", "disabled", "stutato"),
+    ("stile", "style", "cess"),
+    ("controllato", "checked", "spuntato"),
+    ("scelto", "selected", "scigliuto"),
+    ("sulo-lettura", "readOnly", "nunsetocca"),
+    ("multiplo", "multiple", "assaje"),
+    ("nascosto", "hidden", "annascuso"),
+    ("auto-fuoco", "autoFocus", "subbeto"),
+    ("azione", "action", "addo"),
+    ("destinazione", "target", "arape"),
+    ("quanno-se-clicca", "onClick", "quanno-tuocche"),
+    (
+        "quanno-se-doppio-clicca",
+        "onDoubleClick",
+        "quanno-tuocche-doje-vote",
+    ),
+    ("quanno-se-scrive", "onChange", "quanno-cagne"),
+    ("quanno-se-cagna", "onChange", "quanno-cagne"),
+    ("quanno-se-manna", "onSubmit", "quanno-manne"),
+    ("quanno-se-preme", "onKeyDown", "quanno-premi"),
+    ("quanno-se-lassa", "onKeyUp", "quanno-aize"),
+    ("quanno-se-passa", "onMouseEnter", "quanno-trase"),
+    ("quanno-se-leva", "onMouseLeave", "quanno-esce"),
+    ("quanno-se-trase", "onFocus", "quanno-piglie"),
+    ("quanno-se-jesce", "onBlur", "quanno-perde"),
+    ("quanno-se-carica", "onLoad", "quanno-carica"),
+    ("quanno-se-scorre", "onScroll", "quanno-scorre"),
+];
+
+/// The HTML tag for a JSX tag name, like [`tag`], plus the warning for a
+/// name from v0.11 and v0.12 that was replaced or changed meaning.
+pub fn jsx_tag(name: &str) -> (&str, Option<String>) {
+    if let Some((_, html, new)) = DEPRECATED_TAGS.iter().find(|(old, _, _)| *old == name) {
+        return (
+            html,
+            Some(format!("<{name}> è vecchio, mo se dice <{new}>")),
+        );
+    }
+    let html = tag(name);
+    let warning =
+        CHANGED_TAGS
+            .iter()
+            .find(|(word, _, _)| *word == name)
+            .map(|(word, before, now)| {
+                format!("<{word}> mo è <{html}>: si vulive <{before}>, scrive <{now}>")
+            });
+    (html, warning)
+}
+
+/// The React prop for a JSX attribute of the HTML tag `tag`, like
+/// [`attribute`], plus the warning for a name from v0.11 and v0.12 that was
+/// replaced.
+pub fn jsx_attribute<'a>(name: &'a str, tag: &str) -> (&'a str, Option<String>) {
+    match DEPRECATED_ATTRIBUTES
+        .iter()
+        .find(|(old, _, _)| *old == name)
+    {
+        Some((_, react, new)) => (
+            react,
+            Some(format!("'{name}' è vecchio, mo se dice '{new}'")),
+        ),
+        None => (attribute(name, tag), None),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn old_jsx_words_keep_compiling_with_a_warning() {
+        let (html, warning) = jsx_tag("scatola");
+        assert_eq!(html, "div");
+        assert_eq!(
+            warning.unwrap(),
+            "<scatola> è vecchio, mo se dice <cascett>"
+        );
+        assert_eq!(jsx_tag("cella").0, "td");
+        let (prop, warning) = jsx_attribute("quanno-se-clicca", "button");
+        assert_eq!(prop, "onClick");
+        assert_eq!(
+            warning.unwrap(),
+            "'quanno-se-clicca' è vecchio, mo se dice 'quanno-tuocche'"
+        );
+        assert_eq!(jsx_attribute("stile", "div").0, "style");
+        assert_eq!(jsx_attribute("indirizzo", "a").0, "href");
+        // Current words have no warning
+        assert_eq!(jsx_tag("cascett"), ("div", None));
+        assert_eq!(jsx_attribute("addo", "a"), ("href", None));
+    }
+
+    #[test]
+    fn words_that_changed_meaning_warn() {
+        let (html, warning) = jsx_tag("casella");
+        assert_eq!(html, "td");
+        assert_eq!(
+            warning.unwrap(),
+            "<casella> mo è <td>: si vulive <input>, scrive <miett>"
+        );
+        assert_eq!(jsx_tag("titolo").0, "title");
+        assert_eq!(jsx_tag("capa").0, "head");
+    }
+
+    #[test]
+    fn deprecated_words_are_not_current_words() {
+        for (old, html, new) in DEPRECATED_TAGS {
+            assert!(
+                TAGS.iter().all(|(nap, _, _)| nap != old),
+                "<{old}> is current"
+            );
+            assert_eq!(tag(new), *html, "<{new}> is not <{html}>");
+        }
+        for (word, _, now) in CHANGED_TAGS {
+            assert_ne!(tag(word), *word, "<{word}> is not a tag");
+            assert!(TAGS.iter().any(|(nap, _, _)| nap == now), "<{now}>");
+        }
+        for (old, react, new) in DEPRECATED_ATTRIBUTES {
+            assert_eq!(attribute(old, "a"), *old, "'{old}' is current");
+            let current = ["a", "form", "input", "img", "button", "div"]
+                .iter()
+                .any(|t| attribute(new, t) == *react);
+            assert!(current, "'{new}' is not {react}");
+        }
+    }
 
     #[test]
     fn neapolitan_tags_become_html() {

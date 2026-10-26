@@ -625,7 +625,8 @@ impl Translator<'_> {
                 } else if prev == ':' {
                     lookup(PSEUDO, &word)
                 } else {
-                    Some(crate::html::tag(&word)).filter(|tag| *tag != word)
+                    // Tag names from v0.11 and v0.12 keep working here too
+                    Some(crate::html::jsx_tag(&word).0).filter(|tag| *tag != word)
                 };
                 self.out.push_str(translated.unwrap_or(&word));
                 i = end;
@@ -791,6 +792,12 @@ mod tests {
 
     fn err(text: &str) -> StileError {
         translate(&[text.to_string()]).unwrap_err()
+    }
+
+    #[test]
+    fn old_tag_names_still_select_their_tag() {
+        assert_eq!(css("buttone { culore: russo }"), "button { color: red }");
+        assert_eq!(css("citofono { culore: russo }"), "button { color: red }");
     }
 
     #[test]

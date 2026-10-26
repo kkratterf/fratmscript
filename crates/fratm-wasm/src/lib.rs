@@ -54,6 +54,7 @@ fn compile_to_response(
             success: true,
             code: Some(result.code),
             source_map: result.source_map.map(|sm| sm.to_json()),
+            warnings: result.warnings,
             error: None,
             line: None,
             column: None,
@@ -78,6 +79,7 @@ fn format_to_response(source: &str) -> CompileResponse {
             success: true,
             code: Some(code),
             source_map: None,
+            warnings: Vec::new(),
             error: None,
             line: None,
             column: None,
@@ -92,6 +94,7 @@ fn error_response(e: &fratm_core::errors::CompileError, source: &str) -> Compile
         success: false,
         code: None,
         source_map: None,
+        warnings: Vec::new(),
         error: Some(format!("{}", e)),
         line: e.line(),
         column: e.column(),
@@ -150,6 +153,8 @@ struct CompileResponse {
     code: Option<String>,
     #[serde(rename = "sourceMap")]
     source_map: Option<String>,
+    /// Non-fatal warnings, such as JSX words from older versions
+    warnings: Vec<String>,
     error: Option<String>,
     line: Option<usize>,
     column: Option<usize>,

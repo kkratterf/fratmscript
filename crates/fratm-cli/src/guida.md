@@ -336,6 +336,10 @@ plugin.
 HTML tags have Neapolitan names (`<cascett>` is `div`), the same as in htmlemmurt pages, translated
 at compile time; HTML names
 (`div`, `button`) work too. A capitalised or dotted tag is a component.
+The words of v0.11 and v0.12 (`<scatola>`, `<buttone>`, `quanno-se-clicca`, `stile=`) still compile, with a
+warning that names the new word. `<titolo>`, `<casella>` and `<capa>` changed meaning: they are now
+`title`, `td` and `head`, and the compiler warns. Write `<luccolone>`, `<miett>` and `<cappiell>` for `h1`,
+`input` and `header`.
 Inside `{ }` goes any FratmScript expression.
 
 ```fratm

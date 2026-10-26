@@ -306,6 +306,9 @@ fn build_file(path: &Path, output: Option<PathBuf>, sourcemap: bool, stdout: boo
             std::process::exit(1);
         }
     };
+    if !json {
+        print_warnings(&result.warnings);
+    }
     // With --json or --stdout, a file is written only when -o asks for one
     let to_terminal = json || stdout || path.as_os_str() == "-";
     if to_terminal && output.is_none() {
@@ -338,7 +341,12 @@ fn build_file(path: &Path, output: Option<PathBuf>, sourcemap: bool, stdout: boo
         std::process::exit(1);
     }
     if json {
-        print_json(serde_json::json!({ "ok": true, "code": result.code, "errors": [] }));
+        print_json(serde_json::json!({
+            "ok": true,
+            "code": result.code,
+            "errors": [],
+            "warnings": result.warnings,
+        }));
     }
     println!(
         "{} {} → {}",
@@ -705,6 +713,13 @@ fn run_gomorra(query: Option<String>, db: Option<&Path>, pg: bool) {
                 run(query);
             }
         }
+    }
+}
+
+/// Prints the compiler's warnings to stderr, one per line.
+fn print_warnings(warnings: &[String]) {
+    for warning in warnings {
+        eprintln!("{} {}", "Attenzione:".yellow().bold(), warning);
     }
 }
 
