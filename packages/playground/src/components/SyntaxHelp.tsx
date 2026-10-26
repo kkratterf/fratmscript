@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipTrigger, TooltipPopup } from '@/components/ui/tooltip'
 import { useI18n, type Lang } from '@/lib/i18n'
 import {
   Dialog,
@@ -176,13 +177,20 @@ export function SyntaxHelp({ onInsert }: { onInsert: (text: string) => void }) {
 
   return (
     <Dialog open={open} onOpenChange={(next) => { setOpen(next); if (!next) setQuery('') }}>
-      <DialogTrigger
-        render={
-          <Button variant="outline" size="icon-sm" aria-label={t('syntax.button')}>
-            <HelpIcon className="size-3.5" />
-          </Button>
-        }
-      />
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <DialogTrigger
+              render={
+                <Button variant="outline" size="icon" aria-label={t('syntax.button')}>
+                  <HelpIcon className="size-4" />
+                </Button>
+              }
+            />
+          }
+        />
+        <TooltipPopup>{t('syntax.button')}</TooltipPopup>
+      </Tooltip>
       <DialogPopup className="flex flex-col max-w-2xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>{t('syntax.title')}</DialogTitle>

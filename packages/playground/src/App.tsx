@@ -411,7 +411,7 @@ function App() {
                       render={
                         <Button
                           variant="outline"
-                          size="icon-sm"
+                          size="icon"
                           aria-label={t('editor.format')}
                           onClick={handleFormat}
                           disabled={compiler.isLoading}

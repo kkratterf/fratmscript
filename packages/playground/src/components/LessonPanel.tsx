@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { NativeSelect } from '@/components/ui/select'
+import { Tooltip, TooltipTrigger, TooltipPopup } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import type { Lesson } from '@/lib/lessons'
 import { useI18n } from '@/lib/i18n'
@@ -61,9 +62,16 @@ export function LessonPanel({ lessons, index, completed, onSelect, onExit, onRes
             </option>
           ))}
         </NativeSelect>
-        <Button variant="ghost" size="icon-sm" aria-label={t('lesson.exit')} onClick={onExit}>
-          <X className="size-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button variant="ghost" size="icon" aria-label={t('lesson.exit')} onClick={onExit}>
+                <X className="size-4" />
+              </Button>
+            }
+          />
+          <TooltipPopup>{t('lesson.exit')}</TooltipPopup>
+        </Tooltip>
       </div>
 
       <div className="space-y-2 px-4 py-3 text-sm leading-relaxed shrink-0 md:flex-1 md:shrink md:min-h-0 md:overflow-auto">

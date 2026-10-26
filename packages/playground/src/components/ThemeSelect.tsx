@@ -18,7 +18,6 @@ export function ThemeSelect() {
 
   return (
     <NativeSelect
-      selectSize="sm"
       value={current}
       onChange={e => setTheme(e.target.value)}
       aria-label={t('theme.label')}

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipPopup } from '@/components/ui/tooltip'
-import { BookOpen, CodeXml, ExternalLink, GraduationCap, Play, Share2, Square } from 'lucide-react'
+import { BookOpen, CodeXml, ExternalLink, GraduationCap, Play, Share2, Square, SquareTerminal } from 'lucide-react'
+import type { MouseEvent } from 'react'
 import { ThemeSelect } from '@/components/ThemeSelect'
 import { LanguageSelect } from '@/components/LanguageSelect'
 import { useI18n } from '@/lib/i18n'
@@ -22,6 +23,13 @@ interface HeaderProps {
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 const runShortcut = isMac ? '⌘↵' : 'Ctrl+↵'
 
+/** Lets a plain click switch views in place; modified clicks open the link in a new tab as usual. */
+function followInPlace(event: MouseEvent<HTMLAnchorElement>, go: () => void) {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  event.preventDefault()
+  go()
+}
+
 function GitHubIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -30,24 +38,25 @@ function GitHubIcon({ className }: { className?: string }) {
   )
 }
 
-function LinkedInIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-    </svg>
-  )
-}
-
-function XIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-    </svg>
-  )
-}
-
 export function Header({ onRun, onStop, onShare, onEmbed, onTour, tourActive, onGuide, guideActive, isRunning, disabled }: HeaderProps) {
   const { t } = useI18n()
+  const github = (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            variant="outline"
+            size="icon"
+            render={<a href="https://github.com/kkratterf/fratmscript" target="_blank" rel="noopener noreferrer" />}
+            aria-label={t('header.github')}
+          >
+            <GitHubIcon className="size-4" />
+          </Button>
+        }
+      />
+      <TooltipPopup>{t('header.github')}</TooltipPopup>
+    </Tooltip>
+  )
   return (
     <header className="flex flex-col gap-2 bg-card px-4 py-3 border-border border-b">
       <div className="flex justify-between items-center gap-3">
@@ -60,10 +69,10 @@ export function Header({ onRun, onStop, onShare, onEmbed, onTour, tourActive, on
               render={
                 <Button
                   variant={tourActive ? 'secondary' : 'ghost'}
-                  size="sm"
                   onClick={onTour}
                   aria-pressed={tourActive}
                   aria-label={t('header.tourLabel')}
+                  className="max-sm:px-2.5"
                 >
                   <GraduationCap className="size-4" />
                   <span className="hidden sm:inline">{t('header.tour')}</span>
@@ -72,18 +81,23 @@ export function Header({ onRun, onStop, onShare, onEmbed, onTour, tourActive, on
             />
             <TooltipPopup>{t(tourActive ? 'header.tourExit' : 'header.tourOpen')}</TooltipPopup>
           </Tooltip>
+          {/* A link, not a toggle: in the guide it leads back to the playground */}
           <Tooltip>
             <TooltipTrigger
               render={
                 <Button
-                  variant={guideActive ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={onGuide}
-                  aria-pressed={guideActive}
-                  aria-label={t('header.guideLabel')}
+                  variant="ghost"
+                  render={
+                    <a
+                      href={guideActive ? window.location.pathname : '#guida'}
+                      onClick={event => followInPlace(event, onGuide)}
+                    />
+                  }
+                  aria-label={t(guideActive ? 'header.guideExit' : 'header.guideLabel')}
+                  className="max-sm:px-2.5"
                 >
-                  <BookOpen className="size-4" />
-                  <span className="hidden sm:inline">{t('header.guide')}</span>
+                  {guideActive ? <SquareTerminal className="size-4" /> : <BookOpen className="size-4" />}
+                  <span className="hidden sm:inline">{t(guideActive ? 'header.playground' : 'header.guide')}</span>
                 </Button>
               }
             />
@@ -92,56 +106,6 @@ export function Header({ onRun, onStop, onShare, onEmbed, onTour, tourActive, on
           <div className="hidden sm:flex items-center gap-2">
             <LanguageSelect />
             <ThemeSelect />
-          </div>
-          <div className="hidden sm:flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <a
-                    href="https://github.com/kkratterf/fratmscript"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:bg-accent p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label={t('header.github')}
-                  >
-                    <GitHubIcon className="size-4" />
-                  </a>
-                }
-              />
-              <TooltipPopup>{t('header.githubTip')}</TooltipPopup>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <a
-                    href="https://linkedin.com/in/kkratter"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:bg-accent p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label="LinkedIn"
-                  >
-                    <LinkedInIcon className="size-4" />
-                  </a>
-                }
-              />
-              <TooltipPopup>{t('header.linkedinTip')}</TooltipPopup>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <a
-                    href="https://x.com/kkratter"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:bg-accent p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label="X (Twitter)"
-                  >
-                    <XIcon className="size-4" />
-                  </a>
-                }
-              />
-              <TooltipPopup>{t('header.xTip')}</TooltipPopup>
-            </Tooltip>
           </div>
           {/* The guide runs its own snippets: the playground's actions wait until you leave it */}
           <div className={cn('flex items-center gap-1.5', guideActive && 'hidden')}>
@@ -152,24 +116,28 @@ export function Header({ onRun, onStop, onShare, onEmbed, onTour, tourActive, on
                 <TooltipTrigger
                   render={
                     <Button onClick={onRun} disabled={disabled} className={cn(isRunning && 'invisible')}>
-                      <Play className="size-3.5 fill-current" />
                       {t('header.run')}
-                      <kbd className="hidden sm:inline opacity-70 ml-1 font-sans text-xs">{runShortcut}</kbd>
                     </Button>
                   }
                 />
                 <TooltipPopup>{t('header.runTip', { shortcut: runShortcut })}</TooltipPopup>
               </Tooltip>
               <Button variant="destructive" onClick={onStop} className={cn(!isRunning && 'invisible')}>
-                <Square className="size-3.5 fill-current" />
                 {t('header.stop')}
               </Button>
             </div>
             {/* Icon only on phones, so the logo is not cut off */}
-            <Button variant="outline" onClick={onShare} aria-label={t('header.share')} className="max-sm:px-2.5">
-              <Share2 className="size-4 sm:hidden" />
-              <span className="hidden sm:inline">{t('header.share')}</span>
-            </Button>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button variant="outline" onClick={onShare} aria-label={t('header.share')} className="max-sm:px-2.5">
+                    <Share2 className="size-4 sm:hidden" />
+                    <span className="hidden sm:inline">{t('header.share')}</span>
+                  </Button>
+                }
+              />
+              <TooltipPopup className="sm:hidden">{t('header.share')}</TooltipPopup>
+            </Tooltip>
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -181,12 +149,14 @@ export function Header({ onRun, onStop, onShare, onEmbed, onTour, tourActive, on
               <TooltipPopup>{t('share.embed')}</TooltipPopup>
             </Tooltip>
           </div>
+          <div className="hidden sm:flex">{github}</div>
         </div>
       </div>
       {/* On phones the menus get their own row */}
       <div className="sm:hidden flex gap-2 w-full">
         <LanguageSelect />
         <ThemeSelect />
+        <div className="ml-auto">{github}</div>
       </div>
     </header>
   )

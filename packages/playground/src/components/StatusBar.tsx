@@ -1,3 +1,4 @@
+import { MadeBy } from '@/components/MadeBy'
 import { cn } from '@/lib/utils'
 
 interface StatusBarProps {
@@ -8,11 +9,11 @@ interface StatusBarProps {
 
 export function StatusBar({ status, statusText, compileTime }: StatusBarProps) {
   return (
-    <footer className="px-4 py-1.5 bg-card border-t border-border text-xs text-muted-foreground flex justify-between">
-      <div className="flex items-center gap-2">
+    <footer className="flex justify-between items-center gap-3 bg-card px-4 py-0.5 border-border border-t text-muted-foreground text-xs">
+      <div className="flex items-center gap-2 min-w-0">
         <div
           className={cn(
-            "w-2 h-2 rounded-full",
+            "w-2 h-2 rounded-full shrink-0",
             status === 'ready' && "bg-success",
             status === 'loading' && "bg-warning animate-pulse",
             (status === 'compiling' || status === 'running') && "bg-warning animate-pulse",
@@ -20,9 +21,12 @@ export function StatusBar({ status, statusText, compileTime }: StatusBarProps) {
             status === 'stale' && "bg-warning"
           )}
         />
-        <span>{statusText}</span>
+        <span className="truncate">{statusText}</span>
       </div>
-      {compileTime && <span>{compileTime}</span>}
+      <div className="flex items-center gap-3 shrink-0">
+        {compileTime && <span className="max-sm:hidden">{compileTime}</span>}
+        <MadeBy />
+      </div>
     </footer>
   )
 }

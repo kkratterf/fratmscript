@@ -3,7 +3,7 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
-import type * as React from "react";
+import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -53,7 +53,12 @@ interface ButtonProps extends useRender.ComponentProps<"button"> {
   size?: VariantProps<typeof buttonVariants>["size"];
 }
 
-function Button({ className, variant, size, render, ...props }: ButtonProps) {
+// forwardRef: React 18 drops `ref` on plain function components, and Base UI
+// triggers (tooltips, dialogs) need it to find the element they listen on.
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  { className, variant, size, render, ...props },
+  ref,
+) {
   const typeValue: React.ButtonHTMLAttributes<HTMLButtonElement>["type"] =
     render ? undefined : "button";
 
@@ -66,8 +71,9 @@ function Button({ className, variant, size, render, ...props }: ButtonProps) {
   return useRender({
     defaultTagName: "button",
     props: mergeProps<"button">(defaultProps, props),
+    ref,
     render,
   });
-}
+});
 
 export { Button, buttonVariants };

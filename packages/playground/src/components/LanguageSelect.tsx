@@ -7,7 +7,6 @@ export function LanguageSelect() {
 
   return (
     <NativeSelect
-      selectSize="sm"
       value={lang}
       onChange={e => setLang(e.target.value as Lang)}
       aria-label={t('lang.label')}

@@ -14,8 +14,8 @@ export interface NativeSelectProps
 const NativeSelect = React.forwardRef<HTMLSelectElement, NativeSelectProps>(
   ({ className, children, selectSize = "default", ...props }, ref) => {
     const sizeClasses = {
-      sm: "h-7 text-xs px-2",
-      default: "h-8 text-sm px-3",
+      sm: "h-8 text-sm px-2 sm:h-7 sm:text-xs",
+      default: "h-9 text-base px-3 sm:h-8 sm:text-sm",
       lg: "h-10 text-base px-4",
     }
 

@@ -4,6 +4,7 @@ import { Editor, type EditorDiagnostic, type EditorHandle } from '@/components/E
 import { ErrorCard } from '@/components/OutputPanel'
 import { ValueTree } from '@/components/ValueTree'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipTrigger, TooltipPopup } from '@/components/ui/tooltip'
 import { compile } from '@/lib/compiler'
 import { runInWorker, SYNC_TIME_LIMIT_MS, type LogEntry } from '@/lib/runner'
 import { originalPosition, parseSourceMap } from '@/lib/sourcemap'
@@ -123,15 +124,22 @@ export function GuideSnippet({ initialCode, ready, onOpen }: GuideSnippetProps) 
               <Play className="size-3 fill-current" /> {t('guide.run')}
             </Button>
           )}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => editorRef.current?.replaceAll(initialCode)}
-            disabled={code === initialCode}
-            title={t('guide.resetTip')}
-          >
-            <RotateCcw className="size-3.5" /> <span className="hidden sm:inline">{t('guide.reset')}</span>
-          </Button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => editorRef.current?.replaceAll(initialCode)}
+                  disabled={code === initialCode}
+                  aria-label={t('guide.reset')}
+                >
+                  <RotateCcw className="size-3.5" /> <span className="hidden sm:inline">{t('guide.reset')}</span>
+                </Button>
+              }
+            />
+            <TooltipPopup>{t('guide.resetTip')}</TooltipPopup>
+          </Tooltip>
         </div>
         <div className="flex items-center gap-1">
           <Button
