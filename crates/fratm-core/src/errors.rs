@@ -64,6 +64,9 @@ pub fn napoletanize_error(message: &str) -> String {
     if let Some(gomorra) = message.strip_prefix("gomorra: ") {
         return gomorra.to_string();
     }
+    if let Some(stile) = message.strip_prefix("stile: ") {
+        return format!("Int'o stile: {stile}");
+    }
     let found = found_token(message);
     if let Some(name) = message.strip_prefix("Reserved name '") {
         let name = name.trim_end_matches('\'');

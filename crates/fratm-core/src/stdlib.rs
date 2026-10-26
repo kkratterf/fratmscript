@@ -52,6 +52,13 @@ pub const HELPERS: &[(&str, &str, &str)] = &[
         "(file = \":memory:\") => { const sqlite = globalThis.process?.getBuiltinModule?.(\"node:sqlite\"); if (!sqlite) throw new Error(\"apri_db vo' Node 22.13 o cchiù nuovo (node:sqlite): int'o browser nun se pò aprì nu database\"); const db = new sqlite.DatabaseSync(file); const prepara = (q, valori) => typeof q === \"string\" ? [db.prepare(q), valori] : [db.prepare(q.sql), q.params]; return { ripiglia: (q, ...valori) => { const [s, p] = prepara(q, valori); return s.all(...p).map((riga) => ({ ...riga })); }, ripiglia_uno: (q, ...valori) => { const [s, p] = prepara(q, valori); const riga = s.get(...p); return riga === undefined ? null : { ...riga }; }, esegui: (q, ...valori) => { const [s, p] = prepara(q, valori); const r = s.run(...p); return { cambiate: Number(r.changes), ultimo_id: Number(r.lastInsertRowid) }; }, chiude: () => db.close() }; }",
         "apre nu database SQLite (node:sqlite, Node 22.13+): db.ripiglia(q), db.ripiglia_uno(q), db.esegui(q), db.chiude()",
     ),
+    // The compiler translates each stile`…` into CSS; in a browser the
+    // rules are added to the page once
+    (
+        "stile",
+        "(() => { const fatti = new Set(); return (css) => { if (typeof document !== \"undefined\" && css.includes(\"{\") && !fatti.has(css)) { fatti.add(css); const s = document.createElement(\"style\"); s.textContent = css; document.head.append(s); } return css; }; })()",
+        "CSS in napoletano: stile`buttone:passanno { culore: russo }` → mette 'e regole int'a pagina e torna 'o CSS",
+    ),
     // The compiler translates each gomorra`…` and passes the SQL here
     (
         "gomorra",
@@ -59,6 +66,24 @@ pub const HELPERS: &[(&str, &str, &str)] = &[
         "na query GomorraSQL: gomorra`ripigliammo nomme mmiez 'a pizze arò id = ${id}` → { sql, params, text, values }",
     ),
 ];
+
+/// Local names of `name` in `chiamm { name } da "fratm"` (an alias with
+/// `comme` included).
+pub fn local_names(program: &crate::parser::Program, name: &str) -> Vec<String> {
+    program
+        .statements
+        .iter()
+        .filter_map(|statement| match statement {
+            crate::parser::Statement::Import {
+                specifiers, source, ..
+            } if source == MODULE => Some(specifiers),
+            _ => None,
+        })
+        .flatten()
+        .filter(|s| s.imported == name)
+        .map(|s| s.local.clone())
+        .collect()
+}
 
 /// JavaScript source of a helper, if the library has it.
 pub fn helper(name: &str) -> Option<&'static str> {

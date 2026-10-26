@@ -388,6 +388,33 @@ chiamm { a_caso, mischia, quanti, aspetta } da "fratm"
 | `aspetta(ms)` | a Promise that resolves after `ms` milliseconds: `aspett aspetta(1000)` |
 | ``gomorra`…` `` | a GomorraSQL query, see below |
 | `apri_db(file)` | opens a SQLite database (Node 22.13+), see below |
+| ``stile`…` `` | CSS in Neapolitan, see [below](#css-in-neapolitan-with-stile) |
+
+### CSS in Neapolitan with `stile`
+
+`` stile`…` `` (imported from `"fratm"`) writes CSS in Neapolitan. The compiler translates it when it compiles the file, so the browser gets standard CSS, and a missing `}` or a declaration without `:` is a compile error with its line. In a browser the rules are added to the page once; the call also returns the CSS text (in Node it only returns it).
+
+```fratm
+chiamm { stile } da "fratm"
+
+chist è accento = "#c8321e"
+
+stile`
+  core.pizzeria { sfunno-culore: janco; spazio: 16px; mostra: flessibile }
+  buttone { culore: ${accento}; bordo-tunno: 6px; cursore: manella }
+  buttone:passanno { culore: russo !importante }
+  @quanno schermo e (larghezza-massima: 600px) {
+    scatola { larghezza: 100% }
+  }
+`
+```
+
+becomes `main.pizzeria { background-color: white; padding: 16px; display: flex }`, `button:hover { color: red !important }`, `@media screen and (max-width: 600px) { div { width: 100% } }`, and so on. The Neapolitan tag names of JSX work in selectors. Words that are not in the tables (class names, ids, units, colours like `#fff`, CSS properties in English) pass through, so plain CSS works too, and `${…}` values are kept. Strings, comments and `url(…)` are never translated.
+
+- **Properties:** `culore` color, `sfunno` background, `sfunno-culore` background-color, `sfunno-immagine` background-image, `sfunno-grannezza` background-size, `scrittura` font-family, `scrittura-grannezza` font-size, `scrittura-peso` font-weight, `scrittura-stile` font-style, `allinea-testo` text-align, `decorazione-testo` text-decoration, `trasforma-testo` text-transform, `altezza-riga` line-height, `spazio-lettere` letter-spacing, `larghezza` width, `altezza` height, `larghezza-minima` min-width, `larghezza-massima` max-width, `altezza-minima` min-height, `altezza-massima` max-height, `margine` margin, `margine-ncoppa` margin-top, `margine-sotto` margin-bottom, `margine-manca` margin-left, `margine-destra` margin-right, `spazio` padding, `spazio-ncoppa` padding-top, `spazio-sotto` padding-bottom, `spazio-manca` padding-left, `spazio-destra` padding-right, `bordo` border, `bordo-culore` border-color, `bordo-larghezza` border-width, `bordo-stile` border-style, `bordo-tunno` border-radius, `bordo-ncoppa` border-top, `bordo-sotto` border-bottom, `bordo-manca` border-left, `bordo-destra` border-right, `contorno` outline, `mostra` display, `posizione` position, `ncoppa` top, `sotto` bottom, `manca` left, `destra` right, `livello` z-index, `trabocca` overflow, `visibilità` visibility, `visibilita` visibility, `opacità` opacity, `opacita` opacity, `ombra` box-shadow, `ombra-testo` text-shadow, `cursore` cursor, `spazio-mmiez` gap, `flessibile` flex, `direzione` flex-direction, `a-capo` flex-wrap, `cresce` flex-grow, `allinea-cose` align-items, `allinea-me` align-self, `giustifica` justify-content, `colonne` grid-template-columns, `righe` grid-template-rows, `area-griglia` grid-area, `transizione` transition, `trasforma` transform, `animazione` animation, `contenuto` content, `scatola` box-sizing, `lista-stile` list-style, `filtro` filter, `puntatore` pointer-events, `selezione` user-select, `galleggia` float, `adatta-oggetto` object-fit, `proporzione` aspect-ratio.
+- **Values:** `russo` red, `janco` white, `niro` black, `nero` black, `verde` green, `blu` blue, `azzurro` skyblue, `celeste` lightblue, `giallo` yellow, `arancione` orange, `rosa` pink, `viola` purple, `grigio` gray, `marrone` brown, `oro` gold, `argiento` silver, `trasparente` transparent, `culore-corrente` currentcolor, `nisciuno` none, `niente` none, `blocco` block, `in-linea` inline, `blocco-in-linea` inline-block, `flessibile` flex, `griglia` grid, `miezo` center, `mmiezo` center, `manca` left, `destra` right, `ncoppa` top, `sotto` bottom, `inizio` start, `fine` end, `spartuto` space-between, `attuorno` space-around, `stiracchiato` stretch, `riga` row, `colonna` column, `fisso` fixed, `fissa` fixed, `assoluto` absolute, `assoluta` absolute, `relativo` relative, `relativa` relative, `appiccecato` sticky, `appiccecata` sticky, `statico` static, `grassetto` bold, `corsivo` italic, `normale` normal, `sottolineato` underline, `sbarrato` line-through, `maiuscolo` uppercase, `minuscolo` lowercase, `nascosto` hidden, `visibile` visible, `scorre` scroll, `automatico` auto, `manella` pointer, `aspetta` wait, `ereditato` inherit, `iniziale` initial, `a-capo` wrap, `nun-va-a-capo` nowrap, `copre` cover, `contiene` contain, `ripete` repeat, `nun-ripete` no-repeat, `continuo` solid, `tratteggiato` dashed, `puntinato` dotted, `bordo-incluso` border-box, `facile` ease, `lineare` linear, `infinito` infinite, `alternato` alternate, and `!importante`.
+- **Pseudo-classes and elements:** `passanno` hover, `premuto` active, `fuoco` focus, `fuoco-visibile` focus-visible, `disattivato` disabled, `spuntato` checked, `primmo-figlio` first-child, `urdemo-figlio` last-child, `vacante` empty, `radice` root, `primma` before, `doppo` after, `segnaposto` placeholder.
+- **At-rules:** `@quanno` is `@media` (with `schermo` screen, `stampa` print, `tutto` all, `e` and).
 
 ### GomorraSQL: SQL in Neapolitan
 
@@ -513,6 +540,7 @@ fermete                      // debugger
 | `fermete` | `debugger` | "stop" |
 | `<scatola>…</scatola>`, `<Pizza />` | JSX (React/Preact); `scatola` = `div`, `scritta` = `p`, `buttone` = `button`, ... | markup in the code |
 | ``gomorra`ripigliammo …` `` | SQL query with bound parameters ([GomorraSQL](#gomorrasql-sql-in-neapolitan)) | Gomorrah |
+| ``stile`culore: russo` `` | CSS in Neapolitan ([`stile`](#css-in-neapolitan-with-stile)) | style |
 
 No accents on your keyboard? `sinno`, `sfols`, `di` (in `stamm a di`), `chist e` and `chè e` work like `sinnò`, `sfòls`, `dì`, `chist è` and `chè è`; `typeof` and `instanceof` are accepted for `chè è` and `è uno`.
 
@@ -593,6 +621,7 @@ Check the `examples/` folder for complete programs:
 16. `16_pizzeria_jsx.fratm` - A React component written with JSX
 17. `17_gomorra.fratm` - GomorraSQL: SQL queries in Neapolitan with bound parameters
 18. `18_magazzino.fratm` - A SQLite database with `apri_db` and `gomorra` (Node 22.13+, or the playground)
+19. `19_pizzeria_cu_stile.fratm` - A React page all in Neapolitan: Neapolitan tags and CSS with `stile`
 
 ---
 

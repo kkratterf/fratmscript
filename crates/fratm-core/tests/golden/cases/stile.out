@@ -1,0 +1,17 @@
+
+  /* 'a pizzeria */
+  main.pizzeria {
+    background-color: white;
+    color: #c8321e;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  button:hover, a:focus { color: red !important; cursor: pointer }
+  li:last-child::after { content: "!" }
+  @media screen and (max-width: 600px) {
+    div { width: 100%; padding: 0 }
+  }
+
+div { color: red }

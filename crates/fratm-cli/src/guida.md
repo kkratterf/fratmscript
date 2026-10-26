@@ -440,6 +440,216 @@ aspett aspetta(10)
 | `aspetta(ms)` | Promise resolved after `ms` milliseconds |
 | ``gomorra`…` `` | SQL query in Neapolitan (next section) |
 | `apri_db(file = ":memory:")` | SQLite database on `node:sqlite` (Node 22.13+; next section) |
+| ``stile`…` `` | CSS in Neapolitan (section "CSS: `stile`") |
+
+## CSS: `stile`
+
+`` stile`…` `` (imported from `"fratm"`) is CSS written in Neapolitan, translated at compile time.
+In a browser the rules are added to the page once (a `<style>` element); the call returns the CSS
+text either way, so in Node it only returns it.
+
+```fratm
+chiamm { stile } da "fratm"
+
+chist è accento = "#c8321e"
+
+stile`
+  core.pizzeria { sfunno-culore: janco; spazio: 16px; mostra: flessibile }
+  buttone { culore: ${accento}; bordo-tunno: 6px; cursore: manella }
+  buttone:passanno { culore: russo !importante }
+  @quanno schermo e (larghezza-massima: 600px) {
+    scatola { larghezza: 100% }
+  }
+`
+```
+
+- Translated: property names (before `:`), value keywords, pseudo-classes after `:`/`::`,
+  `@quanno` (`@media`) and the Neapolitan JSX tag names used as type selectors.
+- Everything else passes through: class names (`.pizza`), ids, units, `#fff`, English CSS, custom
+  properties (`--accento`, whose values are translated). Strings, comments and `url(…)` are kept.
+- `${…}` values stay in place; a word glued to `${…}` is not translated.
+- Compile errors: a `}` that closes nothing, a missing `}`, a declaration without `:`, an
+  unclosed comment or string. `stile(css)` called as a function takes plain CSS as it is.
+- For inline styles in JSX use objects (`style={{ color: "red" }}`); `stile` is for rules.
+
+| Property | CSS |
+| --- | --- |
+| `culore` | `color` |
+| `sfunno` | `background` |
+| `sfunno-culore` | `background-color` |
+| `sfunno-immagine` | `background-image` |
+| `sfunno-grannezza` | `background-size` |
+| `scrittura` | `font-family` |
+| `scrittura-grannezza` | `font-size` |
+| `scrittura-peso` | `font-weight` |
+| `scrittura-stile` | `font-style` |
+| `allinea-testo` | `text-align` |
+| `decorazione-testo` | `text-decoration` |
+| `trasforma-testo` | `text-transform` |
+| `altezza-riga` | `line-height` |
+| `spazio-lettere` | `letter-spacing` |
+| `larghezza` | `width` |
+| `altezza` | `height` |
+| `larghezza-minima` | `min-width` |
+| `larghezza-massima` | `max-width` |
+| `altezza-minima` | `min-height` |
+| `altezza-massima` | `max-height` |
+| `margine` | `margin` |
+| `margine-ncoppa` | `margin-top` |
+| `margine-sotto` | `margin-bottom` |
+| `margine-manca` | `margin-left` |
+| `margine-destra` | `margin-right` |
+| `spazio` | `padding` |
+| `spazio-ncoppa` | `padding-top` |
+| `spazio-sotto` | `padding-bottom` |
+| `spazio-manca` | `padding-left` |
+| `spazio-destra` | `padding-right` |
+| `bordo` | `border` |
+| `bordo-culore` | `border-color` |
+| `bordo-larghezza` | `border-width` |
+| `bordo-stile` | `border-style` |
+| `bordo-tunno` | `border-radius` |
+| `bordo-ncoppa` | `border-top` |
+| `bordo-sotto` | `border-bottom` |
+| `bordo-manca` | `border-left` |
+| `bordo-destra` | `border-right` |
+| `contorno` | `outline` |
+| `mostra` | `display` |
+| `posizione` | `position` |
+| `ncoppa` | `top` |
+| `sotto` | `bottom` |
+| `manca` | `left` |
+| `destra` | `right` |
+| `livello` | `z-index` |
+| `trabocca` | `overflow` |
+| `visibilità` | `visibility` |
+| `visibilita` | `visibility` |
+| `opacità` | `opacity` |
+| `opacita` | `opacity` |
+| `ombra` | `box-shadow` |
+| `ombra-testo` | `text-shadow` |
+| `cursore` | `cursor` |
+| `spazio-mmiez` | `gap` |
+| `flessibile` | `flex` |
+| `direzione` | `flex-direction` |
+| `a-capo` | `flex-wrap` |
+| `cresce` | `flex-grow` |
+| `allinea-cose` | `align-items` |
+| `allinea-me` | `align-self` |
+| `giustifica` | `justify-content` |
+| `colonne` | `grid-template-columns` |
+| `righe` | `grid-template-rows` |
+| `area-griglia` | `grid-area` |
+| `transizione` | `transition` |
+| `trasforma` | `transform` |
+| `animazione` | `animation` |
+| `contenuto` | `content` |
+| `scatola` | `box-sizing` |
+| `lista-stile` | `list-style` |
+| `filtro` | `filter` |
+| `puntatore` | `pointer-events` |
+| `selezione` | `user-select` |
+| `galleggia` | `float` |
+| `adatta-oggetto` | `object-fit` |
+| `proporzione` | `aspect-ratio` |
+
+| Value | CSS |
+| --- | --- |
+| `russo` | `red` |
+| `janco` | `white` |
+| `niro` | `black` |
+| `nero` | `black` |
+| `verde` | `green` |
+| `blu` | `blue` |
+| `azzurro` | `skyblue` |
+| `celeste` | `lightblue` |
+| `giallo` | `yellow` |
+| `arancione` | `orange` |
+| `rosa` | `pink` |
+| `viola` | `purple` |
+| `grigio` | `gray` |
+| `marrone` | `brown` |
+| `oro` | `gold` |
+| `argiento` | `silver` |
+| `trasparente` | `transparent` |
+| `culore-corrente` | `currentcolor` |
+| `nisciuno` | `none` |
+| `niente` | `none` |
+| `blocco` | `block` |
+| `in-linea` | `inline` |
+| `blocco-in-linea` | `inline-block` |
+| `flessibile` | `flex` |
+| `griglia` | `grid` |
+| `miezo` | `center` |
+| `mmiezo` | `center` |
+| `manca` | `left` |
+| `destra` | `right` |
+| `ncoppa` | `top` |
+| `sotto` | `bottom` |
+| `inizio` | `start` |
+| `fine` | `end` |
+| `spartuto` | `space-between` |
+| `attuorno` | `space-around` |
+| `stiracchiato` | `stretch` |
+| `riga` | `row` |
+| `colonna` | `column` |
+| `fisso` | `fixed` |
+| `fissa` | `fixed` |
+| `assoluto` | `absolute` |
+| `assoluta` | `absolute` |
+| `relativo` | `relative` |
+| `relativa` | `relative` |
+| `appiccecato` | `sticky` |
+| `appiccecata` | `sticky` |
+| `statico` | `static` |
+| `grassetto` | `bold` |
+| `corsivo` | `italic` |
+| `normale` | `normal` |
+| `sottolineato` | `underline` |
+| `sbarrato` | `line-through` |
+| `maiuscolo` | `uppercase` |
+| `minuscolo` | `lowercase` |
+| `nascosto` | `hidden` |
+| `visibile` | `visible` |
+| `scorre` | `scroll` |
+| `automatico` | `auto` |
+| `manella` | `pointer` |
+| `aspetta` | `wait` |
+| `ereditato` | `inherit` |
+| `iniziale` | `initial` |
+| `a-capo` | `wrap` |
+| `nun-va-a-capo` | `nowrap` |
+| `copre` | `cover` |
+| `contiene` | `contain` |
+| `ripete` | `repeat` |
+| `nun-ripete` | `no-repeat` |
+| `continuo` | `solid` |
+| `tratteggiato` | `dashed` |
+| `puntinato` | `dotted` |
+| `bordo-incluso` | `border-box` |
+| `facile` | `ease` |
+| `lineare` | `linear` |
+| `infinito` | `infinite` |
+| `alternato` | `alternate` |
+| `!importante` | `!important` |
+
+| Pseudo | CSS |
+| --- | --- |
+| `passanno` | `hover` |
+| `premuto` | `active` |
+| `fuoco` | `focus` |
+| `fuoco-visibile` | `focus-visible` |
+| `disattivato` | `disabled` |
+| `spuntato` | `checked` |
+| `primmo-figlio` | `first-child` |
+| `urdemo-figlio` | `last-child` |
+| `vacante` | `empty` |
+| `radice` | `root` |
+| `primma` | `before` |
+| `doppo` | `after` |
+| `segnaposto` | `placeholder` |
+
+`@quanno` media queries also take `schermo` (screen), `stampa` (print), `tutto` (all), `e` (and).
 
 ## GomorraSQL: SQL queries
 

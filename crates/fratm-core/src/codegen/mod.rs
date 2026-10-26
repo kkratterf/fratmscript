@@ -12,6 +12,8 @@ pub struct CodeGen {
     current_col: usize,
     /// Local names of the `gomorra` tag
     gomorra: Vec<String>,
+    /// Local names of the `stile` tag
+    stile: Vec<String>,
 }
 
 impl CodeGen {
@@ -24,11 +26,13 @@ impl CodeGen {
             current_line: 0,
             current_col: 0,
             gomorra: Vec::new(),
+            stile: Vec::new(),
         }
     }
 
     pub fn generate(&mut self, program: &Program) -> String {
         self.gomorra = crate::gomorra::tag_names(program);
+        self.stile = crate::stdlib::local_names(program, "stile");
         for stmt in &program.statements {
             self.gen_statement(stmt);
             self.emit("\n");
@@ -634,7 +638,7 @@ impl CodeGen {
                 self.emit("}");
             }
             Expression::TaggedTemplate { tag, quasi, .. } => {
-                if !self.gen_gomorra(tag, quasi) {
+                if !self.gen_gomorra(tag, quasi) && !self.gen_stile(tag, quasi) {
                     self.gen_callee(tag);
                     self.gen_expression(quasi);
                 }
@@ -1284,9 +1288,6 @@ impl CodeGen {
         }
     }
 
-    /// Callee or object of a member access: prefix operators need parentheses
-    /// too (`(await p).x`, `(() => 1)()`), and so do numbers (`(5).toString()`,
-    /// since `5.` would be read as the number).
     /// `` gomorra`ripigliammo … arò id = ${id}` `` becomes
     /// `gomorra("SELECT … WHERE id = ?", "SELECT … WHERE id = $1", [id])`.
     /// Returns false when `tag` is not the gomorra of the fratm library.
@@ -1325,6 +1326,45 @@ impl CodeGen {
         true
     }
 
+    /// `` stile`buttone { culore: russo }` `` becomes
+    /// `` stile(`button { color: red }`) ``, with every `${ … }` kept.
+    /// Returns false when `tag` is not the stile of the fratm library.
+    fn gen_stile(&mut self, tag: &Expression, quasi: &Expression) -> bool {
+        let (
+            Expression::Identifier { name, .. },
+            Expression::Template {
+                quasis,
+                expressions,
+                ..
+            },
+        ) = (tag, quasi)
+        else {
+            return false;
+        };
+        if !self.stile.contains(name) {
+            return false;
+        }
+        // The checker reports CSS that does not translate
+        let Ok(css) = crate::stile::translate(quasis) else {
+            return false;
+        };
+        self.emit(&js_name(name));
+        self.emit("(`");
+        for (i, chunk) in css.iter().enumerate() {
+            self.emit(chunk);
+            if let Some(expr) = expressions.get(i) {
+                self.emit("${");
+                self.gen_expression(expr);
+                self.emit("}");
+            }
+        }
+        self.emit("`)");
+        true
+    }
+
+    /// Callee or object of a member access: prefix operators need parentheses
+    /// too (`(await p).x`, `(() => 1)()`), and so do numbers (`(5).toString()`,
+    /// since `5.` would be read as the number).
     fn gen_callee(&mut self, expr: &Expression) {
         let prefix = matches!(
             expr,

@@ -40,6 +40,9 @@ keywords change.
   `casella` input, `lista`/`voce` ul/li; full table in `fratm guida`); HTML names work too.
   Hooks keep their React names (`useState`), `class` works on HTML tags. The
   output imports `react/jsx-runtime`; `// @jsxImportSource preact` switches library.
+- CSS in Neapolitan: `chiamm { stile } da "fratm"` then
+  ``stile`buttone:passanno { culore: russo; spazio: 8px }` `` (adds `button:hover { color: red;
+  padding: 8px }` to the page). Plain CSS words pass through; tables in `fratm guida`.
 - Every modern JavaScript construct is supported; `fratm guida` lists the exact syntax.
 
 | FratmScript | JavaScript |

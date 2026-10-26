@@ -33,6 +33,7 @@ const TITLES: Record<string, Record<Lang, string>> = {
   '16_pizzeria_jsx': { it: 'Componente React (JSX)', en: 'React component (JSX)', nap: "'A pizzeria cu React" },
   '17_gomorra': { it: 'Query SQL con GomorraSQL', en: 'SQL queries with GomorraSQL', nap: "'E query 'e GomorraSQL" },
   '18_magazzino': { it: 'Database SQLite', en: 'SQLite database', nap: "'O magazzino (SQLite)" },
+  '19_pizzeria_cu_stile': { it: 'Pagina con tag e CSS napoletani', en: 'Page with Neapolitan tags and CSS', nap: "'A pizzeria cu stile" },
 }
 
 export interface Example {

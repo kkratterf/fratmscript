@@ -41,6 +41,7 @@ pub fn check(program: &Program) -> Result<(), SemanticError> {
         private_names: Vec::new(),
         exports: Vec::new(),
         gomorra: crate::gomorra::tag_names(program),
+        stile: crate::stdlib::local_names(program, "stile"),
     };
     checker.statements(&program.statements);
     // Exports may name declarations further down, so check them last
@@ -70,6 +71,8 @@ struct Checker {
     exports: Vec<(String, Span)>,
     /// Local names of the `gomorra` tag, whose queries are checked here
     gomorra: Vec<String>,
+    /// Local names of the `stile` tag, whose CSS is checked here
+    stile: Vec<String>,
 }
 
 /// Where the statement being checked sits, for `piglie`, `aspett`, `rompe`,
@@ -649,6 +652,30 @@ impl Checker {
                             crate::gomorra::source_position(*span, expressions, &e.position);
                         self.fail(SemanticError {
                             message: format!("gomorra: {}", e.message),
+                            span: Span {
+                                line,
+                                column,
+                                ..*span
+                            },
+                        });
+                    }
+                }
+                self.expression(quasi);
+            }
+            Expression::TaggedTemplate { tag, quasi, .. }
+                if matches!(&**tag, Expression::Identifier { name, .. } if self.stile.contains(name)) =>
+            {
+                if let Expression::Template {
+                    quasis,
+                    expressions,
+                    span,
+                } = &**quasi
+                {
+                    if let Err(e) = crate::stile::translate(quasis) {
+                        let (line, column) =
+                            crate::gomorra::source_position(*span, expressions, &e.position);
+                        self.fail(SemanticError {
+                            message: format!("stile: {}", e.message),
                             span: Span {
                                 line,
                                 column,

@@ -88,6 +88,7 @@ pub mod parser;
 pub mod runtime;
 pub mod sourcemap;
 pub mod stdlib;
+pub mod stile;
 
 use codegen::CodeGen;
 use errors::CompileError;
@@ -1424,6 +1425,40 @@ na famiglie Pizzaiolo figlio 'e Persona {
         .unwrap_err();
         assert!(
             error.to_string().contains("attaccato a na query"),
+            "{}",
+            error
+        );
+    }
+
+    #[test]
+    fn test_stile_is_translated_to_css_at_compile_time() {
+        let code = js(
+            "chiamm { stile } da \"fratm\"\nstile`buttone:passanno { culore: ${c}; spazio: 8px }`",
+        );
+        assert!(code.starts_with("const stile = (() => {"), "{}", code);
+        assert!(
+            code.ends_with("stile(`button:hover { color: ${c}; padding: 8px }`);\n"),
+            "{}",
+            code
+        );
+        // Without the import, stile is any other tag
+        assert_eq!(js("stile`culore: russo`"), "stile`culore: russo`;\n");
+        // Called as a function it takes CSS as it is
+        assert!(js("chiamm { stile } da \"fratm\"\nstile(\"a{}\")").ends_with("stile(\"a{}\");\n"));
+    }
+
+    #[test]
+    fn test_stile_errors_point_into_the_css() {
+        let error = compile(
+            "chiamm { stile } da \"fratm\"\nstile`\n  .pizza {\n    culore russo\n  }`",
+            Default::default(),
+        )
+        .unwrap_err();
+        assert_eq!((error.line(), error.column()), (Some(4), Some(5)));
+        assert!(
+            error
+                .to_string()
+                .contains("Int'o stile: 'culore russo' nun è na proprietà"),
             "{}",
             error
         );

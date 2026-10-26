@@ -39,19 +39,7 @@ pub struct GomorraError {
 /// Local names of `gomorra` in `chiamm { gomorra } da "fratm"` (an alias
 /// with `comme` included): the tags whose templates get translated.
 pub fn tag_names(program: &crate::parser::Program) -> Vec<String> {
-    program
-        .statements
-        .iter()
-        .filter_map(|statement| match statement {
-            crate::parser::Statement::Import {
-                specifiers, source, ..
-            } if source == crate::stdlib::MODULE => Some(specifiers),
-            _ => None,
-        })
-        .flatten()
-        .filter(|s| s.imported == "gomorra")
-        .map(|s| s.local.clone())
-        .collect()
+    crate::stdlib::local_names(program, "gomorra")
 }
 
 /// Line and column (from 1) in the `.fratm` file of an error position.

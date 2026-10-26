@@ -1,0 +1,26 @@
+// stile`…`: CSS in Neapolitan, translated at compile time
+chiamm { stile } da "fratm"
+
+chist è accento = "#c8321e"
+chist è spazio = 8
+
+chist è css = stile`
+  /* 'a pizzeria */
+  core.pizzeria {
+    sfunno-culore: janco;
+    culore: ${accento};
+    spazio: ${spazio * 2}px;
+    mostra: flessibile;
+    direzione: colonna;
+    spazio-mmiez: 4px;
+  }
+  buttone:passanno, collegamento:fuoco { culore: russo !importante; cursore: manella }
+  voce:urdemo-figlio::doppo { contenuto: "!" }
+  @quanno schermo e (larghezza-massima: 600px) {
+    scatola { larghezza: 100%; spazio: 0 }
+  }
+`
+stamm a dì(css)
+
+// Plain CSS goes through as it is
+stamm a dì(stile`div { color: red }`)
