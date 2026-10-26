@@ -716,18 +716,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_vscode_grammar_knows_every_phrase() {
+    fn the_editors_know_every_phrase() {
+        use crate::editor_words::{lists, playground_lists};
         for (words, _, kind) in PHRASES {
-            let scope = match kind {
-                Kind::Statement => "keyword.other.DML.sql",
-                Kind::Clause => "keyword.other.sql",
-                Kind::Operator => "keyword.operator.sql",
-                Kind::Value => "constant.language.sql",
+            let (scope, array) = match kind {
+                Kind::Statement => ("keyword.other.DML.sql", "GOMORRA_STATEMENTS"),
+                Kind::Clause => ("keyword.other.sql", "GOMORRA_CLAUSES"),
+                Kind::Operator => ("keyword.operator.sql", "GOMORRA_OPERATORS"),
+                Kind::Value => ("constant.language.sql", "GOMORRA_VALUES"),
             };
+            let phrase = words.join(" ");
             assert!(
-                crate::vscode_grammar::lists("gomorra-template", scope, words),
-                "{} missing from gomorra-template ({scope}) in the VS Code grammar",
-                words.join(" ")
+                lists("gomorra-template", scope, words),
+                "{phrase} missing from gomorra-template ({scope}) in the VS Code grammar"
+            );
+            assert!(
+                playground_lists(array, &phrase),
+                "{phrase} missing from {array} in the playground"
             );
         }
     }

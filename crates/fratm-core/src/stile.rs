@@ -755,8 +755,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_vscode_grammar_knows_every_value_and_tag() {
-        use crate::vscode_grammar::lists;
+    fn the_editors_know_every_value_and_tag() {
+        use crate::editor_words::{lists, playground_lists};
         for (word, _) in VALUES {
             assert!(
                 lists(
@@ -766,12 +766,20 @@ mod tests {
                 ),
                 "{word} missing from stile-template in the VS Code grammar"
             );
+            assert!(
+                playground_lists("STILE_VALUES", word),
+                "{word} missing from STILE_VALUES in the playground"
+            );
         }
         for (nap, html, _) in crate::html::TAGS {
             for tag in [nap, html] {
                 assert!(
                     lists("stile-template", "entity.name.tag.css", &[tag]),
                     "{tag} missing from stile-template in the VS Code grammar"
+                );
+                assert!(
+                    playground_lists("STILE_TAGS", tag),
+                    "{tag} missing from STILE_TAGS in the playground"
                 );
             }
         }

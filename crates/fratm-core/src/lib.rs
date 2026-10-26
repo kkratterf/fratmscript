@@ -362,10 +362,11 @@ pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
-/// The VS Code grammar colours the words of `stile` and `gomorra` blocks
-/// from lists that must follow the compiler's tables; tests read them here.
+/// The VS Code grammar and the playground editor colour the words of `stile`
+/// and `gomorra` blocks from lists that must follow the compiler's tables;
+/// tests read them here.
 #[cfg(test)]
-pub(crate) mod vscode_grammar {
+pub(crate) mod editor_words {
     /// Whether the `match` regex of the pattern named `scope` inside the
     /// grammar rule `rule` lists `words` (joined by `\s+`) as an alternative.
     pub fn lists(rule: &str, scope: &str, words: &[&str]) -> bool {
@@ -388,6 +389,22 @@ pub(crate) mod vscode_grammar {
                         .any(|after| regex.contains(&format!("{before}{alternative}{after}")))
                 })
             })
+    }
+    /// Whether the array `name` of the playground's `templateWords.ts` holds
+    /// `phrase` as one of its strings.
+    pub fn playground_lists(name: &str, phrase: &str) -> bool {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../packages/playground/src/lib/templateWords.ts"
+        );
+        let source = std::fs::read_to_string(path).unwrap();
+        let start = format!("export const {name} = [");
+        let Some(at) = source.find(&start) else {
+            return false;
+        };
+        let array = &source[at..];
+        let array = &array[..array.find("\n]").unwrap()];
+        array.contains(&format!("'{phrase}'")) || array.contains(&format!("\"{phrase}\""))
     }
 }
 

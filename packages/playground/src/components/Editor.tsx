@@ -9,20 +9,46 @@ import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 import { keywordHelp, setKeywordLanguage } from '@/lib/keywordHelp'
 import { useI18n } from '@/lib/i18n'
+import { STILE_TAGS, STILE_VALUES, GOMORRA_CLAUSES, GOMORRA_OPERATORS, GOMORRA_STATEMENTS, GOMORRA_VALUES } from '@/lib/templateWords'
 
 // FratmScript language definition for StreamLanguage.
-// JSX is tracked with a stack of contexts: inside a tag (`<a href="…"`),
-// among an element's children, or in a `{ … }` expression nested in JSX.
+// JSX and template literals are tracked with a stack of contexts: inside a
+// tag (`<a href="…"`), among an element's children, in a `{ … }` or `${ … }`
+// expression, or in a template literal (CSS for stile`…`, SQL for gomorra`…`).
+type TemplateLanguage = 'stile' | 'gomorra' | null
+
 type JsxContext =
   | { kind: 'tag' }
   | { kind: 'children' }
   | { kind: 'expr'; depth: number }
+  | { kind: 'template'; language: TemplateLanguage }
 
 interface FratmState {
   jsx: JsxContext[]
   /** The last token ends a value (name, number, `)`), so `<` compares */
   afterValue: boolean
+  /** The tag of the template literal that starts at the next backtick */
+  templateTag: TemplateLanguage
 }
+
+/** A regex that matches one of `words` as a whole word, longest first */
+function wordsPattern(words: string[]): RegExp {
+  const escaped = [...words]
+    .sort((a, b) => b.length - a.length)
+    .map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+'))
+  return new RegExp(`^(?:${escaped.join('|')})(?![\\p{L}\\p{N}_$-])`, 'u')
+}
+
+const STILE_VALUE = wordsPattern(STILE_VALUES)
+// A tag is a selector only when a selector or a block follows it
+const STILE_TAG = new RegExp(`${wordsPattern(STILE_TAGS).source}(?=\\s*(?:[{,>+~\\[]|[.#][\\p{L}_-]|::?\\p{L})|\\s+[^:;\`]*\\{)`, 'u')
+const GOMORRA_STATEMENT = wordsPattern([...GOMORRA_STATEMENTS, ...GOMORRA_CLAUSES])
+const GOMORRA_OPERATOR = wordsPattern(GOMORRA_OPERATORS)
+const GOMORRA_VALUE = wordsPattern(GOMORRA_VALUES)
+const SQL_KEYWORD = /^(?:select|from|where|insert|into|update|set|delete|create|table|drop|if|exists|join|left|inner|on|order|group|by|limit|offset|values|and|or|not|null|as|like|in|is|asc|desc|begin|commit|rollback|primary|key|integer|text|real|default)(?![\p{L}\p{N}_$-])/iu
+const CSS_NAME = /^-{0,2}[\p{L}_][\p{L}\p{N}_-]*/u
+// A property is a name followed by `:` and a space (`buttone:passanno` is a selector)
+const CSS_PROPERTY = new RegExp(`${CSS_NAME.source}(?=\\s*:(?:\\s|$))`, 'u')
 
 const JSX_NAME = /^[\p{L}_$][\p{L}\p{N}_$.:-]*/u
 
@@ -33,6 +59,19 @@ function codeToken(stream: StringStream, state: FratmState): string | null {
     stream.skipToEnd()
     return 'comment'
   }
+
+  // Template literals: stile`…` and gomorra`…` get their own colours
+  const tagged = stream.match(/^(stile|gomorra)(?=\s*`)/) as RegExpMatchArray | null
+  if (tagged) {
+    state.templateTag = tagged[1] as TemplateLanguage
+    return 'variableName.function'
+  }
+  if (stream.eat('`')) {
+    state.jsx.push({ kind: 'template', language: state.templateTag })
+    state.templateTag = null
+    return 'string'
+  }
+  state.templateTag = null
 
   // Strings
   if (stream.match(/"([^"\\]|\\.)*"/)) return 'string'
@@ -75,6 +114,60 @@ function codeToken(stream: StringStream, state: FratmState): string | null {
   // Skip unknown character
   stream.next()
   return null
+}
+
+/** Tokens of a template literal, until the closing backtick. */
+function templateToken(stream: StringStream, state: FratmState, language: TemplateLanguage): string | null {
+  if (stream.eat('`')) {
+    state.jsx.pop()
+    state.afterValue = true
+    return 'string'
+  }
+  if (stream.match('${')) {
+    state.jsx.push({ kind: 'expr', depth: 0 })
+    state.afterValue = false
+    return 'brace'
+  }
+  if (stream.match(/^\\./)) return 'string'
+  if (language === null) {
+    stream.match(/^(?:[^`$\\]|\$(?!\{))+/) || stream.next()
+    return 'string'
+  }
+  if (stream.eatSpace()) return null
+  if (language === 'stile') return stileToken(stream)
+  return gomorraToken(stream)
+}
+
+/** CSS in Neapolitan inside stile`…` */
+function stileToken(stream: StringStream): string | null {
+  if (stream.match(/^\/\*(?:[^*`]|\*(?!\/))*(?:\*\/)?/)) return 'comment'
+  if (stream.match(/^@[\p{L}_-][\p{L}\p{N}_-]*/u)) return 'keyword'
+  if (stream.match(/^"[^"`]*"/) || stream.match(/^'[^'`]*'/)) return 'string'
+  if (stream.match(CSS_PROPERTY)) return 'propertyName'
+  if (stream.match(/^::?[\p{L}_-][\p{L}\p{N}_-]*/u)) return 'keyword'
+  if (stream.match(/^#[0-9a-fA-F]{3,8}(?![\p{L}\p{N}_-])/u)) return 'number'
+  if (stream.match(/^[#.][\p{L}_-][\p{L}\p{N}_-]*/u)) return 'className'
+  if (stream.match(/^-?(?:\d+\.?\d*|\.\d+)(?:[a-zA-Z]+|%)?/)) return 'number'
+  if (stream.match(STILE_TAG)) return 'tagName'
+  if (stream.match(STILE_VALUE)) return 'atom'
+  if (stream.match(CSS_NAME)) return null
+  stream.next()
+  return 'punctuation'
+}
+
+/** GomorraSQL inside gomorra`…` */
+function gomorraToken(stream: StringStream): string | null {
+  if (stream.match(/^--(?:[^`$]|\$(?!\{))*/)) return 'comment'
+  if (stream.match(/^"[^"`]*"/)) return 'string'
+  if (stream.match(GOMORRA_STATEMENT)) return 'keyword'
+  if (stream.match(GOMORRA_OPERATOR)) return 'operator'
+  if (stream.match(GOMORRA_VALUE)) return 'atom'
+  if (stream.match(SQL_KEYWORD)) return 'keyword'
+  if (stream.match(/^\d+(?:\.\d+)?/)) return 'number'
+  if (stream.match(/^(?:<=|>=|<>|!=|=|<|>)/)) return 'operator'
+  if (stream.match(/^[\p{L}_'][\p{L}\p{N}_']*/u)) return null
+  stream.next()
+  return 'punctuation'
 }
 
 /** Tokens inside `<tag …>`: name, attributes, values, until `>` or `/>`. */
@@ -125,11 +218,12 @@ function childrenToken(stream: StringStream, state: FratmState): string | null {
 }
 
 const fratmScriptLanguage = StreamLanguage.define<FratmState>({
-  startState: () => ({ jsx: [], afterValue: false }),
-  copyState: state => ({ jsx: state.jsx.map(context => ({ ...context })), afterValue: state.afterValue }),
+  startState: () => ({ jsx: [], afterValue: false, templateTag: null }),
+  copyState: state => ({ jsx: state.jsx.map(context => ({ ...context })), afterValue: state.afterValue, templateTag: state.templateTag }),
   token(stream, state) {
     const context = state.jsx[state.jsx.length - 1]
     if (context?.kind === 'children') return childrenToken(stream, state)
+    if (context?.kind === 'template') return templateToken(stream, state, context.language)
     // Skip whitespace
     if (stream.eatSpace()) return null
     if (context?.kind === 'tag') return tagToken(stream, state)
@@ -145,7 +239,7 @@ const fratmScriptLanguage = StreamLanguage.define<FratmState>({
     }
     const style = codeToken(stream, state)
     const text = stream.current()
-    if (style !== 'comment' && style !== 'angleBracket') {
+    if (style !== 'comment' && style !== 'angleBracket' && state.jsx[state.jsx.length - 1]?.kind !== 'template') {
       state.afterValue = style === 'variable' || style === 'number' || style === 'string' || style === 'atom' || /^[)\]]$/.test(text)
     }
     return style
