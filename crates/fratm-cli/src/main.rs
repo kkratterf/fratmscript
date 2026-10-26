@@ -835,4 +835,19 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn guida_lists_every_html_tag_and_attribute() {
+        for (nap, html, _) in fratm_core::html::TAGS {
+            let row = format!("| `{nap}` | `{html}` |");
+            assert!(GUIDA.contains(&row), "missing {row}");
+        }
+        for (nap, react) in fratm_core::html::ATTRIBUTES {
+            if matches!(*nap, "class" | "for") {
+                continue;
+            }
+            let row = format!("| `{nap}` | `{react}` |");
+            assert!(GUIDA.contains(&row), "missing {row}");
+        }
+    }
 }

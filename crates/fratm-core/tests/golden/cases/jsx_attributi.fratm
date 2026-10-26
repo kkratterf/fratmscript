@@ -1,0 +1,30 @@
+// JSX attributes and events with Neapolitan names: on HTML tags they
+// compile to the React props, on components they stay as written
+chiamm { useState } da "react"
+
+mann for predefinit facc Ordine({ pizze, Riga }) {
+    tien [nomme, setNomme] = useState("")
+    piglie (
+        <modulo azione="/ordine" metodo="post" quanno-se-manna={(e) => e.preventDefault()}>
+            <etichetta pe="nomme" classe="etichetta">Nomme</etichetta>
+            <casella
+                id="nomme"
+                nomme="nomme"
+                tipo="text"
+                segnaposto="Totonno"
+                valore={nomme}
+                quanno-se-scrive={(e) => setNomme(e.target.value)}
+                obbligatorio
+                auto-fuoco
+            />
+            <lista>
+                {pizze.map((p) => <voce chiave={p.id} quanno-se-clicca={() => setNomme(p.nomme)}>{p.nomme}</voce>)}
+            </lista>
+            <immagine fonte="pizza.png" testo-alternativo="Na pizza" larghezza={120} altezza={80} />
+            <collegamento indirizzo="/" destinazione="_blank" titolo="Torna">Torna</collegamento>
+            <scatola stile={{ color: "red" }} nascosto={nomme === ""} ruolo="status">Uè {nomme}</scatola>
+            <buttone tipo="submit" disattivato={nomme === ""} onClick={() => stamm a dì(nomme)}>Manna</buttone>
+            <Riga tipo="pizza" quanno-se-clicca={setNomme} />
+        </modulo>
+    )
+}

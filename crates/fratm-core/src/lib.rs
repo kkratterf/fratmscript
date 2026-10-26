@@ -410,6 +410,32 @@ mod tests {
     }
 
     #[test]
+    fn test_jsx_neapolitan_attributes_and_events_compile_to_react_props() {
+        assert_eq!(
+            jsx_js("x = <casella tipo=\"text\" segnaposto=\"Pizza\" valore={v} quanno-se-scrive={(e) => f(e.target.value)} disattivato />"),
+            "x = _jsx(\"input\", { type: \"text\", placeholder: \"Pizza\", value: v, onChange: (e) => f(e.target.value), disabled: true });\n"
+        );
+        assert_eq!(
+            jsx_js("x = <buttone classe=\"forte\" quanno-se-clicca={sforna} stile={{ color: \"red\" }}>Sforna</buttone>"),
+            "x = _jsx(\"button\", { className: \"forte\", onClick: sforna, style: { color: \"red\" }, children: \"Sforna\" });\n"
+        );
+        assert_eq!(
+            jsx_js("x = <etichetta pe=\"n\"><immagine fonte=\"/a.png\" testo-alternativo=\"Pizza\" /></etichetta>"),
+            "x = _jsx(\"label\", { htmlFor: \"n\", children: _jsx(\"img\", { src: \"/a.png\", alt: \"Pizza\" }) });\n"
+        );
+        // `chiave` is the key of an HTML element
+        assert_eq!(
+            jsx_js("x = <voce chiave={p.id}>{p.nomme}</voce>"),
+            "x = _jsx(\"li\", { children: p.nomme }, p.id);\n"
+        );
+        // React names keep working, and a component gets its props as written
+        assert_eq!(
+            jsx_js("x = <modulo onSubmit={manna}><Campo tipo=\"a\" quanno-se-clicca={f} /></modulo>"),
+            "x = _jsx(\"form\", { onSubmit: manna, children: _jsx(Campo, { tipo: \"a\", \"quanno-se-clicca\": f }) });\n"
+        );
+    }
+
+    #[test]
     fn test_jsx_components_props_keys_and_spreads() {
         assert_eq!(
             jsx_js("x = <Pizza key={p.id} nomme=\"Margherita\" {...p} cotta />"),

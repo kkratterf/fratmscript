@@ -31,8 +31,10 @@ Playground: https://kkratterf.github.io/fratmscript/ · Repo: https://github.com
    errors" below; most errors also carry a hint that starts with 💡.
 8. **Web pages:** write JSX tags with their Neapolitan names (`<scatola>`, `<buttone>`, table in
    "JSX" below; never invent one: an unknown lowercase name stays as it is in the DOM). Attributes
-   and event props keep their React names (`className`, `onClick`, `type`). Class names, ids and
-   Tailwind classes are never translated: `className="mt-4"` and `.pizza` stay as they are.
+   and events of HTML tags have Neapolitan names too (`classe`, `segnaposto`,
+   `quanno-se-clicca`; the React names `className`, `onClick` work as well); props of a
+   component are never translated. Class names, ids and Tailwind classes are never translated:
+   `classe="mt-4"` and `.pizza` stay as they are.
    In `` stile`…` `` only the words of the CSS tables change; check a block with `fratm_stile`.
 
 ## Keywords
@@ -340,7 +342,7 @@ chiamm { useState } da "react"
 chiamm "./stile.css"
 
 facc Pizza({ nomme, prezzo }) {
-    piglie <voce class="pizza">{nomme}: {prezzo} €</voce>
+    piglie <voce classe="pizza">{nomme}: {prezzo} €</voce>
 }
 
 mann for predefinit facc Menu({ pizze }) {
@@ -352,7 +354,7 @@ mann for predefinit facc Menu({ pizze }) {
                 {pizze.map((p) => <Pizza key={p.nomme} {...p} />)}
             </lista>
             {scelte > 0 ? <scritta>Bravo!</scritta> : nisciun}
-            <buttone onClick={() => setScelte(scelte + 1)}>Scegli</buttone>
+            <buttone quanno-se-clicca={() => setScelte(scelte + 1)}>Scegli</buttone>
         </sezione>
     )
 }
@@ -402,7 +404,61 @@ mann for predefinit facc Menu({ pizze }) {
   | `capocella` | `th` |
   | `tela` | `canvas` |
 
-- `class` and `for` work on HTML tags (they become `className` / `htmlFor`).
+- Attributes and events of HTML tags have Neapolitan names (the output always has the React
+  name; React names, `class`, `for`, `data-*` and `aria-*` work as written). On a component
+  (`<Pizza tipo="x" />`) every prop is passed as written.
+
+  | FratmScript | React |
+  | --- | --- |
+  | `chiave` | `key` |
+  | `classe` | `className` |
+  | `pe` | `htmlFor` |
+  | `tipo` | `type` |
+  | `valore` | `value` |
+  | `valore-iniziale` | `defaultValue` |
+  | `segnaposto` | `placeholder` |
+  | `fonte` | `src` |
+  | `indirizzo` | `href` |
+  | `testo-alternativo` | `alt` |
+  | `disattivato` | `disabled` |
+  | `nomme` | `name` |
+  | `titolo` | `title` |
+  | `stile` | `style` |
+  | `controllato` | `checked` |
+  | `scelto` | `selected` |
+  | `obbligatorio` | `required` |
+  | `sulo-lettura` | `readOnly` |
+  | `multiplo` | `multiple` |
+  | `nascosto` | `hidden` |
+  | `auto-fuoco` | `autoFocus` |
+  | `larghezza` | `width` |
+  | `altezza` | `height` |
+  | `righe` | `rows` |
+  | `colonne` | `cols` |
+  | `minimo` | `min` |
+  | `massimo` | `max` |
+  | `passo` | `step` |
+  | `azione` | `action` |
+  | `metodo` | `method` |
+  | `destinazione` | `target` |
+  | `lingua` | `lang` |
+  | `ruolo` | `role` |
+  | `quanno-se-clicca` | `onClick` |
+  | `quanno-se-doppio-clicca` | `onDoubleClick` |
+  | `quanno-se-scrive` | `onChange` |
+  | `quanno-se-cagna` | `onChange` |
+  | `quanno-se-manna` | `onSubmit` |
+  | `quanno-se-preme` | `onKeyDown` |
+  | `quanno-se-lassa` | `onKeyUp` |
+  | `quanno-se-passa` | `onMouseEnter` |
+  | `quanno-se-leva` | `onMouseLeave` |
+  | `quanno-se-trase` | `onFocus` |
+  | `quanno-se-jesce` | `onBlur` |
+  | `quanno-se-carica` | `onLoad` |
+  | `quanno-se-scorre` | `onScroll` |
+
+  `stile={{ color: "red" }}` takes a React style object (camelCase keys, plain CSS values);
+  rules in Neapolitan CSS go in `` stile`…` ``.
 - The output uses the automatic JSX runtime: `import { jsx as _jsx, ... } from
   "react/jsx-runtime"` is added at the top. Write `// @jsxImportSource preact` at the top of the
   file to use Preact; the npm package's `compile` takes `jsxImportSource` too.

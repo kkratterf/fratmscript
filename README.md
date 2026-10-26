@@ -361,15 +361,15 @@ chiamm "./stile.css"
 mann for predefinit facc Contatore() {
     tien [pizze, setPizze] = useState(0)
     piglie (
-        <core class="pizzeria">
+        <core classe="pizzeria">
             <titolo>Pizze sfurnate: {pizze}</titolo>
-            <buttone onClick={() => setPizze(pizze + 1)}>Sforna</buttone>
+            <buttone quanno-se-clicca={() => setPizze(pizze + 1)}>Sforna</buttone>
         </core>
     )
 }
 ```
 
-JSX compiles to the automatic runtime of React (`react/jsx-runtime`). Write `// @jsxImportSource preact` at the top of a file to use Preact instead. HTML tags have Neapolitan names, translated at compile time so the browser still gets standard HTML: `scatola` → `div`, `piezzo` → `span`, `scritta` → `p`, `titolo` → `h1`, `titolo2` → `h2`, `titolo3` → `h3`, `titolo4` → `h4`, `titolo5` → `h5`, `titolo6` → `h6`, `buttone` → `button`, `casella` → `input`, `quaderno` → `textarea`, `scegli` → `select`, `opzione` → `option`, `etichetta` → `label`, `modulo` → `form`, `lista` → `ul`, `elenco` → `ol`, `voce` → `li`, `collegamento` → `a`, `immagine` → `img`, `capa` → `header`, `pede` → `footer`, `core` → `main`, `sezione` → `section`, `articolo` → `article`, `navigazione` → `nav`, `acapo` → `br`, `linea` → `hr`, `forte` → `strong`, `corsivo` → `em`, `codice` → `code`, `tabella` → `table`, `riga` → `tr`, `cella` → `td`, `capocella` → `th`, `tela` → `canvas`. HTML names (`div`, `button`) work too, a capitalised tag is a component, `class` and `for` work on every HTML tag, and CSS is plain CSS (or CSS modules) imported through Vite. A `<` starts JSX only where a value can start and a tag name follows right away, so `a < b` is still a comparison.
+JSX compiles to the automatic runtime of React (`react/jsx-runtime`). Write `// @jsxImportSource preact` at the top of a file to use Preact instead. HTML tags have Neapolitan names, translated at compile time so the browser still gets standard HTML: `scatola` → `div`, `piezzo` → `span`, `scritta` → `p`, `titolo` → `h1`, `titolo2` → `h2`, `titolo3` → `h3`, `titolo4` → `h4`, `titolo5` → `h5`, `titolo6` → `h6`, `buttone` → `button`, `casella` → `input`, `quaderno` → `textarea`, `scegli` → `select`, `opzione` → `option`, `etichetta` → `label`, `modulo` → `form`, `lista` → `ul`, `elenco` → `ol`, `voce` → `li`, `collegamento` → `a`, `immagine` → `img`, `capa` → `header`, `pede` → `footer`, `core` → `main`, `sezione` → `section`, `articolo` → `article`, `navigazione` → `nav`, `acapo` → `br`, `linea` → `hr`, `forte` → `strong`, `corsivo` → `em`, `codice` → `code`, `tabella` → `table`, `riga` → `tr`, `cella` → `td`, `capocella` → `th`, `tela` → `canvas`. HTML names (`div`, `button`) work too and a capitalised tag is a component. Attributes and events of HTML tags have Neapolitan names as well, translated to the React props: `chiave` → `key`, `classe` → `className`, `pe` → `htmlFor`, `tipo` → `type`, `valore` → `value`, `valore-iniziale` → `defaultValue`, `segnaposto` → `placeholder`, `fonte` → `src`, `indirizzo` → `href`, `testo-alternativo` → `alt`, `disattivato` → `disabled`, `nomme` → `name`, `titolo` → `title`, `stile` → `style`, `controllato` → `checked`, `scelto` → `selected`, `obbligatorio` → `required`, `sulo-lettura` → `readOnly`, `multiplo` → `multiple`, `nascosto` → `hidden`, `auto-fuoco` → `autoFocus`, `larghezza` → `width`, `altezza` → `height`, `righe` → `rows`, `colonne` → `cols`, `minimo` → `min`, `massimo` → `max`, `passo` → `step`, `azione` → `action`, `metodo` → `method`, `destinazione` → `target`, `lingua` → `lang`, `ruolo` → `role`; events `quanno-se-clicca` → `onClick`, `quanno-se-doppio-clicca` → `onDoubleClick`, `quanno-se-scrive` and `quanno-se-cagna` → `onChange`, `quanno-se-manna` → `onSubmit`, `quanno-se-preme` → `onKeyDown`, `quanno-se-lassa` → `onKeyUp`, `quanno-se-passa` → `onMouseEnter`, `quanno-se-leva` → `onMouseLeave`, `quanno-se-trase` → `onFocus`, `quanno-se-jesce` → `onBlur`, `quanno-se-carica` → `onLoad`, `quanno-se-scorre` → `onScroll`. React names, `class`, `for`, `data-*` and `aria-*` work as written; props of a component are never translated. CSS is plain CSS (or CSS modules) imported through Vite. A `<` starts JSX only where a value can start and a tag name follows right away, so `a < b` is still a comparison.
 
 ### The `fratm` library
 
@@ -546,6 +546,7 @@ fermete                      // debugger
 | `leva` | `delete` | "remove" |
 | `fermete` | `debugger` | "stop" |
 | `<scatola>…</scatola>`, `<Pizza />` | JSX (React/Preact); `scatola` = `div`, `scritta` = `p`, `buttone` = `button`, ... | markup in the code |
+| `classe="…"`, `quanno-se-clicca={f}` | JSX attributes and events on HTML tags: `className`, `onClick`, ... | class, when it gets clicked |
 | ``gomorra`ripigliammo …` `` | SQL query with bound parameters ([GomorraSQL](#gomorrasql-sql-in-neapolitan)) | Gomorrah |
 | ``stile`culore: russo` `` | CSS in Neapolitan ([`stile`](#css-in-neapolitan-with-stile)) | style |
 

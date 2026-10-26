@@ -1,7 +1,8 @@
 // ============================================
 // Example 19: 'A pizzeria cu stile
-// A React page written all in Neapolitan: Neapolitan tags in JSX and
-// CSS in Neapolitan with stile`…`, both translated at compile time
+// A React page written all in Neapolitan: tags, attributes and events
+// in JSX (scatola, classe, quanno-se-clicca) and CSS with stile`…`,
+// all translated at compile time
 // ============================================
 
 chiamm { useState } da "react"
@@ -46,17 +47,17 @@ chist è MENU = [
 mann for predefinit facc Pizzeria() {
     tien [conto, setConto] = useState(0)
     piglie (
-        <core className="pizzeria">
+        <core classe="pizzeria">
             <titolo>'A pizzeria cu stile</titolo>
             <lista>
                 {MENU.map((p) => (
-                    <voce key={p.nomme}>
+                    <voce chiave={p.nomme}>
                         <piezzo>{p.nomme} · {p.prezzo} €</piezzo>
-                        <buttone onClick={() => setConto(conto + p.prezzo)}>Pigliala</buttone>
+                        <buttone quanno-se-clicca={() => setConto(conto + p.prezzo)}>Pigliala</buttone>
                     </voce>
                 ))}
             </lista>
-            <scritta className="totale">Totale: {conto} €</scritta>
+            <scritta classe="totale">Totale: {conto} €</scritta>
         </core>
     )
 }

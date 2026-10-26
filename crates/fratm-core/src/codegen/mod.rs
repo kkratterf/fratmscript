@@ -1039,13 +1039,17 @@ impl CodeGen {
         };
         for attribute in &element.attributes {
             match attribute {
-                JsxAttribute::Named { name, value, .. } if name == "key" => key = Some(value),
+                JsxAttribute::Named { name, value, .. }
+                    if name == "key" || (intrinsic && name == "chiave") =>
+                {
+                    key = Some(value)
+                }
                 JsxAttribute::Named { name, value, .. } => {
                     separator(self);
-                    let name = match name.as_str() {
-                        "class" if intrinsic => "className",
-                        "for" if intrinsic => "htmlFor",
-                        name => name,
+                    let name = if intrinsic {
+                        crate::html::attribute(name)
+                    } else {
+                        name
                     };
                     if is_plain_name(name) {
                         self.emit(name);

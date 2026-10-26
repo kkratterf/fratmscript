@@ -112,7 +112,7 @@ function llms(): string {
 
 Only the keywords change: operators, literals and every JavaScript built-in stay the same. JavaScript keywords such as \`const\`, \`function\`, \`return\`, \`if\`, \`new\`, \`this\` or \`true\` are not valid FratmScript. Read the full reference before writing code, then check or run it with the \`fratm\` CLI or its MCP server and fix it from the errors (Neapolitan message, line, column and hint).
 
-Web apps: \`.fratm\` files take JSX with Neapolitan HTML tags (\`<scatola>\` is \`div\`, \`<buttone>\` is \`button\`), CSS in Neapolitan with the \`stile\` template tag (\`culore: russo\` is \`color: red\`), Tailwind CSS classes, and SQL in Neapolitan with GomorraSQL. \`fratm nuovo app --tailwind\` or \`npm create fratm@latest app\` starts a React + Vite project, \`--completa\` adds a Hono API on SQLite. Everything is translated at compile time, so the page has standard HTML and CSS.
+Web apps: \`.fratm\` files take JSX with Neapolitan HTML tags and attributes (\`<scatola>\` is \`div\`, \`<buttone quanno-se-clicca={f}>\` is \`<button onClick={f}>\`, \`classe\` is \`className\`), CSS in Neapolitan with the \`stile\` template tag (\`culore: russo\` is \`color: red\`), Tailwind CSS classes, and SQL in Neapolitan with GomorraSQL. \`fratm nuovo app --tailwind\` or \`npm create fratm@latest app\` starts a React + Vite project, \`--completa\` adds a Hono API on SQLite. Everything is translated at compile time, so the page has standard HTML and CSS.
 
 ## Docs
 
