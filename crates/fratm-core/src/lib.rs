@@ -82,6 +82,7 @@ pub mod codegen;
 pub mod errors;
 pub mod formatter;
 pub mod gomorra;
+pub mod html;
 pub mod lexer;
 pub mod parser;
 pub mod runtime;
@@ -389,6 +390,21 @@ mod tests {
             jsx_js("x = <><b /><i /></>"),
             "x = _jsxs(_Fragment, { children: [_jsx(\"b\", {}), _jsx(\"i\", {})] });\n"
         );
+    }
+
+    #[test]
+    fn test_jsx_neapolitan_tags_compile_to_html() {
+        assert_eq!(
+            jsx_js("x = <scatola class=\"pizza\"><titolo>Uè</titolo><buttone>Sforna</buttone></scatola>"),
+            "x = _jsxs(\"div\", { className: \"pizza\", children: [_jsx(\"h1\", { children: \"Uè\" }), _jsx(\"button\", { children: \"Sforna\" })] });\n"
+        );
+        // `for` on a Neapolitan label is an HTML attribute too
+        assert_eq!(
+            jsx_js("x = <etichetta for=\"n\">Nomme<casella id=\"n\" /></etichetta>"),
+            "x = _jsxs(\"label\", { htmlFor: \"n\", children: [\"Nomme\", _jsx(\"input\", { id: \"n\" })] });\n"
+        );
+        // Components keep their names, even when they read like a tag
+        assert_eq!(jsx_js("x = <Scatola />"), "x = _jsx(Scatola, {});\n");
     }
 
     #[test]

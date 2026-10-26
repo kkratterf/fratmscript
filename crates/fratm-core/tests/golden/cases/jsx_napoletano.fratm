@@ -1,0 +1,32 @@
+// JSX with Neapolitan tag names: they compile to the standard HTML tags
+facc Modulo({ invia }) {
+    piglie (
+        <modulo onSubmit={invia}>
+            <capa><titolo>'A pizzeria</titolo></capa>
+            <core>
+                <sezione>
+                    <titolo2>Menù</titolo2>
+                    <lista>
+                        <voce><forte>Margherita</forte> <corsivo>5 €</corsivo></voce>
+                    </lista>
+                    <elenco><voce>Primma</voce></elenco>
+                </sezione>
+                <etichetta for="nomme">Nomme</etichetta>
+                <casella id="nomme" />
+                <quaderno />
+                <scegli><opzione>Pizza</opzione></scegli>
+                <scritta>Scrive <piezzo>ccà</piezzo><acapo /><codice>x</codice></scritta>
+                <immagine src="pizza.png" alt="pizza" />
+                <collegamento href="/">Torna</collegamento>
+                <linea />
+                <tabella><riga><capocella>A</capocella><cella>1</cella></riga></tabella>
+                <tela />
+                <scatola class="tasti"><buttone>Manna</buttone></scatola>
+            </core>
+            <navigazione />
+            <articolo />
+            <pede>Fatto a Napule</pede>
+            <div>I tag HTML vanno ancora</div>
+        </modulo>
+    )
+}

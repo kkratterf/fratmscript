@@ -359,15 +359,15 @@ chiamm "./stile.css"
 mann for predefinit facc Contatore() {
     tien [pizze, setPizze] = useState(0)
     piglie (
-        <main class="pizzeria">
-            <h1>Pizze sfurnate: {pizze}</h1>
-            <button onClick={() => setPizze(pizze + 1)}>Sforna</button>
-        </main>
+        <core class="pizzeria">
+            <titolo>Pizze sfurnate: {pizze}</titolo>
+            <buttone onClick={() => setPizze(pizze + 1)}>Sforna</buttone>
+        </core>
     )
 }
 ```
 
-JSX compiles to the automatic runtime of React (`react/jsx-runtime`). Write `// @jsxImportSource preact` at the top of a file to use Preact instead. Tags stay HTML, `class` and `for` work on them, and CSS is plain CSS (or CSS modules) imported through Vite. A `<` starts JSX only where a value can start and a tag name follows right away, so `a < b` is still a comparison.
+JSX compiles to the automatic runtime of React (`react/jsx-runtime`). Write `// @jsxImportSource preact` at the top of a file to use Preact instead. HTML tags have Neapolitan names, translated at compile time so the browser still gets standard HTML: `scatola` → `div`, `piezzo` → `span`, `scritta` → `p`, `titolo` → `h1`, `titolo2` → `h2`, `titolo3` → `h3`, `titolo4` → `h4`, `titolo5` → `h5`, `titolo6` → `h6`, `buttone` → `button`, `casella` → `input`, `quaderno` → `textarea`, `scegli` → `select`, `opzione` → `option`, `etichetta` → `label`, `modulo` → `form`, `lista` → `ul`, `elenco` → `ol`, `voce` → `li`, `collegamento` → `a`, `immagine` → `img`, `capa` → `header`, `pede` → `footer`, `core` → `main`, `sezione` → `section`, `articolo` → `article`, `navigazione` → `nav`, `acapo` → `br`, `linea` → `hr`, `forte` → `strong`, `corsivo` → `em`, `codice` → `code`, `tabella` → `table`, `riga` → `tr`, `cella` → `td`, `capocella` → `th`, `tela` → `canvas`. HTML names (`div`, `button`) work too, a capitalised tag is a component, `class` and `for` work on every HTML tag, and CSS is plain CSS (or CSS modules) imported through Vite. A `<` starts JSX only where a value can start and a tag name follows right away, so `a < b` is still a comparison.
 
 ### The `fratm` library
 
@@ -511,7 +511,7 @@ fermete                      // debugger
 | `dint'a` | `in` (operator) | "inside" |
 | `leva` | `delete` | "remove" |
 | `fermete` | `debugger` | "stop" |
-| `<div>…</div>`, `<Pizza />` | JSX (React/Preact) | markup in the code |
+| `<scatola>…</scatola>`, `<Pizza />` | JSX (React/Preact); `scatola` = `div`, `scritta` = `p`, `buttone` = `button`, ... | markup in the code |
 | ``gomorra`ripigliammo …` `` | SQL query with bound parameters ([GomorraSQL](#gomorrasql-sql-in-neapolitan)) | Gomorrah |
 
 No accents on your keyboard? `sinno`, `sfols`, `di` (in `stamm a di`), `chist e` and `chè e` work like `sinnò`, `sfòls`, `dì`, `chist è` and `chè è`; `typeof` and `instanceof` are accepted for `chè è` and `è uno`.

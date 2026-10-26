@@ -35,8 +35,10 @@ keywords change.
   `&&`/`||`, and anywhere inside `( )` and `[ ]`.
 - Braces are required: `si (x) { ... }`.
 - `chist è` cannot be reassigned, and a name cannot be declared twice in the same scope.
-- JSX works in `.fratm` files for React or Preact: `piglie <button onClick={f}>Uè</button>`.
-  Tags stay HTML, hooks keep their React names (`useState`), `class` works on HTML tags. The
+- JSX works in `.fratm` files for React or Preact: `piglie <buttone onClick={f}>Uè</buttone>`.
+  HTML tags have Neapolitan names compiled to HTML (`scatola` div, `scritta` p, `buttone` button,
+  `casella` input, `lista`/`voce` ul/li; full table in `fratm guida`); HTML names work too.
+  Hooks keep their React names (`useState`), `class` works on HTML tags. The
   output imports `react/jsx-runtime`; `// @jsxImportSource preact` switches library.
 - Every modern JavaScript construct is supported; `fratm guida` lists the exact syntax.
 

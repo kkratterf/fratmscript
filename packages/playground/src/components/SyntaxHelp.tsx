@@ -123,7 +123,7 @@ const syntaxReference: { category: Localized; items: SyntaxItem[] }[] = [
     { fratm: 'chiamm("…")', js: 'import("…")', desc: { it: 'Import dinamico (con aspett)', en: 'Dynamic import (with aspett)', nap: 'Import dinamico (cu aspett)' }, insert: 'aspett chiamm("")' },
   ]},
   { category: { it: 'JSX e componenti', en: 'JSX and components', nap: 'JSX e componenti' }, items: [
-    { fratm: '<div>…</div>', js: 'jsx("div", …)', desc: { it: 'Elemento HTML (per React o Preact)', en: 'HTML element (for React or Preact)', nap: 'Elemento HTML (pe React o Preact)' }, insert: '<div></div>' },
+    { fratm: '<scatola>…</scatola>', js: 'jsx("div", …)', desc: { it: 'Elemento HTML con nome napoletano (scatola = div, scritta = p, buttone = button, casella = input…); vanno anche i nomi HTML', en: 'HTML element with a Neapolitan name (scatola = div, scritta = p, buttone = button, casella = input…); HTML names work too', nap: "Elemento HTML cu 'o nomme napulitano (scatola = div, scritta = p, buttone = button, casella = input…); vanno pure 'e nomme HTML" }, insert: '<scatola></scatola>' },
     { fratm: '<Pizza nomme="x" />', js: 'jsx(Pizza, { nomme })', desc: { it: 'Componente con props', en: 'Component with props', nap: 'Componente cu props' }, insert: '< />' },
     { fratm: '{espressione}', js: '{expression}', desc: { it: 'Valore dentro il JSX', en: 'Value inside JSX', nap: "Nu valore dint'o JSX" }, insert: '{}' },
     { fratm: '<>…</>', js: 'Fragment', desc: { it: 'Frammento senza tag', en: 'Fragment without a tag', nap: 'Frammento senza tag' }, insert: '<></>' },

@@ -273,7 +273,7 @@
     "body": [
       "mann for predefinit facc ${1:Componente}(${2:{ props \\}}) {",
       "\tpiglie (",
-      "\t\t<${3:div}>$0</${3:div}>",
+      "\t\t<${3:scatola}>$0</${3:scatola}>",
       "\t)",
       "}"
     ],

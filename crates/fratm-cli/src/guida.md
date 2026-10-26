@@ -326,7 +326,8 @@ plugin.
 ## JSX: components and web pages
 
 `.fratm` files can contain JSX, so React (or Preact) components are written in FratmScript.
-Tags are HTML as usual (`div`, `button`, `input`); a capitalised or dotted tag is a component.
+HTML tags have Neapolitan names (`<scatola>` is `div`), translated at compile time; HTML names
+(`div`, `button`) work too. A capitalised or dotted tag is a component.
 Inside `{ }` goes any FratmScript expression.
 
 ```fratm
@@ -334,26 +335,68 @@ chiamm { useState } da "react"
 chiamm "./stile.css"
 
 facc Pizza({ nomme, prezzo }) {
-    piglie <li class="pizza">{nomme}: {prezzo} €</li>
+    piglie <voce class="pizza">{nomme}: {prezzo} €</voce>
 }
 
 mann for predefinit facc Menu({ pizze }) {
     tien [scelte, setScelte] = useState(0)
     piglie (
-        <section>
-            <h1>Pizze scelte: {scelte}</h1>
-            <ul>
+        <sezione>
+            <titolo>Pizze scelte: {scelte}</titolo>
+            <lista>
                 {pizze.map((p) => <Pizza key={p.nomme} {...p} />)}
-            </ul>
-            {scelte > 0 ? <p>Bravo!</p> : nisciun}
-            <button onClick={() => setScelte(scelte + 1)}>Scegli</button>
-        </section>
+            </lista>
+            {scelte > 0 ? <scritta>Bravo!</scritta> : nisciun}
+            <buttone onClick={() => setScelte(scelte + 1)}>Scegli</buttone>
+        </sezione>
     )
 }
 ```
 
 - Supported: elements, self-closing tags, fragments `<>…</>`, `{expr}` attributes and children,
   `{...props}`, boolean attributes, `{/* comments */}`, HTML entities (`&amp;`, `&nbsp;`).
+- Neapolitan tags (the output always has the HTML name):
+
+  | FratmScript | HTML |
+  | --- | --- |
+  | `scatola` | `div` |
+  | `piezzo` | `span` |
+  | `scritta` | `p` |
+  | `titolo` | `h1` |
+  | `titolo2` | `h2` |
+  | `titolo3` | `h3` |
+  | `titolo4` | `h4` |
+  | `titolo5` | `h5` |
+  | `titolo6` | `h6` |
+  | `buttone` | `button` |
+  | `casella` | `input` |
+  | `quaderno` | `textarea` |
+  | `scegli` | `select` |
+  | `opzione` | `option` |
+  | `etichetta` | `label` |
+  | `modulo` | `form` |
+  | `lista` | `ul` |
+  | `elenco` | `ol` |
+  | `voce` | `li` |
+  | `collegamento` | `a` |
+  | `immagine` | `img` |
+  | `capa` | `header` |
+  | `pede` | `footer` |
+  | `core` | `main` |
+  | `sezione` | `section` |
+  | `articolo` | `article` |
+  | `navigazione` | `nav` |
+  | `acapo` | `br` |
+  | `linea` | `hr` |
+  | `forte` | `strong` |
+  | `corsivo` | `em` |
+  | `codice` | `code` |
+  | `tabella` | `table` |
+  | `riga` | `tr` |
+  | `cella` | `td` |
+  | `capocella` | `th` |
+  | `tela` | `canvas` |
+
 - `class` and `for` work on HTML tags (they become `className` / `htmlFor`).
 - The output uses the automatic JSX runtime: `import { jsx as _jsx, ... } from
   "react/jsx-runtime"` is added at the top. Write `// @jsxImportSource preact` at the top of the

@@ -1014,7 +1014,7 @@ impl CodeGen {
         });
         match &element.name {
             None => self.emit("_Fragment"),
-            Some(name) if intrinsic => self.emit(&js_string(name)),
+            Some(name) if intrinsic => self.emit(&js_string(crate::html::tag(name))),
             Some(name) => {
                 for (i, part) in name.split('.').enumerate() {
                     if i == 0 {
