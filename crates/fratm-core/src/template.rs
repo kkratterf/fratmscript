@@ -102,22 +102,22 @@ mann for predefinit facc App() {
     }
 
     piglie (
-        <main className="pizzeria">
-            <header>
-                <h1>{{name}} 🍕</h1>
-                <p>Scritto tutto in FratmScript: cagna <code>src/App.fratm</code> e salva.</p>
-            </header>
-            <ul className="menu">
+        <core classe="pizzeria">
+            <capa>
+                <titolo>{{name}} 🍕</titolo>
+                <scritta>Scritto tutto in FratmScript: cagna <codice>src/App.fratm</codice> e salva.</scritta>
+            </capa>
+            <lista classe="menu">
                 {MENU.map((pizza) => (
                     <Pizza key={pizza.nomme} pizza={pizza} onOrdina={() => ordina(pizza)} />
                 ))}
-            </ul>
-            <footer>
+            </lista>
+            <pede>
                 {ordine.length === 0
                     ? "Ancora nisciuna pizza. Che te magne?"
                     : `Pizze ordinate: ${ordine.length} · Totale: ${totale} €`}
-            </footer>
-        </main>
+            </pede>
+        </core>
     )
 }
 "##,
@@ -130,15 +130,15 @@ chiamm stile da "./Pizza.module.css"
 // 'E props arrivano comme n'oggetto: { pizza, onOrdina }
 mann for predefinit facc Pizza({ pizza, onOrdina }) {
     piglie (
-        <li className={stile.carta}>
-            <div>
-                <h2 className={stile.nomme}>{pizza.nomme}</h2>
-                <p className={stile.ingredienti}>{pizza.ingredienti}</p>
-            </div>
-            <button className={stile.bottone} onClick={onOrdina}>
+        <voce classe={stile.carta}>
+            <scatola>
+                <titolo2 classe={stile.nomme}>{pizza.nomme}</titolo2>
+                <scritta classe={stile.ingredienti}>{pizza.ingredienti}</scritta>
+            </scatola>
+            <buttone classe={stile.bottone} quanno-se-clicca={onOrdina}>
                 {pizza.prezzo} € · Ordina
-            </button>
-        </li>
+            </buttone>
+        </voce>
     )
 }
 "##,
@@ -237,12 +237,14 @@ npm run build   # production build in dist/
 
 - `src/main.fratm` starts the app, `src/App.fratm` is the main component and
   `src/components/Pizza.fratm` a child component with props.
-- Components return JSX: HTML tags as usual, FratmScript inside `{ }`. Hooks keep
-  their React names (`useState`, `useEffect`).
+- Components return JSX with Neapolitan tags, attributes and events (`<scatola>` is
+  `div`, `classe` is `className`, `quanno-se-clicca` is `onClick`; HTML and React
+  names work too), FratmScript inside `{ }`. Hooks keep their React names
+  (`useState`, `useEffect`).
 - Styles are plain CSS (`src/stile.css`, imported with `chiamm "./stile.css"`) and
-  CSS modules (`Pizza.module.css`, used as `className={stile.carta}`). With
+  CSS modules (`Pizza.module.css`, used as `classe={stile.carta}`). With
   `fratm nuovo --tailwind` the project has Tailwind CSS too: utility classes in
-  `className="…"` work in every `.fratm` file.
+  `classe="…"` work in every `.fratm` file.
 - `npm run dev` has Fast Refresh: save a component and the page updates without
   losing its state (`@vitejs/plugin-react` in `vite.config.js`).
 - To use Preact instead of React, write `// @jsxImportSource preact` at the top
@@ -437,25 +439,25 @@ mann for predefinit facc App() {
     }
 
     piglie (
-        <main className="pizzeria">
-            <header>
-                <h1>{{name}} 🍕</h1>
-                <p>
-                    Front end in <code>src/</code>, API e database in <code>server/</code>: tutto FratmScript.
-                </p>
-            </header>
-            {errore && <p style={{ color: "#a82816" }}>{errore}</p>}
-            <ul className="menu">
+        <core classe="pizzeria">
+            <capa>
+                <titolo>{{name}} 🍕</titolo>
+                <scritta>
+                    Front end in <codice>src/</codice>, API e database in <codice>server/</codice>: tutto FratmScript.
+                </scritta>
+            </capa>
+            {errore && <scritta stile={{ color: "#a82816" }}>{errore}</scritta>}
+            <lista classe="menu">
                 {menu.map((pizza) => (
                     <Pizza key={pizza.id} pizza={pizza} onOrdina={() => ordina(pizza)} />
                 ))}
-            </ul>
-            <footer>
+            </lista>
+            <pede>
                 {conto.pizze === 0
                     ? "Ancora nisciuna pizza. Che te magne?"
                     : `Pizze ordinate: ${conto.pizze} · Totale: ${conto.totale} €`}
-            </footer>
-        </main>
+            </pede>
+        </core>
     )
 }
 "##,
@@ -639,7 +641,7 @@ fn add_tailwind(path: &str, contents: String) -> String {
             if contents.contains("plugins: [\n") {
                 contents.replacen(
                     "plugins: [\n",
-                    "plugins: [\n    // Tailwind: utility classes in className=\"…\"\n    tailwindcss(),\n",
+                    "plugins: [\n    // Tailwind: utility classes in classe=\"…\"\n    tailwindcss(),\n",
                     1,
                 )
             } else {
@@ -652,8 +654,8 @@ fn add_tailwind(path: &str, contents: String) -> String {
             "@import \"tailwindcss\";\n@source \"./**/*.fratm\";\n\n{contents}"
         ),
         "src/App.fratm" => contents.replacen(
-            "<footer>",
-            "<footer className=\"mt-8 rounded-xl bg-red-700 px-4 py-3 text-white shadow-lg\">",
+            "<pede>",
+            "<pede classe=\"mt-8 rounded-xl bg-red-700 px-4 py-3 text-white shadow-lg\">",
             1,
         ),
         _ => contents,

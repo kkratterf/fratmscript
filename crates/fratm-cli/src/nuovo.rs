@@ -82,7 +82,7 @@ mod tests {
             let css = fs::read_to_string(dir.join("src/stile.css")).unwrap();
             assert!(css.starts_with("@import \"tailwindcss\";"), "{css}");
             let app = fs::read_to_string(dir.join("src/App.fratm")).unwrap();
-            assert!(app.contains("className=\"mt-8 rounded-xl"), "{app}");
+            assert!(app.contains("classe=\"mt-8 rounded-xl"), "{app}");
             compile(&app, CompileOptions::default()).unwrap();
         }
         // Without the flag nothing changes

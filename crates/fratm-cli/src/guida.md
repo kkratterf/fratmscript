@@ -464,8 +464,8 @@ mann for predefinit facc Menu({ pizze }) {
   file to use Preact; the npm package's `compile` takes `jsxImportSource` too.
 - Hooks and React APIs keep their names: `useState`, `useEffect`, `createRoot`.
 - Styles: import plain CSS (`chiamm "./stile.css"`) or CSS modules
-  (`chiamm stile da "./App.module.css"`, then `className={stile.titolo}`) through Vite; inline
-  styles are objects: `style={{ color: "red" }}`.
+  (`chiamm stile da "./App.module.css"`, then `classe={stile.titolo}`) through Vite; inline
+  styles are objects: `stile={{ color: "red" }}`.
 - Tailwind CSS: `fratm nuovo --tailwind` sets it up (Vite plugin, `@import "tailwindcss"` in
   `src/stile.css`); it finds classes in `.fratm` files. `chiamm "tailwindcss/index.css"` in a
   `.fratm` file turns it on too, and is what switches Tailwind on in the playground preview.
@@ -851,8 +851,8 @@ as the command `fratm` with the argument `mcp`.
 
 A web app, step by step: `fratm nuovo app --tailwind` (or `npm create fratm@latest app --tailwind`,
 or the files of `fratm_nuovo`), then `npm install` and `npm run dev` in `app`. Components live in
-`src/*.fratm` (JSX with Neapolitan tags), styles in `src/stile.css`, Tailwind classes in
-`className`, or rules in `` stile`…` ``. `--completa` adds `server/api.fratm`, a Hono API on
+`src/*.fratm` (JSX with Neapolitan tags and attributes), styles in `src/stile.css`, Tailwind
+classes in `classe`, or rules in `` stile`…` ``. `--completa` adds `server/api.fratm`, a Hono API on
 SQLite with `apri_db` and `gomorra`.
 
 Install the CLI: `curl -fsSL https://raw.githubusercontent.com/kkratterf/fratmscript/main/install.sh | sh`
