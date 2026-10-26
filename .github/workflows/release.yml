@@ -184,8 +184,7 @@ jobs:
 
       - name: Build, test and package
         run: |
-          # The npm package also goes into the release: `fratm nuovo` projects
-          # install it from there while it is not on the npm registry
+          # The npm package also goes into the release, next to the one on npm
           (cd packages/fratmscript && npm run build && npm test && npm pack --pack-destination "$GITHUB_WORKSPACE")
           cd packages/vscode-extension
           pnpm install --frozen-lockfile
