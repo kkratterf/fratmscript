@@ -240,6 +240,8 @@ pub fn translate(chunks: &[String]) -> Result<Vec<String>, StileError> {
 enum Segment {
     /// Before `{`: selectors or an at-rule
     Prelude,
+    /// Before `{` inside a `@keyframes`: `da`, `a` or a percentage
+    Keyframe,
     /// Before `;`, `}` or the end: `property: value`
     Declaration,
 }
@@ -251,7 +253,9 @@ struct Translator<'a> {
 
 impl Translator<'_> {
     fn run(mut self) -> Result<String, StileError> {
-        let mut open: Vec<usize> = Vec::new();
+        // Each open block: where its `{` is, and whether it is a @keyframes,
+        // whose preludes are `da`/`a`/percentages instead of selectors
+        let mut open: Vec<(usize, bool)> = Vec::new();
         let mut start = 0;
         let mut i = 0;
         while i < self.text.len() {
@@ -273,9 +277,16 @@ impl Translator<'_> {
                     continue;
                 }
                 '{' => {
-                    self.segment(start, i, Segment::Prelude, !open.is_empty())?;
+                    let inside_keyframes = open.last().is_some_and(|(_, k)| *k);
+                    let kind = if inside_keyframes {
+                        Segment::Keyframe
+                    } else {
+                        Segment::Prelude
+                    };
+                    let prelude: String = self.text[start..i].iter().collect();
+                    self.segment(start, i, kind, !open.is_empty())?;
                     self.out.push('{');
-                    open.push(i);
+                    open.push((i, prelude.trim_start().starts_with("@keyframes")));
                     start = i + 1;
                 }
                 '}' => {
@@ -296,7 +307,7 @@ impl Translator<'_> {
             i += 1;
         }
         self.segment(start, self.text.len(), Segment::Declaration, false)?;
-        if let Some(&at) = open.last() {
+        if let Some(&(at, _)) = open.last() {
             return Err(self.error("manca na '}' pe chiudere chesta '{'", at));
         }
         Ok(self.out)
@@ -387,6 +398,14 @@ impl Translator<'_> {
         let part = &self.text[start..end];
         let trimmed: String = part.iter().collect::<String>().trim().to_string();
         let first = part.iter().position(|c| !c.is_whitespace());
+        if kind == Segment::Keyframe {
+            self.words(part, |w, _, _| match w {
+                "da" => Some("from"),
+                "a" => Some("to"),
+                _ => None,
+            });
+            return Ok(());
+        }
         if kind == Segment::Prelude {
             let media = trimmed.starts_with("@quanno")
                 && !is_word_char(part_char(part, first.unwrap_or(0) + "@quanno".len()));
@@ -717,11 +736,17 @@ mod tests {
             css(".a { culore: russo; &:passanno { culore: blu } }"),
             ".a { color: red; &:hover { color: blue } }"
         );
-        // Other at-rules pass through
+        // Other at-rules pass through; inside @keyframes `da`/`a` are from/to
         assert_eq!(
             css("@keyframes gira { from { trasforma: rotate(0) } }"),
             "@keyframes gira { from { transform: rotate(0) } }"
         );
+        assert_eq!(
+            css("@keyframes trase { da { opacità: 0 } 50% { opacità: 0.5 } a { opacità: 1 } }"),
+            "@keyframes trase { from { opacity: 0 } 50% { opacity: 0.5 } to { opacity: 1 } }"
+        );
+        // Outside @keyframes, `a` is still the link tag
+        assert_eq!(css("a { culore: blu }"), "a { color: blue }");
     }
 
     #[test]
