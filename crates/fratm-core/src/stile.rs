@@ -759,7 +759,11 @@ mod tests {
         use crate::vscode_grammar::lists;
         for (word, _) in VALUES {
             assert!(
-                lists("stile-template", "support.constant.property-value.css", &[word]),
+                lists(
+                    "stile-template",
+                    "support.constant.property-value.css",
+                    &[word]
+                ),
                 "{word} missing from stile-template in the VS Code grammar"
             );
         }
