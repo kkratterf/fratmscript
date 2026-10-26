@@ -46,6 +46,21 @@ const GOMORRA_STATEMENT = wordsPattern([...GOMORRA_STATEMENTS, ...GOMORRA_CLAUSE
 const GOMORRA_OPERATOR = wordsPattern(GOMORRA_OPERATORS)
 const GOMORRA_VALUE = wordsPattern(GOMORRA_VALUES)
 const SQL_KEYWORD = /^(?:select|from|where|insert|into|update|set|delete|create|table|drop|if|exists|join|left|inner|on|order|group|by|limit|offset|values|and|or|not|null|as|like|in|is|asc|desc|begin|commit|rollback|primary|key|integer|text|real|default)(?![\p{L}\p{N}_$-])/iu
+/** A regex for whole FratmScript words, so `chist` matches but `chisto` does not */
+function keywords(...words: string[]): RegExp {
+  return new RegExp(`^(?:${words.join('|')})(?![\\p{L}\\p{N}_$'])`, 'u')
+}
+
+const CONSOLE = /^(?:stamm|avvis|scrive)\s+a\s+dì(?![\p{L}\p{N}_$])/u
+const KEYWORD = keywords(
+  'chist', 'è\\s+uno', 'è', 'tien', 'facc', 'piglie', 'sinnò', 'sinno', 'si', 'pe', 'ogni', 'mentre', 'che', 'chè',
+  'mo', 'vir', 'aspett', 'pruvamm', 'schiatta', 'aropp', 'iett', 'vedimm', 'caso', 'primm', 'fa',
+  "dint'a", 'dint', 'damme', 'miette', 'fisso', 'figlio', 'nu', 'bell', 'na', 'famiglie', 'stu', 'cos',
+  'chiamm', 'da', 'mann', 'for', 'predefinit', 'comme', 'rompe', 'salta', 'fermete', 'leva', 'caccia',
+)
+const ATOM = keywords('overo', 'sfòls', 'sfols', 'nisciun', 'boh')
+const WORD_OPERATOR = keywords('e', 'o', 'no', 'manco', 'pure')
+
 const CSS_NAME = /^-{0,2}[\p{L}_][\p{L}\p{N}_-]*/u
 // A property is a name followed by `:` and a space (`buttone:passanno` is a selector)
 const CSS_PROPERTY = new RegExp(`${CSS_NAME.source}(?=\\s*:(?:\\s|$))`, 'u')
@@ -73,6 +88,9 @@ function codeToken(stream: StringStream, state: FratmState): string | null {
   }
   state.templateTag = null
 
+  // `'o pate`, `'ncopp` and `figlio 'e` start with a quote but are keywords, not strings
+  if (stream.match(/^(?:'o\s+pate|'ncopp|'e)(?![\p{L}\p{N}_$'])/u)) return 'keyword'
+
   // Strings
   if (stream.match(/"([^"\\]|\\.)*"/)) return 'string'
   if (stream.match(/'([^'\\]|\\.)*'/)) return 'string'
@@ -87,20 +105,12 @@ function codeToken(stream: StringStream, state: FratmState): string | null {
     return 'angleBracket'
   }
 
-  // Keywords - FratmScript specific
-  if (stream.match(/\b(chist|è|tien|facc|piglie|si|sinnò|sinno|pe|ogni|mentre|che)\b/)) return 'keyword'
-  if (stream.match(/\b(overo|sfòls|sfols|nisciun|boh)\b/)) return 'atom'
-  if (stream.match(/\b(stamm|dì|di|avvis|scrive)\b/)) return 'builtin'
-  if (stream.match(/\b(mo|vir|aspett)\b/)) return 'keyword'
-  if (stream.match(/\b(pruvamm|schiatta|aropp|iett)\b/)) return 'keyword'
-  if (stream.match(/\b(vedimm|caso|primm|fa|dint)\b/)) return 'keyword'
-  if (stream.match(/\b(damme|miette|fisso|figlio)\b/)) return 'keyword'
-  if (stream.match(/\b(nu|bell|na|famiglie|stu|cos)\b/)) return 'keyword'
-  if (stream.match(/\b(chiamm|da|mann|for|predefinit)\b/)) return 'keyword'
-  if (stream.match(/\b(rompe|salta|fermete)\b/)) return 'keyword'
-  if (stream.match(/\b(e|o|no|manco|pure)\b/)) return 'operator'
-  if (stream.match(/\b(leva|caccia)\b/)) return 'keyword'
-  if (stream.match(/\b(costruttore)\b/)) return 'def'
+  // Keywords - FratmScript specific. Not `\b`: it ends a word at `è`, `ò`…
+  if (stream.match(CONSOLE)) return 'builtin'
+  if (stream.match(KEYWORD)) return 'keyword'
+  if (stream.match(ATOM)) return 'atom'
+  if (stream.match(WORD_OPERATOR)) return 'operator'
+  if (stream.match(/^costruttore(?![\p{L}\p{N}_$])/u)) return 'def'
 
   // Operators
   if (stream.match(/[+\-*/%=<>!&|?:]+/)) return 'operator'
@@ -109,7 +119,7 @@ function codeToken(stream: StringStream, state: FratmState): string | null {
   if (stream.match(/[{}()\[\],;.]/)) return 'punctuation'
 
   // Identifiers
-  if (stream.match(/[a-zA-Z_àèéìòù][a-zA-Z0-9_àèéìòù]*/)) return 'variable'
+  if (stream.match(/^[\p{L}_$][\p{L}\p{N}_$]*/u)) return 'variable'
 
   // Skip unknown character
   stream.next()
@@ -262,6 +272,7 @@ const darkHighlighting = HighlightStyle.define([
   { tag: tags.operator, color: '#22d3ee' }, // cyan-400
   { tag: tags.punctuation, color: '#9ca3af' }, // neutral-400
   { tag: tags.function(tags.variableName), color: '#60a5fa' }, // blue-400
+  { tag: tags.standard(tags.variableName), color: '#22d3ee' }, // cyan-400
   { tag: tags.propertyName, color: '#f87171' }, // red-400
   { tag: tags.typeName, color: '#fbbf24' }, // amber-400
   { tag: tags.className, color: '#fbbf24' }, // amber-400
@@ -285,6 +296,7 @@ const lightHighlighting = HighlightStyle.define([
   { tag: tags.operator, color: '#0e7490' }, // cyan-700
   { tag: tags.punctuation, color: '#6b7280' }, // neutral-500
   { tag: tags.function(tags.variableName), color: '#2563eb' }, // blue-600
+  { tag: tags.standard(tags.variableName), color: '#0e7490' }, // cyan-700
   { tag: tags.propertyName, color: '#dc2626' }, // red-600
   { tag: tags.typeName, color: '#b45309' }, // amber-700
   { tag: tags.className, color: '#b45309' }, // amber-700
