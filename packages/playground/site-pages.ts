@@ -1,12 +1,15 @@
 // Static pages for search engines and crawlers that do not run JavaScript:
 // - guida/<id>/ and en/guide/<id>/: one page per guide section, in Italian
 //   and English, built from src/guida/guida.json and its examples
-// - sitemap.xml: the home and every guide page, with hreflang alternates
+// - scola/<id>/ and en/learn/<id>/: one page per tour lesson, built from
+//   src/lib/lessonTexts.ts and the lesson's starter program
+// - sitemap.xml: the home and every page above, with hreflang alternates
 // The playground stays a single-page app; each page links to its section there.
 import fs from 'node:fs'
 import path from 'node:path'
 import type { Plugin } from 'vite'
 import { REPO, SITE, guidaDir, type GuideSection } from './agent-files'
+import { EN_TEXTS, IT_TEXTS, type LessonText } from './src/lib/lessonTexts'
 
 type Lang = 'it' | 'en'
 
@@ -17,6 +20,15 @@ function pagePath(lang: Lang, id = ''): string {
   const base = lang === 'it' ? 'guida/' : 'en/guide/'
   return id ? `${base}${id}/` : base
 }
+
+/** Path of a tour lesson page under the site, '' for the tour index. */
+function lessonPath(lang: Lang, id = ''): string {
+  const base = lang === 'it' ? 'scola/' : 'en/learn/'
+  return id ? `${base}${id.replace(/_/g, '-')}/` : base
+}
+
+const scolaDir = path.join(__dirname, 'src/scola')
+const LESSON_TEXTS: Record<Lang, Record<string, LessonText>> = { it: IT_TEXTS, en: EN_TEXTS }
 
 const TEXT: Record<Lang, Record<string, string>> = {
   it: {
@@ -32,6 +44,17 @@ const TEXT: Record<Lang, Record<string, string>> = {
     prev: 'Precedente',
     next: 'Successiva',
     other: 'English',
+    tour: 'Tour',
+    tourTitle: 'Impara FratmScript: il tour in lezioni',
+    tourIntro:
+      'Un corso interattivo di FratmScript, il JavaScript in napoletano: ogni lezione spiega un pezzo del linguaggio e ti dà un esercizio da risolvere nel playground, senza installare niente.',
+    lesson: 'Lezione',
+    task: 'Esercizio',
+    expected: 'Quando hai finito, il programma stampa',
+    doLesson: 'Fai questa lezione nel playground',
+    startTour: 'Inizia il tour nel playground',
+    seeTour: 'Preferisci gli esercizi? Fai il tour in lezioni.',
+    seeGuide: 'Cerchi un argomento preciso? Leggi la guida.',
   },
   en: {
     guide: 'Guide',
@@ -46,6 +69,17 @@ const TEXT: Record<Lang, Record<string, string>> = {
     prev: 'Previous',
     next: 'Next',
     other: 'Italiano',
+    tour: 'Tour',
+    tourTitle: 'Learn FratmScript: the tour in lessons',
+    tourIntro:
+      'An interactive FratmScript course, JavaScript in Neapolitan: each lesson explains a piece of the language and gives you an exercise to solve in the playground, with nothing to install.',
+    lesson: 'Lesson',
+    task: 'Exercise',
+    expected: 'When you are done, the program prints',
+    doLesson: 'Do this lesson in the playground',
+    startTour: 'Start the tour in the playground',
+    seeTour: 'Rather do exercises? Take the tour in lessons.',
+    seeGuide: 'Looking for a topic? Read the guide.',
   },
 }
 
@@ -110,6 +144,8 @@ interface Page {
   body: string
   /** Section in the playground the page links to */
   playground: string
+  /** Label of the link to the playground */
+  cta: string
 }
 
 function render(page: Page): string {
@@ -136,7 +172,7 @@ function render(page: Page): string {
 <link rel="canonical" href="${url}">
 <link rel="alternate" hreflang="${page.lang}" href="${url}">
 <link rel="alternate" hreflang="${other}" href="${SITE + page.alternate}">
-<link rel="alternate" hreflang="x-default" href="${SITE + page.path.replace(/^en\/guide\//, 'guida/')}">
+<link rel="alternate" hreflang="x-default" href="${SITE + (page.lang === 'it' ? page.path : page.alternate)}">
 <link rel="icon" type="image/png" href="${SITE}favicon.png">
 <meta property="og:type" content="article">
 <meta property="og:url" content="${url}">
@@ -151,11 +187,11 @@ function render(page: Page): string {
 <body>
 <header>
 <a class="brand" href="${SITE}">FratmScript 🤌🏻</a>
-<nav><a href="${SITE + pagePath(page.lang)}">${t.guide}</a><a href="${SITE + page.alternate}" hreflang="${other}" lang="${other}">${t.other}</a><a href="${REPO}">GitHub</a></nav>
+<nav><a href="${SITE + pagePath(page.lang)}">${t.guide}</a><a href="${SITE + lessonPath(page.lang)}">${t.tour}</a><a href="${SITE + page.alternate}" hreflang="${other}" lang="${other}">${t.other}</a><a href="${REPO}">GitHub</a></nav>
 </header>
 <main>
 ${page.body}
-<p><a class="cta" href="${page.playground}">${page.path === pagePath(page.lang) ? t.playground : t.tryIt}</a></p>
+<p><a class="cta" href="${page.playground}">${page.cta}</a></p>
 </main>
 <footer>FratmScript · ${t.tagline} · <a href="${SITE}llms.txt">llms.txt</a> · MIT</footer>
 </body>
@@ -176,8 +212,9 @@ function pages(): Page[] {
       alternate: pagePath(other),
       title: t.guideTitle,
       description: summary(t.guideIntro),
-      body: `<h1>${t.guideTitle}</h1>\n<p>${escape(t.guideIntro)}</p>\n<ol>\n${list}\n</ol>`,
+      body: `<h1>${t.guideTitle}</h1>\n<p>${escape(t.guideIntro)}</p>\n<ol>\n${list}\n</ol>\n<p><a href="${SITE + lessonPath(lang)}">${t.seeTour}</a></p>`,
       playground: `${SITE}#guida`,
+      cta: t.playground,
     })
     all.forEach((section, i) => {
       const link = (s: GuideSection | undefined, label: string) =>
@@ -195,6 +232,57 @@ function pages(): Page[] {
           `<nav class="pager">${link(all[i - 1], t.prev)}${link(all[i + 1], t.next)}</nav>`,
         ].join('\n'),
         playground: `${SITE}#guida=${section.id}`,
+        cta: t.tryIt,
+      })
+    })
+  }
+  return result.concat(lessonPages())
+}
+
+/** The tour index and one page per lesson, in each language. */
+function lessonPages(): Page[] {
+  const ids = Object.keys(IT_TEXTS).sort()
+  const result: Page[] = []
+  for (const lang of LANGS) {
+    const t = TEXT[lang]
+    const other: Lang = lang === 'it' ? 'en' : 'it'
+    const texts = LESSON_TEXTS[lang]
+    const list = ids.map((id) => `<li><a href="${SITE + lessonPath(lang, id)}">${escape(texts[id].title)}</a></li>`).join('\n')
+    result.push({
+      lang,
+      path: lessonPath(lang),
+      alternate: lessonPath(other),
+      title: t.tourTitle,
+      description: summary(t.tourIntro),
+      body: `<h1>${t.tourTitle}</h1>\n<p>${escape(t.tourIntro)}</p>\n<ol>\n${list}\n</ol>\n<p><a href="${SITE + pagePath(lang)}">${t.seeGuide}</a></p>`,
+      playground: `${SITE}#scola=1`,
+      cta: t.startTour,
+    })
+    ids.forEach((id, i) => {
+      const text = texts[id]
+      const starter = escape(fs.readFileSync(path.join(scolaDir, `${id}.fratm`), 'utf8').trimEnd())
+      const expected = escape(fs.readFileSync(path.join(scolaDir, `${id}.out`), 'utf8').trimEnd())
+      const link = (next: string | undefined, label: string, rel: string) =>
+        next ? `<a href="${SITE + lessonPath(lang, next)}" rel="${rel}">${label}: ${escape(texts[next].title)}</a>` : '<span></span>'
+      result.push({
+        lang,
+        path: lessonPath(lang, id),
+        alternate: lessonPath(other, id),
+        title: `${t.lesson} ${i + 1}: ${text.title}`,
+        description: summary(text.body[0]),
+        body: [
+          `<p class="label">${t.lesson} ${i + 1} / ${ids.length}</p>`,
+          `<h1>${paragraph(text.title)}</h1>`,
+          ...text.body.map((p) => `<p>${paragraph(p)}</p>`),
+          `<h2>${t.task}</h2>`,
+          `<p>${paragraph(text.task)}</p>`,
+          `<pre><code class="language-fratm">${starter}</code></pre>`,
+          `<p class="label">${t.expected}</p>`,
+          `<pre class="out"><code>${expected}</code></pre>`,
+          `<nav class="pager">${link(ids[i - 1], t.prev, 'prev')}${link(ids[i + 1], t.next, 'next')}</nav>`,
+        ].join('\n'),
+        playground: `${SITE}#scola=${i + 1}`,
+        cta: t.doLesson,
       })
     })
   }
