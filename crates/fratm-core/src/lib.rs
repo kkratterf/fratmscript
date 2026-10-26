@@ -456,6 +456,33 @@ mod tests {
     }
 
     #[test]
+    fn test_jsx_style_objects_take_neapolitan_css() {
+        assert_eq!(
+            jsx_js("x = <cascett cess={{ \"sfunno-culore\": \"russo\", spazio: \"8px\", bordo: \"1px solid niro\", fontSize: n }} />"),
+            "x = _jsx(\"div\", { style: { backgroundColor: \"red\", padding: \"8px\", border: \"1px solid black\", fontSize: n } });\n"
+        );
+        // React keys and values, the old `stile=` and `style=` work too
+        assert_eq!(
+            jsx_js("x = <scatulell style={{ culore: \"blu\", backgroundColor: \"red\" }} />"),
+            "x = _jsx(\"span\", { style: { color: \"blue\", backgroundColor: \"red\" } });\n"
+        );
+        // A shorthand entry named like a property takes its React name
+        assert_eq!(
+            jsx_js("x = <cascett cess={{ culore, larga }} />"),
+            "x = _jsx(\"div\", { style: { color: culore, larga } });\n"
+        );
+        // A variable and a component prop stay as written
+        assert_eq!(
+            jsx_js("x = <cascett cess={s} />"),
+            "x = _jsx(\"div\", { style: s });\n"
+        );
+        assert_eq!(
+            jsx_js("x = <Scheda cess={{ culore: \"russo\" }} />"),
+            "x = _jsx(Scheda, { cess: { culore: \"russo\" } });\n"
+        );
+    }
+
+    #[test]
     fn test_jsx_enumerated_values_are_translated() {
         assert_eq!(
             jsx_js("x = <modulo metodo=\"post\"><miett tipo=\"fattimiei\" /><citofono tipo=\"manna\">Trase</citofono></modulo>"),

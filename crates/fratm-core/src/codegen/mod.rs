@@ -1093,6 +1093,14 @@ impl CodeGen {
                     self.emit(": ");
                     match (html_value, value) {
                         (Some(html), _) => self.emit(&js_string(html)),
+                        (None, Some(Expression::Object { properties, span }))
+                            if html_tag.is_some() && name == "style" =>
+                        {
+                            self.gen_expression(&Expression::Object {
+                                properties: style_object(properties),
+                                span: *span,
+                            })
+                        }
                         (None, Some(value)) => self.gen_expression(value),
                         (None, None) => self.emit("true"),
                     }
@@ -1522,6 +1530,45 @@ fn alias(name: &str, alias: &str) -> String {
     } else {
         format!("{} as {}", name, alias)
     }
+}
+
+/// The entries of a `cess={{ … }}` object on an HTML tag with Neapolitan CSS
+/// translated: `"sfunno-culore": "russo"` → `backgroundColor: "red"`.
+/// Other keys, non-string values, spreads and methods stay as written.
+fn style_object(properties: &[Property]) -> Vec<Property> {
+    properties
+        .iter()
+        .map(|property| match property {
+            Property::KeyValue { key, value } => {
+                let key = match key {
+                    PropertyKey::Name(k) | PropertyKey::String(k) => {
+                        crate::stile::style_key(k).map_or_else(|| key.clone(), PropertyKey::Name)
+                    }
+                    _ => key.clone(),
+                };
+                let value = match value {
+                    Expression::String { value, span } => Expression::String {
+                        value: crate::stile::style_value(value),
+                        span: *span,
+                    },
+                    _ => value.clone(),
+                };
+                Property::KeyValue { key, value }
+            }
+            // `{ culore }` → `color: culore`
+            Property::Shorthand { name, span } => match crate::stile::style_key(name) {
+                Some(react) => Property::KeyValue {
+                    key: PropertyKey::Name(react),
+                    value: Expression::Identifier {
+                        name: name.clone(),
+                        span: *span,
+                    },
+                },
+                None => property.clone(),
+            },
+            _ => property.clone(),
+        })
+        .collect()
 }
 
 /// `div`, `my-element`, `svg:rect` are HTML/SVG tags (strings for the

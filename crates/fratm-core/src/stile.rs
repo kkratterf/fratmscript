@@ -663,6 +663,51 @@ impl Translator<'_> {
     }
 }
 
+/// The React style key for a Neapolitan property of a `cess={{ … }}`
+/// object: `"sfunno-culore"` (or `sfunnoCulore`) is `backgroundColor`.
+/// `None` for keys that are not Neapolitan properties, which stay as written.
+pub fn style_key(key: &str) -> Option<String> {
+    let mut kebab = String::new();
+    for c in key.chars() {
+        if c.is_ascii_uppercase() {
+            kebab.push('-');
+            kebab.push(c.to_ascii_lowercase());
+        } else {
+            kebab.push(c);
+        }
+    }
+    let css = lookup(PROPERTIES, &kebab)?;
+    let mut camel = String::new();
+    let mut upper = false;
+    for c in css.chars() {
+        match c {
+            '-' => upper = true,
+            c if upper => {
+                camel.push(c.to_ascii_uppercase());
+                upper = false;
+            }
+            c => camel.push(c),
+        }
+    }
+    Some(camel)
+}
+
+/// A string value of a `cess={{ … }}` object with its Neapolitan words
+/// translated as in a `stile` declaration: `"1px solid russo"` is
+/// `"1px solid red"`.
+pub fn style_value(value: &str) -> String {
+    if value.contains(HOLE) {
+        return value.to_string();
+    }
+    let text: Vec<char> = value.chars().collect();
+    let mut translator = Translator {
+        text: &text,
+        out: String::new(),
+    };
+    translator.value(&text, false);
+    translator.out
+}
+
 fn lookup(table: &[(&str, &'static str)], word: &str) -> Option<&'static str> {
     table
         .iter()
@@ -796,6 +841,25 @@ mod tests {
 
     fn err(text: &str) -> StileError {
         translate(&[text.to_string()]).unwrap_err()
+    }
+
+    #[test]
+    fn style_object_keys_and_values() {
+        assert_eq!(
+            style_key("sfunno-culore").as_deref(),
+            Some("backgroundColor")
+        );
+        assert_eq!(
+            style_key("sfunnoCulore").as_deref(),
+            Some("backgroundColor")
+        );
+        assert_eq!(style_key("culore").as_deref(), Some("color"));
+        assert_eq!(style_key("color"), None);
+        assert_eq!(style_key("backgroundColor"), None);
+        assert_eq!(style_key("--accento"), None);
+        assert_eq!(style_value("1px solid russo"), "1px solid red");
+        assert_eq!(style_value("8px"), "8px");
+        assert_eq!(style_value("url(russo.png)"), "url(russo.png)");
     }
 
     #[test]

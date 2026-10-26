@@ -553,9 +553,11 @@ mann for predefinit facc Menu({ pizze }) {
   | `quanno-perde` | `onBlur` |
   | `quanno-scorre` | `onScroll` |
 
-  `addo` is `action` on `<modulo>` and `href` everywhere else. `cess={{ color: "red" }}` takes a
-  React style object (camelCase keys, plain CSS values); rules in Neapolitan CSS go in
-  `` stile`…` ``.
+  `addo` is `action` on `<modulo>` and `href` everywhere else. `cess={{ … }}` takes a style
+  object whose keys and string values can be Neapolitan CSS, as in `` stile`…` ``:
+  `cess={{ "sfunno-culore": "russo", spazio: "8px" }}` is
+  `style: { backgroundColor: "red", padding: "8px" }`. React keys (`backgroundColor`) and plain
+  CSS values work too; selectors and `:passanno` rules go in `` stile`…` ``.
 - The output uses the automatic JSX runtime: `import { jsx as _jsx, ... } from
   "react/jsx-runtime"` is added at the top. Write `// @jsxImportSource preact` at the top of the
   file to use Preact; the npm package's `compile` takes `jsxImportSource` too.

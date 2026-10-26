@@ -1,0 +1,19 @@
+// A style object on an HTML tag takes Neapolitan CSS: keys become the
+// React camelCase names and string values are translated word by word
+mann for predefinit facc Scheda({ larga, culore }) {
+    piglie (
+        <cascett
+            cess={{
+                "sfunno-culore": "janco",
+                spazio: "8px 16px",
+                bordo: "1px solid niro",
+                "allinea-testo": "miezo",
+                larghezza: larga,
+                culore,
+                fontWeight: "bold",
+            }}
+        >
+            <chiacchier cess={{ culore: "russo" }}>Uè</chiacchier>
+        </cascett>
+    )
+}
