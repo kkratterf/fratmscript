@@ -715,6 +715,23 @@ fn render(items: &[Item], placeholder: impl Fn(usize) -> String) -> String {
 mod tests {
     use super::*;
 
+    #[test]
+    fn the_vscode_grammar_knows_every_phrase() {
+        for (words, _, kind) in PHRASES {
+            let scope = match kind {
+                Kind::Statement => "keyword.other.DML.sql",
+                Kind::Clause => "keyword.other.sql",
+                Kind::Operator => "keyword.operator.sql",
+                Kind::Value => "constant.language.sql",
+            };
+            assert!(
+                crate::vscode_grammar::lists("gomorra-template", scope, words),
+                "{} missing from gomorra-template ({scope}) in the VS Code grammar",
+                words.join(" ")
+            );
+        }
+    }
+
     fn sql(chunks: &[&str]) -> String {
         let chunks: Vec<String> = chunks.iter().map(|c| c.to_string()).collect();
         translate(&chunks).unwrap().sql

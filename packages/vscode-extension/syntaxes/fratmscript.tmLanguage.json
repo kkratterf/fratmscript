@@ -62,6 +62,8 @@
     },
     "template-strings": {
       "patterns": [
+        { "include": "#stile-template" },
+        { "include": "#gomorra-template" },
         {
           "name": "string.template.fratm",
           "begin": "`",
@@ -71,21 +73,186 @@
               "name": "constant.character.escape.fratm",
               "match": "\\\\."
             },
-            {
-              "name": "meta.template.expression.fratm",
-              "begin": "\\$\\{",
-              "beginCaptures": {
-                "0": { "name": "punctuation.definition.template-expression.begin.fratm" }
-              },
-              "end": "\\}",
-              "endCaptures": {
-                "0": { "name": "punctuation.definition.template-expression.end.fratm" }
-              },
-              "patterns": [
-                { "include": "source.fratm" }
-              ]
-            }
+            { "include": "#template-hole" }
           ]
+        }
+      ]
+    },
+    "template-hole": {
+      "name": "meta.template.expression.fratm",
+      "begin": "\\$\\{",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.template-expression.begin.fratm"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.template-expression.end.fratm"
+        }
+      },
+      "patterns": [
+        {
+          "include": "source.fratm"
+        }
+      ]
+    },
+    "stile-template": {
+      "comment": "stile`…`: CSS in Neapolitan, kept in sync with crates/fratm-core/src/stile.rs by its tests",
+      "name": "string.template.stile.fratm",
+      "begin": "\\b(stile)\\s*(`)",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.name.function.tagged-template.fratm"
+        },
+        "2": {
+          "name": "punctuation.definition.string.template.begin.fratm"
+        }
+      },
+      "end": "`",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.template.end.fratm"
+        }
+      },
+      "contentName": "meta.embedded.block.css",
+      "patterns": [
+        {
+          "name": "constant.character.escape.fratm",
+          "match": "\\\\."
+        },
+        {
+          "include": "#template-hole"
+        },
+        {
+          "name": "comment.block.css",
+          "begin": "/\\*",
+          "end": "\\*/|(?=`)"
+        },
+        {
+          "name": "keyword.control.at-rule.css",
+          "match": "@[\\p{L}_-][\\p{L}\\p{N}_-]*"
+        },
+        {
+          "name": "string.quoted.css",
+          "match": "\"[^\"`]*\"|'[^'`]*'"
+        },
+        {
+          "match": "(?<![\\p{L}\\p{N}_$-])(-{0,2}[\\p{L}_][\\p{L}\\p{N}_-]*)\\s*(:)(?=\\s|$)",
+          "captures": {
+            "1": {
+              "name": "support.type.property-name.css"
+            },
+            "2": {
+              "name": "punctuation.separator.key-value.css"
+            }
+          }
+        },
+        {
+          "name": "entity.other.attribute-name.pseudo-class.css",
+          "match": "::?[\\p{L}_-][\\p{L}\\p{N}_-]*"
+        },
+        {
+          "name": "entity.name.tag.css",
+          "match": "(?<![\\p{L}\\p{N}_$-])(?:collegamento|navigazione|etichetta|capocella|immagine|articolo|textarea|quaderno|scritta|titolo4|sezione|opzione|titolo6|article|casella|corsivo|tabella|titolo3|titolo5|buttone|scatola|section|titolo2|button|header|select|option|piezzo|elenco|scegli|titolo|modulo|footer|codice|strong|canvas|table|lista|linea|input|label|forte|acapo|cella|span|form|core|main|tela|capa|pede|voce|riga|code|img|nav|div|ol|h5|h1|h2|h6|h3|td|em|th|hr|tr|h4|br|li|ul|p|a)(?![\\p{L}\\p{N}_$-])(?=\\s*(?:[{,>+~\\[]|[.#][\\p{L}_-]|::?[\\p{L}])|\\s+[^:;`]*\\{)"
+        },
+        {
+          "name": "constant.other.color.rgb-value.css",
+          "match": "#\\h{3,8}(?![\\p{L}\\p{N}_$-])"
+        },
+        {
+          "name": "entity.other.attribute-name.id.css",
+          "match": "#[\\p{L}_-][\\p{L}\\p{N}_-]*"
+        },
+        {
+          "name": "constant.numeric.css",
+          "match": "(?<![\\p{L}\\p{N}_$-])-?(?:\\d+\\.?\\d*|\\.\\d+)(?:[a-zA-Z]+|%)?"
+        },
+        {
+          "name": "entity.other.attribute-name.class.css",
+          "match": "\\.[\\p{L}_-][\\p{L}\\p{N}_-]*"
+        },
+        {
+          "name": "support.constant.property-value.css",
+          "match": "(?<![\\p{L}\\p{N}_$-])(?:culore-corrente|blocco-in-linea|bordo-incluso|nun-va-a-capo|sottolineato|tratteggiato|stiracchiato|trasparente|appiccecata|appiccecato|nun-ripete|automatico|flessibile|puntinato|alternato|minuscolo|grassetto|arancione|ereditato|maiuscolo|relativo|relativa|iniziale|visibile|spartuto|assoluta|attuorno|in-linea|contiene|infinito|nisciuno|assoluto|nascosto|continuo|argiento|sbarrato|corsivo|griglia|azzurro|colonna|lineare|manella|aspetta|marrone|normale|celeste|statico|destra|niente|ripete|grigio|mmiezo|ncoppa|a-capo|scorre|facile|giallo|blocco|inizio|janco|copre|fisso|viola|miezo|manca|fissa|verde|russo|sotto|riga|niro|fine|nero|rosa|blu|oro)(?![\\p{L}\\p{N}_$-])"
+        },
+        {
+          "name": "support.function.css",
+          "match": "(?<![\\p{L}\\p{N}_$-])[\\p{L}_-][\\p{L}\\p{N}_-]*(?=\\()"
+        },
+        {
+          "name": "punctuation.section.property-list.css",
+          "match": "[{}]"
+        },
+        {
+          "name": "punctuation.terminator.rule.css",
+          "match": ";"
+        }
+      ]
+    },
+    "gomorra-template": {
+      "comment": "gomorra`…`: GomorraSQL, kept in sync with crates/fratm-core/src/gomorra.rs by its tests",
+      "name": "string.template.gomorra.fratm",
+      "begin": "\\b(gomorra)\\s*(`)",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.name.function.tagged-template.fratm"
+        },
+        "2": {
+          "name": "punctuation.definition.string.template.begin.fratm"
+        }
+      },
+      "end": "`",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.template.end.fratm"
+        }
+      },
+      "contentName": "meta.embedded.block.sql",
+      "patterns": [
+        {
+          "name": "constant.character.escape.fratm",
+          "match": "\\\\."
+        },
+        {
+          "include": "#template-hole"
+        },
+        {
+          "name": "comment.line.double-dash.sql",
+          "match": "--(?:[^`$]|\\$(?!\\{))*"
+        },
+        {
+          "name": "string.quoted.double.sql",
+          "match": "\"[^\"`]*\""
+        },
+        {
+          "name": "keyword.other.DML.sql",
+          "match": "(?<![\\p{L}\\p{N}_$-])(?:abbrucimm\\s+'a\\s+tavula|facimm\\s+na'\\s+strage|facimm\\s+'a\\s+tavula|iamme\\s+bello\\s+ia'|nzipp\\s+'ngoppa|ua\\s+uagliò|ripigliammo|rifacimm|sfaccimm)(?![\\p{L}\\p{N}_$-])"
+        },
+        {
+          "name": "keyword.other.sql",
+          "match": "(?<![\\p{L}\\p{N}_$-])(?:facimm\\s+'e\\s+mucchie\\s+pe|mettimmo\\s+in\\s+fila\\s+pe|nun\\s+cchiù\\s+'e|pesc\\s+e\\s+pesc|mmiez\\s+'a|zumpanno|accunza|chist|arò)(?![\\p{L}\\p{N}_$-])"
+        },
+        {
+          "name": "keyword.operator.sql",
+          "match": "(?<![\\p{L}\\p{N}_$-])(?:nun\\s+assumiglia\\s+a|assumiglia\\s+a|nun\\s+dint'a|nun\\s+è|accussì|dint'a|comme|nun|e|o|è)(?![\\p{L}\\p{N}_$-])"
+        },
+        {
+          "name": "constant.language.sql",
+          "match": "(?<![\\p{L}\\p{N}_$-])(?:tutto\\s+chillo\\s+ch'era\\s+'o\\s+nuostro|nun\\s+è\\s+nisciun|a\\s+scennere|è\\s+nisciun|a\\s+salì|nisciun|overo|sfòls)(?![\\p{L}\\p{N}_$-])"
+        },
+        {
+          "name": "keyword.other.sql",
+          "match": "(?i)\\b(?:select|from|where|insert|into|update|set|delete|create|table|drop|if|exists|join|left|inner|on|order|group|by|limit|offset|values|and|or|not|null|as|like|in|is|asc|desc|begin|commit|rollback|primary|key|integer|text|real|default)\\b"
+        },
+        {
+          "name": "constant.numeric.sql",
+          "match": "(?<![\\p{L}\\p{N}_$-])\\d+(?:\\.\\d+)?"
+        },
+        {
+          "name": "keyword.operator.comparison.sql",
+          "match": "<=|>=|<>|!=|=|<|>"
         }
       ]
     },

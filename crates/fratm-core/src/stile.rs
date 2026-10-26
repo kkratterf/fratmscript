@@ -754,6 +754,25 @@ fn top_level_colon(part: &[char]) -> Option<usize> {
 mod tests {
     use super::*;
 
+    #[test]
+    fn the_vscode_grammar_knows_every_value_and_tag() {
+        use crate::vscode_grammar::lists;
+        for (word, _) in VALUES {
+            assert!(
+                lists("stile-template", "support.constant.property-value.css", &[word]),
+                "{word} missing from stile-template in the VS Code grammar"
+            );
+        }
+        for (nap, html, _) in crate::html::TAGS {
+            for tag in [nap, html] {
+                assert!(
+                    lists("stile-template", "entity.name.tag.css", &[tag]),
+                    "{tag} missing from stile-template in the VS Code grammar"
+                );
+            }
+        }
+    }
+
     fn css(text: &str) -> String {
         translate(&[text.to_string()]).unwrap().remove(0)
     }

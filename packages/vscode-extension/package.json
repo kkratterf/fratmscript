@@ -58,7 +58,11 @@
       {
         "language": "fratmscript",
         "scopeName": "source.fratm",
-        "path": "./syntaxes/fratmscript.tmLanguage.json"
+        "path": "./syntaxes/fratmscript.tmLanguage.json",
+        "embeddedLanguages": {
+          "meta.embedded.block.css": "css",
+          "meta.embedded.block.sql": "sql"
+        }
       }
     ],
     "snippets": [

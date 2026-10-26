@@ -14,6 +14,7 @@ Evidenziazione completa per tutte le keywords napoletane:
 - `stamm a dì` → `console.log`
 - E molte altre...
 - JSX: tag, attributi e `{ … }` dint'e componenti React
+- CSS dint'a ``stile`…` `` (proprietà, valori, selettori, `@quanno`) e SQL dint'a ``gomorra`…` `` (`ripigliammo`, `mmiez 'a`, `arò`…), cu 'e `${…}` ca restano codice
 
 ### Snippets
 30+ snippets per scrivere codice velocemente:
@@ -24,6 +25,7 @@ Evidenziazione completa per tutte le keywords napoletane:
 - `pruvamm` → Try-catch
 - `componente` → Componente React cu JSX
 - `usestate` → `tien [valore, setValore] = useState(…)`
+- `buttone`, `casella` → tag cu attributi ed eventi in napoletano
 
 ### Language Server
 - **Autocompletamento** intelligente per tutte le keywords

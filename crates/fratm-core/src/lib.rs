@@ -362,6 +362,35 @@ pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
+/// The VS Code grammar colours the words of `stile` and `gomorra` blocks
+/// from lists that must follow the compiler's tables; tests read them here.
+#[cfg(test)]
+pub(crate) mod vscode_grammar {
+    /// Whether the `match` regex of the pattern named `scope` inside the
+    /// grammar rule `rule` lists `words` (joined by `\s+`) as an alternative.
+    pub fn lists(rule: &str, scope: &str, words: &[&str]) -> bool {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../packages/vscode-extension/syntaxes/fratmscript.tmLanguage.json"
+        );
+        let grammar: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let patterns = grammar["repository"][rule]["patterns"].as_array().unwrap();
+        let alternative = words.join("\\s+");
+        patterns
+            .iter()
+            .filter(|p| p["name"] == scope)
+            .filter_map(|p| p["match"].as_str())
+            .any(|regex| {
+                ["(?:", "|"].iter().any(|before| {
+                    ["|", ")"]
+                        .iter()
+                        .any(|after| regex.contains(&format!("{before}{alternative}{after}")))
+                })
+            })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
