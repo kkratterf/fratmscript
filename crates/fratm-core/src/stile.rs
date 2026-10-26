@@ -171,12 +171,15 @@ pub const VALUES: &[(&str, &str)] = &[
     ("alternato", "alternate"),
 ];
 
-/// (Neapolitan pseudo-class or pseudo-element, CSS name), after `:` or `::`
+/// (Neapolitan pseudo-class or pseudo-element, CSS name), after `:` or `::`.
+/// `stutato` and `esempio` are the words of the HTML attributes
+/// ([`crate::html`]); `disattivato` and `segnaposto` are kept from v0.11.
 pub const PSEUDO: &[(&str, &str)] = &[
     ("passanno", "hover"),
     ("premuto", "active"),
     ("fuoco", "focus"),
     ("fuoco-visibile", "focus-visible"),
+    ("stutato", "disabled"),
     ("disattivato", "disabled"),
     ("spuntato", "checked"),
     ("primmo-figlio", "first-child"),
@@ -185,6 +188,7 @@ pub const PSEUDO: &[(&str, &str)] = &[
     ("radice", "root"),
     ("primma", "before"),
     ("doppo", "after"),
+    ("esempio", "placeholder"),
     ("segnaposto", "placeholder"),
 ];
 
@@ -792,6 +796,19 @@ mod tests {
 
     fn err(text: &str) -> StileError {
         translate(&[text.to_string()]).unwrap_err()
+    }
+
+    #[test]
+    fn states_use_the_attribute_words() {
+        assert_eq!(
+            css("miett:stutato, miett::esempio { culore: grigio }"),
+            "input:disabled, input::placeholder { color: gray }"
+        );
+        // The words of v0.11 keep working
+        assert_eq!(
+            css("miett:disattivato, miett::segnaposto { culore: grigio }"),
+            "input:disabled, input::placeholder { color: gray }"
+        );
     }
 
     #[test]

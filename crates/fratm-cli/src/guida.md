@@ -809,7 +809,7 @@ stile`
 | `premuto` | `active` |
 | `fuoco` | `focus` |
 | `fuoco-visibile` | `focus-visible` |
-| `disattivato` | `disabled` |
+| `stutato` (or `disattivato`) | `disabled` |
 | `spuntato` | `checked` |
 | `primmo-figlio` | `first-child` |
 | `urdemo-figlio` | `last-child` |
@@ -817,7 +817,7 @@ stile`
 | `radice` | `root` |
 | `primma` | `before` |
 | `doppo` | `after` |
-| `segnaposto` | `placeholder` |
+| `esempio` (or `segnaposto`) | `placeholder` |
 
 `@quanno` media queries also take `schermo` (screen), `stampa` (print), `tutto` (all), `e` (and),
 `o` (or), `nun` (not).
