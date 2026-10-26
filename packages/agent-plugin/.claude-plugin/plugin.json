@@ -1,6 +1,6 @@
 {
   "name": "fratmscript",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Write, check and run FratmScript (JavaScript with Neapolitan keywords): a skill with the language rules and the fratm MCP server",
   "author": {
     "name": "kkratterf",
