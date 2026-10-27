@@ -4,9 +4,11 @@ let b = 2;
 console.log(a, b);
 let x = 0;
 let y = 1;
-for (let i = 0; (i < 10); i++) {
-  [x, y] = [y, (x + y)];
+
+for (let i = 0; i < 10; i++) {
+  [x, y] = [y, x + y];
 }
+
 console.log(x);
 const punto = { x: 3, y: 4, z: 5 };
 const copia = {};

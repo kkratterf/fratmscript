@@ -1,10 +1,12 @@
 function somma(primo, ...resto) {
-  return resto.reduce((totale, n) => (totale + n), primo);
+  return resto.reduce((totale, n) => totale + n, primo);
 }
-function saluta(nome = "Gennà", punto = ((nome.length > 4) ? "!" : ".")) {
-  return (("Uè " + nome) + punto);
+
+function saluta(nome = "Gennà", punto = nome.length > 4 ? "!" : ".") {
+  return "Uè " + nome + punto;
 }
-const conta = (base = 10, ...altri) => (base + altri.length);
+
+const conta = (base = 10, ...altri) => base + altri.length;
 const a = [1, 2];
 const b = [...a, 3, ...a];
 const o = { x: 1 };

@@ -1,11 +1,51 @@
-const gomorra = (sql, text, params) => ({ sql, params, text, values: [...params] });
+const gomorra = (sql, text, params) => ({
+  sql,
+  params,
+  text,
+  values: [...params],
+});
+
 const minimo = 6;
-const care = gomorra("SELECT nomme, prezzo FROM pizze WHERE prezzo >= ? AND nomme IS NOT NULL ORDER BY prezzo DESC LIMIT 3", "SELECT nomme, prezzo FROM pizze WHERE prezzo >= $1 AND nomme IS NOT NULL ORDER BY prezzo DESC LIMIT 3", [minimo]);
+const care = gomorra(
+  "SELECT nomme, prezzo FROM pizze WHERE prezzo >= ? AND nomme IS NOT NULL ORDER BY prezzo DESC LIMIT 3",
+  "SELECT nomme, prezzo FROM pizze WHERE prezzo >= $1 AND nomme IS NOT NULL ORDER BY prezzo DESC LIMIT 3",
+  [minimo],
+);
 console.log(care.sql);
 console.log(care.params);
 console.log(care.text);
-console.log(gomorra("CREATE TABLE IF NOT EXISTS pizze (id INTEGER PRIMARY KEY, nomme TEXT, prezzo REAL)", "CREATE TABLE IF NOT EXISTS pizze (id INTEGER PRIMARY KEY, nomme TEXT, prezzo REAL)", []).sql);
-console.log(gomorra("INSERT INTO pizze (nomme, prezzo) VALUES (?, ?)", "INSERT INTO pizze (nomme, prezzo) VALUES ($1, $2)", ["margherita", 5.5]).sql);
-console.log(gomorra("UPDATE pizze SET prezzo = prezzo + 1 WHERE nomme LIKE ?", "UPDATE pizze SET prezzo = prezzo + 1 WHERE nomme LIKE $1", ["%fritta%"]).sql);
-console.log(gomorra("DELETE FROM pizze WHERE id IN (?, ?)", "DELETE FROM pizze WHERE id IN ($1, $2)", [1, 2]).sql);
-console.log(gomorra("SELECT pizze.nomme, COUNT(*) AS ordini FROM pizze JOIN ordini WHERE ordini.pizza = pizze.id GROUP BY pizze.nomme", "SELECT pizze.nomme, COUNT(*) AS ordini FROM pizze JOIN ordini WHERE ordini.pizza = pizze.id GROUP BY pizze.nomme", []).sql);
+console.log(
+  gomorra(
+    "CREATE TABLE IF NOT EXISTS pizze (id INTEGER PRIMARY KEY, nomme TEXT, prezzo REAL)",
+    "CREATE TABLE IF NOT EXISTS pizze (id INTEGER PRIMARY KEY, nomme TEXT, prezzo REAL)",
+    [],
+  ).sql,
+);
+console.log(
+  gomorra(
+    "INSERT INTO pizze (nomme, prezzo) VALUES (?, ?)",
+    "INSERT INTO pizze (nomme, prezzo) VALUES ($1, $2)",
+    ["margherita", 5.5],
+  ).sql,
+);
+console.log(
+  gomorra(
+    "UPDATE pizze SET prezzo = prezzo + 1 WHERE nomme LIKE ?",
+    "UPDATE pizze SET prezzo = prezzo + 1 WHERE nomme LIKE $1",
+    ["%fritta%"],
+  ).sql,
+);
+console.log(
+  gomorra(
+    "DELETE FROM pizze WHERE id IN (?, ?)",
+    "DELETE FROM pizze WHERE id IN ($1, $2)",
+    [1, 2],
+  ).sql,
+);
+console.log(
+  gomorra(
+    "SELECT pizze.nomme, COUNT(*) AS ordini FROM pizze JOIN ordini WHERE ordini.pizza = pizze.id GROUP BY pizze.nomme",
+    "SELECT pizze.nomme, COUNT(*) AS ordini FROM pizze JOIN ordini WHERE ordini.pizza = pizze.id GROUP BY pizze.nomme",
+    [],
+  ).sql,
+);

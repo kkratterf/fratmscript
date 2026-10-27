@@ -444,12 +444,12 @@ mod tests {
     fn test_jsx_neapolitan_tags_compile_to_html() {
         assert_eq!(
             jsx_js("x = <cascett class=\"pizza\"><luccolone>Uè</luccolone><citofono>Sforna</citofono></cascett>"),
-            "x = _jsxs(\"div\", { className: \"pizza\", children: [_jsx(\"h1\", { children: \"Uè\" }), _jsx(\"button\", { children: \"Sforna\" })] });\n"
+            "x = _jsxs(\"div\", {\n  className: \"pizza\",\n  children: [\n    _jsx(\"h1\", { children: \"Uè\" }),\n    _jsx(\"button\", { children: \"Sforna\" }),\n  ],\n});\n"
         );
         // `for` on a Neapolitan label is an HTML attribute too
         assert_eq!(
             jsx_js("x = <etichetta for=\"n\">Nomme<miett id=\"n\" /></etichetta>"),
-            "x = _jsxs(\"label\", { htmlFor: \"n\", children: [\"Nomme\", _jsx(\"input\", { id: \"n\" })] });\n"
+            "x = _jsxs(\"label\", {\n  htmlFor: \"n\",\n  children: [\"Nomme\", _jsx(\"input\", { id: \"n\" })],\n});\n"
         );
         // Components keep their names, even when they read like a tag
         assert_eq!(jsx_js("x = <Cascett />"), "x = _jsx(Cascett, {});\n");
@@ -459,7 +459,7 @@ mod tests {
     fn test_jsx_style_objects_take_neapolitan_css() {
         assert_eq!(
             jsx_js("x = <cascett cess={{ \"sfunno-culore\": \"russo\", spazio: \"8px\", bordo: \"1px solid niro\", fontSize: n }} />"),
-            "x = _jsx(\"div\", { style: { backgroundColor: \"red\", padding: \"8px\", border: \"1px solid black\", fontSize: n } });\n"
+            "x = _jsx(\"div\", {\n  style: {\n    backgroundColor: \"red\",\n    padding: \"8px\",\n    border: \"1px solid black\",\n    fontSize: n,\n  },\n});\n"
         );
         // React keys and values, the old `stile=` and `style=` work too
         assert_eq!(
@@ -486,7 +486,7 @@ mod tests {
     fn test_jsx_enumerated_values_are_translated() {
         assert_eq!(
             jsx_js("x = <modulo metodo=\"post\"><miett tipo=\"fattimiei\" /><citofono tipo=\"manna\">Trase</citofono></modulo>"),
-            "x = _jsxs(\"form\", { method: \"post\", children: [_jsx(\"input\", { type: \"password\" }), _jsx(\"button\", { type: \"submit\", children: \"Trase\" })] });\n"
+            "x = _jsxs(\"form\", {\n  method: \"post\",\n  children: [\n    _jsx(\"input\", { type: \"password\" }),\n    _jsx(\"button\", { type: \"submit\", children: \"Trase\" }),\n  ],\n});\n"
         );
         // Components get their props as written
         assert_eq!(
@@ -504,7 +504,7 @@ mod tests {
         .unwrap();
         assert_eq!(
             result.code.strip_prefix(JSX_IMPORT).unwrap(),
-            "x = _jsxs(\"div\", { children: [_jsx(\"button\", { onClick: f, style: { color: \"red\" }, children: \"A\" }), _jsx(\"button\", { children: \"B\" })] });\n"
+            "x = _jsxs(\"div\", {\n  children: [\n    _jsx(\"button\", { onClick: f, style: { color: \"red\" }, children: \"A\" }),\n    _jsx(\"button\", { children: \"B\" }),\n  ],\n});\n"
         );
         assert_eq!(
             result.warnings,
@@ -531,20 +531,20 @@ mod tests {
     fn test_jsx_neapolitan_attributes_and_events_compile_to_react_props() {
         assert_eq!(
             jsx_js("x = <miett tipo=\"text\" esempio=\"Pizza\" valore={v} quanno-scrive={(e) => f(e.target.value)} stutato />"),
-            "x = _jsx(\"input\", { type: \"text\", placeholder: \"Pizza\", value: v, onInput: (e) => f(e.target.value), disabled: true });\n"
+            "x = _jsx(\"input\", {\n  type: \"text\",\n  placeholder: \"Pizza\",\n  value: v,\n  onInput: (e) => f(e.target.value),\n  disabled: true,\n});\n"
         );
         assert_eq!(
             jsx_js("x = <citofono classe=\"forte\" quanno-tuocche={sforna} cess={{ color: \"red\" }}>Sforna</citofono>"),
-            "x = _jsx(\"button\", { className: \"forte\", onClick: sforna, style: { color: \"red\" }, children: \"Sforna\" });\n"
+            "x = _jsx(\"button\", {\n  className: \"forte\",\n  onClick: sforna,\n  style: { color: \"red\" },\n  children: \"Sforna\",\n});\n"
         );
         assert_eq!(
             jsx_js("x = <etichetta pe=\"n\"><cartulin da=\"/a.png\" spiegazione=\"Pizza\" /></etichetta>"),
-            "x = _jsx(\"label\", { htmlFor: \"n\", children: _jsx(\"img\", { src: \"/a.png\", alt: \"Pizza\" }) });\n"
+            "x = _jsx(\"label\", {\n  htmlFor: \"n\",\n  children: _jsx(\"img\", { src: \"/a.png\", alt: \"Pizza\" }),\n});\n"
         );
         // `addo` is `action` on a form and `href` elsewhere; `quanno-cagne` is `onChange`
         assert_eq!(
             jsx_js("x = <modulo addo=\"/ordina\" quanno-cagne={g}><vattenn addo=\"/\">Casa</vattenn></modulo>"),
-            "x = _jsx(\"form\", { action: \"/ordina\", onChange: g, children: _jsx(\"a\", { href: \"/\", children: \"Casa\" }) });\n"
+            "x = _jsx(\"form\", {\n  action: \"/ordina\",\n  onChange: g,\n  children: _jsx(\"a\", { href: \"/\", children: \"Casa\" }),\n});\n"
         );
         // `chiave` is the key of an HTML element
         assert_eq!(
@@ -554,7 +554,7 @@ mod tests {
         // React names keep working, and a component gets its props as written
         assert_eq!(
             jsx_js("x = <modulo onSubmit={manna}><Campo tipo=\"a\" quanno-tuocche={f} /></modulo>"),
-            "x = _jsx(\"form\", { onSubmit: manna, children: _jsx(Campo, { tipo: \"a\", \"quanno-tuocche\": f }) });\n"
+            "x = _jsx(\"form\", {\n  onSubmit: manna,\n  children: _jsx(Campo, { tipo: \"a\", \"quanno-tuocche\": f }),\n});\n"
         );
     }
 
@@ -571,7 +571,7 @@ mod tests {
         // `class` and `for` become `className` and `htmlFor` on HTML tags only
         assert_eq!(
             jsx_js("x = <label class=\"a\" for=\"b\"><Campo class=\"c\" /></label>"),
-            "x = _jsx(\"label\", { className: \"a\", htmlFor: \"b\", children: _jsx(Campo, { class: \"c\" }) });\n"
+            "x = _jsx(\"label\", {\n  className: \"a\",\n  htmlFor: \"b\",\n  children: _jsx(Campo, { class: \"c\" }),\n});\n"
         );
         // Custom elements and SVG namespaces are tags, not components
         assert_eq!(
@@ -586,12 +586,12 @@ mod tests {
             jsx_js(
                 "x = (\n    <ul>\n        {/* niente */}\n        {xs.map((v) => <li key={v}>{v} &amp; basta</li>)}\n    </ul>\n)"
             ),
-            "x = _jsx(\"ul\", { children: xs.map((v) => _jsxs(\"li\", { children: [v, \" & basta\"] }, v)) });\n"
+            "x = _jsx(\"ul\", {\n  children: xs.map((v) => _jsxs(\"li\", { children: [v, \" & basta\"] }, v)),\n});\n"
         );
         // Neapolitan inside the braces
         assert_eq!(
             jsx_js("x = <p>{pronto ? \"sì\" : nisciun}{a e b}</p>"),
-            "x = _jsxs(\"p\", { children: [(pronto ? \"sì\" : null), (a && b)] });\n"
+            "x = _jsxs(\"p\", { children: [pronto ? \"sì\" : null, a && b] });\n"
         );
         // An element as an attribute value
         assert_eq!(
@@ -605,7 +605,7 @@ mod tests {
         let plain = compile("chist è x = a < b", Default::default())
             .unwrap()
             .code;
-        assert_eq!(plain, "const x = (a < b);\n");
+        assert_eq!(plain, "const x = a < b;\n");
 
         let pragma = compile("// @jsxImportSource preact\nx = <b />", Default::default())
             .unwrap()
@@ -729,9 +729,9 @@ mod tests {
 
     #[test]
     fn test_unary_base_of_power_gets_parentheses() {
-        assert_eq!(js("x = (-2) ** 2"), "x = ((-2) ** 2);\n");
-        assert_eq!(js("x = (chè è a) ** 2"), "x = ((typeof a) ** 2);\n");
-        assert_eq!(js("x = 2 ** -1"), "x = (2 ** -1);\n");
+        assert_eq!(js("x = (-2) ** 2"), "x = (-2) ** 2;\n");
+        assert_eq!(js("x = (chè è a) ** 2"), "x = (typeof a) ** 2;\n");
+        assert_eq!(js("x = 2 ** -1"), "x = 2 ** -1;\n");
     }
 
     #[test]
@@ -845,21 +845,21 @@ na famiglie Pizzaiolo figlio 'e Persona {
         assert_eq!(js("tien x = typeof a"), "let x = typeof a;\n");
         assert_eq!(
             js("tien x = chè è a == \"number\""),
-            "let x = (typeof a == \"number\");\n"
+            "let x = typeof a == \"number\";\n"
         );
     }
 
     #[test]
     fn test_instanceof_compiles_to_one_expression() {
-        assert_eq!(js("tien x = a è uno B"), "let x = (a instanceof B);\n");
-        assert_eq!(js("tien x = a instanceof B"), "let x = (a instanceof B);\n");
+        assert_eq!(js("tien x = a è uno B"), "let x = a instanceof B;\n");
+        assert_eq!(js("tien x = a instanceof B"), "let x = a instanceof B;\n");
     }
 
     #[test]
     fn test_number_literals() {
         assert_eq!(js("tien x = 0x1F"), "let x = 31;\n");
-        assert_eq!(js("tien x = 0b101 + 0o17"), "let x = (5 + 15);\n");
-        assert_eq!(js("tien x = 1e3 + 2.5E-3"), "let x = (1000 + 0.0025);\n");
+        assert_eq!(js("tien x = 0b101 + 0o17"), "let x = 5 + 15;\n");
+        assert_eq!(js("tien x = 1e3 + 2.5E-3"), "let x = 1000 + 0.0025;\n");
         assert_eq!(js("tien x = 1_000_000"), "let x = 1000000;\n");
         assert_eq!(js("tien x = 1e300"), "let x = 1e300;\n");
     }
@@ -929,7 +929,7 @@ na famiglie Pizzaiolo figlio 'e Persona {
     fn test_keywords_without_accents() {
         assert_eq!(
             js("chist e x = sfols\nsi (x) { stamm a di(1) } sinno { avvis a di(2) }"),
-            "const x = false;\nif (x) {\n  console.log(1);\n} else {\n  console.warn(2);\n}\n"
+            "const x = false;\n\nif (x) {\n  console.log(1);\n} else {\n  console.warn(2);\n}\n"
         );
         assert_eq!(js("scrive a di(chè e x)"), "console.error(typeof x);\n");
         assert!(js("pe (chist e v dint xs) { }").contains("for (const v of xs) {"));
@@ -947,10 +947,10 @@ na famiglie Pizzaiolo figlio 'e Persona {
         assert!(js("mo vir facc* f() { caccia aspett p }")
             .contains("async function* f() {\n  yield await p;"));
         assert!(js("na famiglie C { facc* a() { caccia 1 }\n*b() { } }")
-            .contains("  *a() {\n    yield 1;\n  }\n  *b() {"));
-        assert!(js("tien o = { *g() { caccia 1 } }").contains("{ *g() {"));
+            .contains("  *a() {\n    yield 1;\n  }\n\n  *b() {"));
+        assert!(js("tien o = { *g() { caccia 1 } }").contains("{\n  *g() {"));
         // A yield used as an operand keeps its parentheses
-        assert!(js("facc* f() { tien x = (caccia 1) + 2 }").contains("let x = ((yield 1) + 2);"));
+        assert!(js("facc* f() { tien x = (caccia 1) + 2 }").contains("let x = (yield 1) + 2;"));
         // `caccia` needs an enclosing generator; arrows never are one
         let err = compile("facc f() { caccia 1 }", Default::default()).unwrap_err();
         assert!(err.to_string().contains("dint'a nu generatore"), "{}", err);
@@ -966,7 +966,7 @@ na famiglie Pizzaiolo figlio 'e Persona {
         let out = js("na famiglie C {\n#x = 1\nfisso n = 0\ny\ndamme x() { piglie stu cos.#x }\nmiette x(v) { stu cos.#x = v }\nfisso damme tutti() { piglie C.n }\n#aiuto() { }\n}");
         assert_eq!(
             out,
-            "class C {\n  #x = 1;\n  static n = 0;\n  y;\n  get x() {\n    return this.#x;\n  }\n  set x(v) {\n    this.#x = v;\n  }\n  static get tutti() {\n    return C.n;\n  }\n  #aiuto() {\n  }\n}\n"
+            "class C {\n  #x = 1;\n  static n = 0;\n  y;\n\n  get x() {\n    return this.#x;\n  }\n\n  set x(v) {\n    this.#x = v;\n  }\n\n  static get tutti() {\n    return C.n;\n  }\n\n  #aiuto() {}\n}\n"
         );
         // `damme`, `miette` and `fisso` alone are ordinary method or field names
         assert!(js("na famiglie C { damme() { } }").contains("  damme() {"));
@@ -992,7 +992,7 @@ na famiglie Pizzaiolo figlio 'e Persona {
         let out = js("na famiglie C {\n*[Symbol.iterator]() { }\nfisso [k] = 1\n[\"a\" + b] = 2\ndamme [k]() { piglie 1 }\nmiette [k](v) { }\nmo vir [k]() { }\n\"x y\"() { }\n}");
         assert_eq!(
             out,
-            "class C {\n  *[Symbol.iterator]() {\n  }\n  static [k] = 1;\n  [(\"a\" + b)] = 2;\n  get [k]() {\n    return 1;\n  }\n  set [k](v) {\n  }\n  async [k]() {\n  }\n  \"x y\"() {\n  }\n}\n"
+            "class C {\n  *[Symbol.iterator]() {}\n\n  static [k] = 1;\n  [\"a\" + b] = 2;\n\n  get [k]() {\n    return 1;\n  }\n\n  set [k](v) {}\n\n  async [k]() {}\n\n  \"x y\"() {}\n}\n"
         );
         // A computed key is an ordinary expression, so undeclared names are not errors
         // and `costruttore` is only translated as a plain name
@@ -1005,11 +1005,11 @@ na famiglie Pizzaiolo figlio 'e Persona {
     fn test_do_while() {
         assert_eq!(
             js("primm fa {\n  i++\n} mentre che (i < 3)"),
-            "do {\n  i++;\n} while ((i < 3));\n"
+            "do {\n  i++;\n} while (i < 3);\n"
         );
         assert_eq!(
             js("primm fa { f() } mentre che (x); g()"),
-            "do {\n  f();\n} while (x);\ng();\n"
+            "do {\n  f();\n} while (x);\n\ng();\n"
         );
         // Both words stay names
         assert_eq!(js("tien primm = 1, fa = 2"), "let primm = 1, fa = 2;\n");
@@ -1060,17 +1060,17 @@ na famiglie Pizzaiolo figlio 'e Persona {
         );
         assert_eq!(
             js("pe (chist è [k, v] dint m.entries()) { }"),
-            "for (const [k, v] of m.entries()) {\n}\n"
+            "for (const [k, v] of m.entries()) {}\n"
         );
         assert_eq!(
             js("pe ogni (tien k 'ncopp o) { f(k) }"),
             "for (let k in o) {\n  f(k);\n}\n"
         );
-        assert_eq!(js("pe (x dint xs) { }"), "for (x of xs) {\n}\n");
+        assert_eq!(js("pe (x dint xs) { }"), "for (x of xs) {}\n");
         assert!(js("mo vir facc f() { pe aspett (chist è r dint rs) { } }")
             .contains("for await (const r of rs) {"));
         // The classic header still works, and `dint` / 'ncopp ... are not reserved
-        assert!(js("pe (tien i = 0; i < 3; i++) { }").contains("for (let i = 0; (i < 3); i++) {"));
+        assert!(js("pe (tien i = 0; i < 3; i++) { }").contains("for (let i = 0; i < 3; i++) {"));
         assert_eq!(js("tien dint = 1"), "let dint = 1;\n");
         assert_eq!(
             js("tien s = 'ncopp a tavola'"),
@@ -1124,9 +1124,9 @@ na famiglie Pizzaiolo figlio 'e Persona {
 
     #[test]
     fn test_short_keywords_keep_their_meaning_in_context() {
-        assert_eq!(js("tien x = a e b o c"), "let x = ((a && b) || c);\n");
+        assert_eq!(js("tien x = a e b o c"), "let x = (a && b) || c;\n");
         assert_eq!(js("tien x = no a"), "let x = !a;\n");
-        assert_eq!(js("tien x = no e no"), "let x = (no && no);\n");
+        assert_eq!(js("tien x = no e no"), "let x = no && no;\n");
         assert_eq!(js("tien x = leva a.b"), "let x = delete a.b;\n");
         assert_eq!(js("tien x = nu bell A()"), "let x = new A();\n");
         assert_eq!(js("scrive a dì(1)"), "console.error(1);\n");
@@ -1170,17 +1170,14 @@ na famiglie Pizzaiolo figlio 'e Persona {
         );
         assert_eq!(
             js("tien x = o.for + { si: 1, for: 2 }.si"),
-            "let x = (o.for + { si: 1, for: 2 }.si);\n"
+            "let x = o.for + { si: 1, for: 2 }.si;\n"
         );
     }
 
     #[test]
     fn test_arrow_functions() {
         assert_eq!(js("tien f = () => 1"), "let f = () => 1;\n");
-        assert_eq!(
-            js("tien f = (a, b) => a + b"),
-            "let f = (a, b) => (a + b);\n"
-        );
+        assert_eq!(js("tien f = (a, b) => a + b"), "let f = (a, b) => a + b;\n");
         assert_eq!(js("tien f = x => x"), "let f = (x) => x;\n");
         assert_eq!(
             js("tien f = (a) => { piglie a }"),
@@ -1191,17 +1188,14 @@ na famiglie Pizzaiolo figlio 'e Persona {
             "let f = async (x) => await g(x);\n"
         );
         assert_eq!(js("tien f = mo vir x => x"), "let f = async (x) => x;\n");
-        assert_eq!(
-            js("xs.map((v, i) => v * i)"),
-            "xs.map((v, i) => (v * i));\n"
-        );
+        assert_eq!(js("xs.map((v, i) => v * i)"), "xs.map((v, i) => v * i);\n");
         assert_eq!(
             js("tien f = () => ({ a: 1 })"),
             "let f = () => ({ a: 1 });\n"
         );
         assert_eq!(js("tien f = (e) => e"), "let f = (e) => e;\n");
         // A parenthesized expression is still an expression
-        assert_eq!(js("tien x = (a) + 1"), "let x = (a + 1);\n");
+        assert_eq!(js("tien x = (a) + 1"), "let x = a + 1;\n");
     }
 
     #[test]
@@ -1234,15 +1228,15 @@ na famiglie Pizzaiolo figlio 'e Persona {
         assert_eq!(js("tien x = ++a[0]"), "let x = ++a[0];\n");
         assert_eq!(
             js("pe (tien i = 0; i < 3; i++) { }"),
-            "for (let i = 0; (i < 3); i++) {\n}\n"
+            "for (let i = 0; i < 3; i++) {}\n"
         );
         assert_eq!(js("tien x = - --i"), "let x = -(--i);\n");
-        assert_eq!(js("tien x = a - -b"), "let x = (a - -b);\n");
+        assert_eq!(js("tien x = a - -b"), "let x = a - -b;\n");
     }
 
     #[test]
     fn test_symbolic_logical_operators() {
-        assert_eq!(js("tien x = a || b && !c"), "let x = (a || (b && !c));\n");
+        assert_eq!(js("tien x = a || b && !c"), "let x = a || (b && !c);\n");
     }
 
     #[test]
@@ -1264,7 +1258,7 @@ na famiglie Pizzaiolo figlio 'e Persona {
         assert_eq!(js("tien x = ``"), "let x = ``;\n");
         assert_eq!(
             js("tien x = `${a ? `x` : \"y\"}`"),
-            "let x = `${(a ? `x` : \"y\")}`;\n"
+            "let x = `${a ? `x` : \"y\"}`;\n"
         );
         assert_eq!(
             js("tien x = `${`${`deep`}`}`"),
@@ -1323,11 +1317,11 @@ na famiglie Pizzaiolo figlio 'e Persona {
     fn test_rest_and_default_parameters() {
         assert_eq!(
             js("facc f(a, ...resto) { }"),
-            "function f(a, ...resto) {\n}\n"
+            "function f(a, ...resto) {}\n"
         );
         assert_eq!(
             js("facc f(a = 1, b = a + 1) { }"),
-            "function f(a = 1, b = (a + 1)) {\n}\n"
+            "function f(a = 1, b = a + 1) {}\n"
         );
         assert_eq!(
             js("tien f = (a = 1, ...xs) => a"),
@@ -1352,7 +1346,7 @@ na famiglie Pizzaiolo figlio 'e Persona {
         assert_eq!(js("tien o = { a, b: 2 }"), "let o = { a, b: 2 };\n");
         assert_eq!(
             js("tien o = { [k]: v, [\"x\" + 1]: 2 }"),
-            "let o = { [k]: v, [(\"x\" + 1)]: 2 };\n"
+            "let o = { [k]: v, [\"x\" + 1]: 2 };\n"
         );
         assert_eq!(
             js("tien o = { \"con spazi\": 1, 42: 2 }"),
@@ -1368,17 +1362,17 @@ na famiglie Pizzaiolo figlio 'e Persona {
     fn test_object_literal_methods() {
         assert_eq!(
             js("tien o = { saluta(a) { piglie a } }"),
-            "let o = { saluta(a) {\n  return a;\n} };\n"
+            "let o = {\n  saluta(a) {\n    return a;\n  },\n};\n"
         );
         assert_eq!(
             js("tien o = { facc saluta() { } }"),
-            "let o = { saluta() {\n} };\n"
+            "let o = { saluta() {} };\n"
         );
         assert_eq!(
             js("tien o = { mo vir carica() { } }"),
-            "let o = { async carica() {\n} };\n"
+            "let o = { async carica() {} };\n"
         );
-        assert_eq!(js("tien o = { [k]() { } }"), "let o = { [k]() {\n} };\n");
+        assert_eq!(js("tien o = { [k]() { } }"), "let o = { [k]() {} };\n");
         // Keywords stay plain keys
         assert_eq!(
             js("tien o = { mo: 1, facc: 2, si: 3 }"),
@@ -1406,7 +1400,7 @@ na famiglie Pizzaiolo figlio 'e Persona {
         assert_eq!(js("tien { for, e } = o"), "let { for: $for, e } = o;\n");
         assert_eq!(
             js("pe (tien [i, j] = p; i < j; i++) { }"),
-            "for (let [i, j] = p; (i < j); i++) {\n}\n"
+            "for (let [i, j] = p; i < j; i++) {}\n"
         );
     }
 
@@ -1414,7 +1408,7 @@ na famiglie Pizzaiolo figlio 'e Persona {
     fn test_destructuring_parameters() {
         assert_eq!(
             js("facc f({ a, b = 1 }, [c]) { }"),
-            "function f({ a, b = 1 }, [c]) {\n}\n"
+            "function f({ a, b = 1 }, [c]) {}\n"
         );
         assert_eq!(js("tien f = ({ a }) => a"), "let f = ({ a }) => a;\n");
         assert_eq!(
@@ -1460,13 +1454,13 @@ na famiglie Pizzaiolo figlio 'e Persona {
 
     #[test]
     fn test_nullish_coalescing() {
-        assert_eq!(js("tien x = a ?? b ?? c"), "let x = ((a ?? b) ?? c);\n");
-        assert_eq!(js("tien x = a ?? b || c"), "let x = (a ?? (b || c));\n");
-        assert_eq!(js("tien x = a e b ?? c"), "let x = ((a && b) ?? c);\n");
+        assert_eq!(js("tien x = a ?? b ?? c"), "let x = a ?? b ?? c;\n");
+        assert_eq!(js("tien x = a ?? b || c"), "let x = a ?? (b || c);\n");
+        assert_eq!(js("tien x = a e b ?? c"), "let x = (a && b) ?? c;\n");
         // The ternary still works next to `?.` and `??`
         assert_eq!(
             js("tien x = a ? b?.c : d ?? 1"),
-            "let x = (a ? b?.c : (d ?? 1));\n"
+            "let x = a ? b?.c : d ?? 1;\n"
         );
     }
 
@@ -1477,10 +1471,10 @@ na famiglie Pizzaiolo figlio 'e Persona {
         assert_eq!(js("f(/a/, /b/i)"), "f(/a/, /b/i);\n");
         assert_eq!(js("tien x = `${/q/.source}`"), "let x = `${/q/.source}`;\n");
         // After an operand, `/` is still a division
-        assert_eq!(js("tien x = a / b / c"), "let x = ((a / b) / c);\n");
+        assert_eq!(js("tien x = a / b / c"), "let x = a / b / c;\n");
         assert_eq!(
             js("tien x = f(1) / 2 + xs[0] / 3"),
-            "let x = ((f(1) / 2) + (xs[0] / 3));\n"
+            "let x = f(1) / 2 + xs[0] / 3;\n"
         );
         assert_eq!(js("tien x = a // commento"), "let x = a;\n");
         assert_eq!(js("x /= 2"), "x /= 2;\n");
@@ -1500,7 +1494,7 @@ na famiglie Pizzaiolo figlio 'e Persona {
         assert_eq!(js("chist è a = 1, { b } = o"), "const a = 1, { b } = o;\n");
         assert_eq!(
             js("pe (tien i = 0, j = 3; i < j; i++, j--) { }"),
-            "for (let i = 0, j = 3; (i < j); i++, j--) {\n}\n"
+            "for (let i = 0, j = 3; i < j; i++, j--) {}\n"
         );
         assert!(compile("chist è a = 1, b", Default::default()).is_err());
     }
@@ -1509,13 +1503,14 @@ na famiglie Pizzaiolo figlio 'e Persona {
     fn test_fratm_library_is_inlined() {
         let code = js("chiamm { a_caso, quanti } da \"fratm\"\nstamm a dì(quanti([a_caso(1, 6)]))");
         assert!(!code.contains("import"), "{}", code);
+        // Helpers on several lines are set apart by blank lines
         assert_eq!(
-            code.lines().collect::<Vec<_>>(),
-            [
-                format!("const a_caso = {};", stdlib::helper("a_caso").unwrap()).as_str(),
-                format!("const quanti = {};", stdlib::helper("quanti").unwrap()).as_str(),
-                "console.log(quanti([a_caso(1, 6)]));",
-            ]
+            code,
+            format!(
+                "const a_caso = {};\n\nconst quanti = {};\n\nconsole.log(quanti([a_caso(1, 6)]));\n",
+                stdlib::helper("a_caso").unwrap(),
+                stdlib::helper("quanti").unwrap(),
+            )
         );
         // Other modules are still imported
         assert_eq!(
@@ -1527,9 +1522,12 @@ na famiglie Pizzaiolo figlio 'e Persona {
     #[test]
     fn test_gomorra_queries_are_translated_at_compile_time() {
         let code = js("chiamm { gomorra } da \"fratm\"\nchist è q = gomorra`ripigliammo nomme mmiez 'a pizze arò id = ${id}`");
-        assert_eq!(
-            code.lines().nth(1).unwrap(),
-            "const q = gomorra(\"SELECT nomme FROM pizze WHERE id = ?\", \"SELECT nomme FROM pizze WHERE id = $1\", [id]);"
+        assert!(
+            code.ends_with(
+                "const q = gomorra(\n  \"SELECT nomme FROM pizze WHERE id = ?\",\n  \"SELECT nomme FROM pizze WHERE id = $1\",\n  [id],\n);\n"
+            ),
+            "{}",
+            code
         );
         // Without the import, gomorra is any other tag
         assert_eq!(js("chist è q = gomorra`arò`"), "const q = gomorra`arò`;\n");
@@ -1537,7 +1535,7 @@ na famiglie Pizzaiolo figlio 'e Persona {
         assert_eq!(
             js("chiamm { gomorra } da \"fratm\"\nstamm a dì(q.gomorra)")
                 .lines()
-                .nth(1),
+                .last(),
             Some("console.log(q.gomorra);")
         );
     }
@@ -1548,7 +1546,7 @@ na famiglie Pizzaiolo figlio 'e Persona {
         // A static import of node:sqlite would break the module in the browser
         assert!(!code.contains("import"), "{}", code);
         assert!(
-            code.starts_with("const apri_db = (file = \":memory:\") => { const sqlite = globalThis.process?.getBuiltinModule?.(\"node:sqlite\");"),
+            code.starts_with("const apri_db = (file = \":memory:\") => {\n  const sqlite = globalThis.process?.getBuiltinModule?.(\"node:sqlite\");\n"),
             "{}",
             code
         );
@@ -1691,7 +1689,7 @@ na famiglie Pizzaiolo figlio 'e Persona {
         // `as` works like `comme`, and `comme` is still a name elsewhere
         assert_eq!(
             js("chiamm { a as b } da \"m\"\ntien comme = b"),
-            "import { a as b } from \"m\";\nlet comme = b;\n"
+            "import { a as b } from \"m\";\n\nlet comme = b;\n"
         );
     }
 
@@ -1735,14 +1733,14 @@ na famiglie Pizzaiolo figlio 'e Persona {
     #[test]
     fn test_in_operator_dint_a() {
         let js = |s: &str| compile(s, Default::default()).unwrap().code;
-        assert_eq!(js("tien x = \"a\" dint'a o"), "let x = (\"a\" in o);\n");
+        assert_eq!(js("tien x = \"a\" dint'a o"), "let x = \"a\" in o;\n");
         // `in` binds tighter than `==` and looser than `+`, as in JS
         assert_eq!(
             js("tien x = \"a\" + 1 dint'a o == overo"),
-            "let x = (((\"a\" + 1) in o) == true);\n"
+            "let x = \"a\" + 1 in o == true;\n"
         );
         let class = js("na famiglie A { #x\nfisso ha(o) { piglie #x dint'a o } }");
-        assert!(class.contains("return (#x in o);"), "{}", class);
+        assert!(class.contains("return #x in o;"), "{}", class);
         // `dint` alone is still a name and the for...of word
         assert_eq!(js("tien dint = 1"), "let dint = 1;\n");
     }
@@ -1750,13 +1748,10 @@ na famiglie Pizzaiolo figlio 'e Persona {
     #[test]
     fn test_bitwise_and_shift_operators() {
         let js = |s: &str| compile(s, Default::default()).unwrap().code;
-        assert_eq!(
-            js("tien x = a | b ^ c & d"),
-            "let x = (a | (b ^ (c & d)));\n"
-        );
-        assert_eq!(js("tien x = a & b == c"), "let x = (a & (b == c));\n");
-        assert_eq!(js("tien x = a << 1 + 2"), "let x = (a << (1 + 2));\n");
-        assert_eq!(js("tien x = a >>> 2 < b"), "let x = ((a >>> 2) < b);\n");
+        assert_eq!(js("tien x = a | b ^ c & d"), "let x = a | (b ^ (c & d));\n");
+        assert_eq!(js("tien x = a & b == c"), "let x = a & b == c;\n");
+        assert_eq!(js("tien x = a << 1 + 2"), "let x = a << 1 + 2;\n");
+        assert_eq!(js("tien x = a >>> 2 < b"), "let x = a >>> 2 < b;\n");
         assert_eq!(js("x >>>= 1"), "x >>>= 1;\n");
         assert_eq!(js("x ^= ~y"), "x ^= ~y;\n");
     }
@@ -1769,7 +1764,7 @@ na famiglie Pizzaiolo figlio 'e Persona {
         assert_eq!(js("tien x = void 0"), "let x = void 0;\n");
         // `void` with nothing after it is a (renamed) name
         assert_eq!(js("tien void = 1"), "let $void = 1;\n");
-        assert_eq!(js("tien x = 1_000n + 0xFFn"), "let x = (1_000n + 0xFFn);\n");
+        assert_eq!(js("tien x = 1_000n + 0xFFn"), "let x = 1_000n + 0xFFn;\n");
         assert!(compile("tien x = 1.5n", Default::default()).is_err());
         assert!(compile("tien x = 012n", Default::default()).is_err());
     }
@@ -1783,13 +1778,13 @@ na famiglie Pizzaiolo figlio 'e Persona {
         );
         assert_eq!(
             js("chist è f = mo vir facc* nomme() { }"),
-            "const f = async function* nomme() {\n};\n"
+            "const f = async function* nomme() {};\n"
         );
         // Called right away, or as a statement: parenthesized, never a declaration
-        assert_eq!(js("(facc () { })()"), "(function () {\n})();\n");
-        assert_eq!(js("(facc g() { })"), "(function g() {\n});\n");
+        assert_eq!(js("(facc () { })()"), "(function () {})();\n");
+        assert_eq!(js("(facc g() { })"), "(function g() {});\n");
         // A statement that starts with `facc` is still a declaration
-        assert_eq!(js("facc g() { }"), "function g() {\n}\n");
+        assert_eq!(js("facc g() { }"), "function g() {}\n");
     }
 
     #[test]
@@ -1849,17 +1844,17 @@ na famiglie Pizzaiolo figlio 'e Persona {
     #[test]
     fn test_expressions_continue_on_the_next_line() {
         let js = |s: &str| compile(s, Default::default()).unwrap().code;
-        assert_eq!(js("tien x = a +\n    b"), "let x = (a + b);\n");
-        assert_eq!(js("tien x = c\n    ? 1\n    : 2"), "let x = (c ? 1 : 2);\n");
+        assert_eq!(js("tien x = a +\n    b"), "let x = a + b;\n");
+        assert_eq!(js("tien x = c\n    ? 1\n    : 2"), "let x = c ? 1 : 2;\n");
         assert_eq!(
             js("tien x = xs\n    .map(f)\n    ?.at(0)"),
             "let x = xs.map(f)?.at(0);\n"
         );
         assert_eq!(
             js("tien x = a\n    && b\n    ?? c"),
-            "let x = ((a && b) ?? c);\n"
+            "let x = (a && b) ?? c;\n"
         );
-        assert_eq!(js("tien x = (\n    a\n    + b\n)"), "let x = (a + b);\n");
+        assert_eq!(js("tien x = (\n    a\n    + b\n)"), "let x = a + b;\n");
         assert_eq!(js("tien f = x =>\n    x"), "let f = (x) => x;\n");
         // A name at the end of a line still ends the statement, even `e`/`o`
         assert_eq!(

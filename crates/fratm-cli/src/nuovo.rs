@@ -175,7 +175,7 @@ mod tests {
         assert!(app.contains("\"pizzeria-react 🍕\""), "{app}");
         assert!(
             app.contains(
-                "_jsx(Pizza, { pizza: pizza, onOrdina: () => ordina(pizza) }, pizza.nomme)"
+                "_jsx(\n            Pizza,\n            { pizza: pizza, onOrdina: () => ordina(pizza) },\n            pizza.nomme,\n          )"
             ),
             "{app}"
         );
@@ -255,7 +255,7 @@ mod tests {
             "{api}"
         );
         assert!(
-            api.contains("INSERT INTO ordini (pizza) VALUES (?)\", \"INSERT INTO ordini (pizza) VALUES ($1)\", [pizza]"),
+            api.contains("\"INSERT INTO ordini (pizza) VALUES (?)\",\n      \"INSERT INTO ordini (pizza) VALUES ($1)\",\n      [pizza],"),
             "{api}"
         );
         let server = compiled("server/avvia.fratm");

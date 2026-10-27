@@ -1,4 +1,60 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 function Modulo({ invia }) {
-  return _jsxs("form", { onSubmit: invia, children: [_jsx("header", { children: _jsx("h1", { children: "'A pizzeria" }) }), _jsxs("main", { children: [_jsxs("section", { children: [_jsx("h2", { children: "Menù" }), _jsx("ul", { children: _jsxs("li", { children: [_jsx("strong", { children: "Margherita" }), "  ", _jsx("em", { children: "5 €" })] }) }), _jsx("ol", { children: _jsx("li", { children: "Primma" }) })] }), _jsx("label", { htmlFor: "nomme", children: "Nomme" }), _jsx("input", { id: "nomme" }), _jsx("textarea", {}), _jsx("select", { children: _jsx("option", { children: "Pizza" }) }), _jsxs("p", { children: ["Scrive ", _jsx("span", { children: "ccà" }), _jsx("br", {}), _jsx("code", { children: "x" })] }), _jsx("img", { src: "pizza.png", alt: "pizza" }), _jsx("a", { href: "/", children: "Torna" }), _jsx("hr", {}), _jsx("table", { children: _jsxs("tr", { children: [_jsx("th", { children: "A" }), _jsx("td", { children: "1" })] }) }), _jsx("canvas", {}), _jsx("div", { className: "tasti", children: _jsx("button", { children: "Manna" }) })] }), _jsx("nav", {}), _jsx("article", {}), _jsx("footer", { children: "Fatto a Napule" }), _jsx("div", { children: "I tag HTML vanno ancora" })] });
+  return _jsxs("form", {
+    onSubmit: invia,
+    children: [
+      _jsx("header", { children: _jsx("h1", { children: "'A pizzeria" }) }),
+      _jsxs("main", {
+        children: [
+          _jsxs("section", {
+            children: [
+              _jsx("h2", { children: "Menù" }),
+              _jsx("ul", {
+                children: _jsxs("li", {
+                  children: [
+                    _jsx("strong", { children: "Margherita" }),
+                    "  ",
+                    _jsx("em", { children: "5 €" }),
+                  ],
+                }),
+              }),
+              _jsx("ol", { children: _jsx("li", { children: "Primma" }) }),
+            ],
+          }),
+          _jsx("label", { htmlFor: "nomme", children: "Nomme" }),
+          _jsx("input", { id: "nomme" }),
+          _jsx("textarea", {}),
+          _jsx("select", { children: _jsx("option", { children: "Pizza" }) }),
+          _jsxs("p", {
+            children: [
+              "Scrive ",
+              _jsx("span", { children: "ccà" }),
+              _jsx("br", {}),
+              _jsx("code", { children: "x" }),
+            ],
+          }),
+          _jsx("img", { src: "pizza.png", alt: "pizza" }),
+          _jsx("a", { href: "/", children: "Torna" }),
+          _jsx("hr", {}),
+          _jsx("table", {
+            children: _jsxs("tr", {
+              children: [
+                _jsx("th", { children: "A" }),
+                _jsx("td", { children: "1" }),
+              ],
+            }),
+          }),
+          _jsx("canvas", {}),
+          _jsx("div", {
+            className: "tasti",
+            children: _jsx("button", { children: "Manna" }),
+          }),
+        ],
+      }),
+      _jsx("nav", {}),
+      _jsx("article", {}),
+      _jsx("footer", { children: "Fatto a Napule" }),
+      _jsx("div", { children: "I tag HTML vanno ancora" }),
+    ],
+  });
 }

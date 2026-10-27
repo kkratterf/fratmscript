@@ -1,4 +1,20 @@
-const stile = (() => { const fatti = new Set(); return (css) => { if (typeof document !== "undefined" && css.includes("{") && !fatti.has(css)) { fatti.add(css); const s = document.createElement("style"); s.textContent = css; document.head.append(s); } return css; }; })();
+const stile = (() => {
+  const fatti = new Set();
+  return (css) => {
+    if (
+      typeof document !== "undefined" &&
+      css.includes("{") &&
+      !fatti.has(css)
+    ) {
+      fatti.add(css);
+      const s = document.createElement("style");
+      s.textContent = css;
+      document.head.append(s);
+    }
+    return css;
+  };
+})();
+
 const accento = "#c8321e";
 const spazio = 8;
 const css = stile(`
@@ -6,7 +22,7 @@ const css = stile(`
   main.pizzeria {
     background-color: white;
     color: ${accento};
-    padding: ${(spazio * 2)}px;
+    padding: ${spazio * 2}px;
     display: flex;
     flex-direction: column;
     gap: 4px;

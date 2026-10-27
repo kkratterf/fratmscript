@@ -11,10 +11,12 @@ function giudizio(voto) {
       return "aggia studià";
   }
 }
+
 console.log(giudizio(10));
 console.log(giudizio(9));
 console.log(giudizio(3));
 let log = [];
+
 switch ("b") {
   case "a":
     log.push("a");
@@ -28,8 +30,11 @@ switch ("b") {
   default:
     log.push("mai");
 }
+
 console.log(log.join(","));
+
 function vedimm(x) {
   return `vedimm ${x}`;
 }
+
 console.log(vedimm("nu poco"));
