@@ -3,7 +3,7 @@
 //! `` stile`citofono:passanno { culore: russo; spazio: 8px }` `` becomes
 //! `button:hover { color: red; padding: 8px }`. Property names, value
 //! keywords, pseudo-classes, `@quanno` (`@media`) and the Neapolitan tag
-//! names of [`crate::html`] in selectors are translated; every other word
+//! and attribute names of [`crate::html`] in selectors are translated; every other word
 //! passes through, so plain CSS stays valid. `${ … }` values are kept as
 //! they are, and so are strings, comments and `url(…)`.
 
@@ -584,16 +584,26 @@ impl Translator<'_> {
         }
     }
 
-    /// Selectors: Neapolitan tags and pseudo-classes, but not class names,
-    /// ids, attribute selectors or strings.
+    /// Selectors: Neapolitan tags, pseudo-classes and the attribute names of
+    /// attribute selectors (`miett[tipo]` is `input[type]`), but not class
+    /// names, ids, attribute values or strings.
     fn selector(&mut self, part: &[char]) {
         let mut i = 0;
         let mut brackets = 0;
+        // The HTML tag of the compound selector so far, for the attribute
+        // names that depend on it (`addo` is `action` on `form`)
+        let mut tag = String::new();
+        // Inside `[`, before the attribute name
+        let mut before_name = false;
         while i < part.len() {
             let c = part[i];
             match c {
-                '[' => brackets += 1,
+                '[' => {
+                    brackets += 1;
+                    before_name = true;
+                }
                 ']' => brackets -= 1,
+                ' ' | '\t' | '\n' | '\r' | ',' | '>' | '+' | '~' if brackets == 0 => tag.clear(),
                 '"' | '\'' => {
                     let end = opaque_end(part, i);
                     self.copy(&part[i..end]);
@@ -619,6 +629,21 @@ impl Translator<'_> {
                 }
                 _ => {}
             }
+            if before_name && c != '[' && !c.is_whitespace() {
+                before_name = false;
+                if is_word_char(c) {
+                    let end = word_end(part, i);
+                    let word: String = part[i..end].iter().collect();
+                    let prev = part[i - 1];
+                    let next = part.get(end).copied().unwrap_or(' ');
+                    let translated = (prev != HOLE && next != HOLE && next != '|')
+                        .then(|| crate::html::html_attribute(&word, &tag))
+                        .flatten();
+                    self.out.push_str(translated.unwrap_or(&word));
+                    i = end;
+                    continue;
+                }
+            }
             if is_word_char(c) && brackets == 0 {
                 let end = word_end(part, i);
                 let word: String = part[i..end].iter().collect();
@@ -630,7 +655,9 @@ impl Translator<'_> {
                     lookup(PSEUDO, &word)
                 } else {
                     // Tag names from v0.11 and v0.12 keep working here too
-                    Some(crate::html::jsx_tag(&word).0).filter(|tag| *tag != word)
+                    let html = crate::html::jsx_tag(&word).0;
+                    tag = html.to_string();
+                    Some(html).filter(|tag| *tag != word)
                 };
                 self.out.push_str(translated.unwrap_or(&word));
                 i = end;
@@ -872,6 +899,33 @@ mod tests {
         assert_eq!(
             css("miett:disattivato, miett::segnaposto { culore: grigio }"),
             "input:disabled, input::placeholder { color: gray }"
+        );
+    }
+
+    #[test]
+    fn attribute_selectors_use_the_attribute_words() {
+        assert_eq!(
+            css("miett[tipo=\"checkbox\"], miett[ nomme ] { culore: russo }"),
+            "input[type=\"checkbox\"], input[ name ] { color: red }"
+        );
+        // The value stays as written, and so does a value that is a name
+        assert_eq!(
+            css("[classe~=nomme][stutato] { culore: russo }"),
+            "[class~=nomme][disabled] { color: red }"
+        );
+        // Names that depend on the tag, events, React props and v0.11 words
+        assert_eq!(
+            css("form[addo], vattenn[addo^=\"https\"] { culore: russo }"),
+            "form[action], a[href^=\"https\"] { color: red }"
+        );
+        assert_eq!(
+            css("[quanno-tuocche], [className], [htmlFor], [segnaposto], [disattivato] { culore: russo }"),
+            "[onclick], [class], [for], [placeholder], [disabled] { color: red }"
+        );
+        // HTML names, data attributes and namespaces stay as they are
+        assert_eq!(
+            css("[type][data-tipo][xlink|addo] cascett { culore: russo }"),
+            "[type][data-tipo][xlink|addo] div { color: red }"
         );
     }
 

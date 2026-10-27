@@ -630,7 +630,9 @@ stile`
 ```
 
 - Translated: property names (before `:`), value keywords, pseudo-classes after `:`/`::`,
-  `@quanno` (`@media`) and the Neapolitan JSX tag names used as type selectors.
+  `@quanno` (`@media`), the Neapolitan JSX tag names used as type selectors and the Neapolitan
+  attribute names in attribute selectors (`miett[tipo="checkbox"]` → `input[type="checkbox"]`;
+  the value stays as written).
 - The conditions of `@quanno`, `@media`, `@supports` and `@container` are translated too
   (`@supports (mostra: griglia)` → `@supports (display: grid)`), with `e` and, `o` or, `nun` not.
   Every other at-rule passes through as it is.

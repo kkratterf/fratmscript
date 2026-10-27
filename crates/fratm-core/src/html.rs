@@ -392,6 +392,39 @@ pub fn value(name: &str, tag: &str, value: &str) -> Option<&'static str> {
         .map(|(_, html)| *html)
 }
 
+/// The HTML attribute for the name `name` in a CSS attribute selector on the
+/// HTML tag `tag` (empty when the selector names no tag): `tipo` is `type`,
+/// `addo` is `href`, or `action` on `form`. Neapolitan names (those of v0.11
+/// and v0.12 too), events and React props (`className`, `htmlFor`) are
+/// translated; `None` for any other name, which stays as written.
+pub fn html_attribute(name: &str, tag: &str) -> Option<&'static str> {
+    let from_react = |react: &str| {
+        EVENTS
+            .iter()
+            .find(|(_, _, r)| *r == react)
+            .map(|(_, html, _)| *html)
+            .or_else(|| ATTRIBUTES.iter().find(|a| a.react == react).map(|a| a.html))
+    };
+    EVENTS
+        .iter()
+        .find(|(nap, _, _)| *nap == name)
+        .map(|(_, html, _)| *html)
+        .or_else(|| {
+            ATTRIBUTES
+                .iter()
+                .find(|a| a.nap == name && applies(a, tag))
+                .map(|a| a.html)
+        })
+        .or_else(|| {
+            DEPRECATED_ATTRIBUTES
+                .iter()
+                .find(|(old, _, _)| *old == name)
+                .and_then(|(_, react, _)| from_react(react))
+        })
+        .or_else(|| from_react(name))
+        .filter(|html| *html != name)
+}
+
 /// JSX tag names from v0.11 and v0.12, replaced by the shared vocabulary:
 /// (old name, HTML tag, new name). They keep compiling to the same tag, with
 /// a warning. They are not part of htmlemmurt's vocabulary.
