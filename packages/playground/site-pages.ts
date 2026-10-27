@@ -10,6 +10,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import type { Plugin } from 'vite'
 import { REPO, SITE, guidaDir, type GuideSection } from './agent-files'
+import { analyticsScript } from './analytics'
 import { EN_TEXTS, IT_TEXTS, type LessonText } from './src/lib/lessonTexts'
 
 type Lang = 'it' | 'en'
@@ -184,6 +185,7 @@ function render(page: Page): string {
 <meta name="theme-color" content="#0a0a0a">
 <script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>
 <style>${STYLE}</style>
+${analyticsScript()}
 </head>
 <body>
 <header>
@@ -319,6 +321,10 @@ function files(): Map<string, { type: string; source: string }> {
 export default function sitePages(): Plugin {
   return {
     name: 'fratm-site-pages',
+    // The playground itself gets the same analytics as the static pages
+    transformIndexHtml(html) {
+      return html.replace('</head>', `${analyticsScript()}\n  </head>`)
+    },
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = req.url?.split('?')[0] ?? ''
