@@ -4,6 +4,7 @@
 // - scola/<id>/ and en/learn/<id>/: one page per tour lesson, built from
 //   src/lib/lessonTexts.ts and the lesson's starter program
 // - sitemap.xml: the home and every page above, with hreflang alternates
+// - robots.txt: allows every crawler and points to the sitemap
 // The playground stays a single-page app; each page links to its section there.
 import fs from 'node:fs'
 import path from 'node:path'
@@ -311,6 +312,7 @@ function files(): Map<string, { type: string; source: string }> {
   const out = new Map<string, { type: string; source: string }>()
   for (const page of list) out.set(`${page.path}index.html`, { type: 'text/html; charset=utf-8', source: render(page) })
   out.set('sitemap.xml', { type: 'application/xml; charset=utf-8', source: sitemap(list) })
+  out.set('robots.txt', { type: 'text/plain; charset=utf-8', source: `User-agent: *\nAllow: /\n\nSitemap: ${SITE}sitemap.xml\n` })
   return out
 }
 
@@ -320,7 +322,7 @@ export default function sitePages(): Plugin {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = req.url?.split('?')[0] ?? ''
-        const name = url.replace(/^\/fratmscript\//, '').replace(/\/$/, '/index.html')
+        const name = url.replace(/^\//, '').replace(/\/$/, '/index.html')
         const file = name !== 'index.html' ? files().get(name) : undefined
         if (!file) return next()
         res.setHeader('Content-Type', file.type)

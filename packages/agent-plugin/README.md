@@ -20,4 +20,4 @@ Then, in Claude Code:
 /plugin install fratmscript@fratmscript
 ```
 
-Other agents: the skill in [`skills/fratmscript/SKILL.md`](skills/fratmscript/SKILL.md) follows the open Agent Skills format, and any MCP client can run the server as the command `fratm` with the argument `mcp`. The full reference is also online at https://kkratterf.github.io/fratmscript/llms-full.txt.
+Other agents: the skill in [`skills/fratmscript/SKILL.md`](skills/fratmscript/SKILL.md) follows the open Agent Skills format, and any MCP client can run the server as the command `fratm` with the argument `mcp`. The full reference is also online at https://fratmscript.kkratter.com/llms-full.txt.

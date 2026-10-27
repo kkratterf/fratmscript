@@ -14,7 +14,7 @@ export default defineConfig({
       '@keywords': path.resolve(__dirname, '../vscode-extension/src/server/keywords.ts'),
     },
   },
-  base: '/fratmscript/',
+  base: '/',
   // ES workers can split chunks, so sql.js loads only when a program needs it
   worker: { format: 'es' },
   // The example picker imports ../../examples/*.fratm

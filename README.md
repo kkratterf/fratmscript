@@ -1,4 +1,4 @@
-<a href="https://kkratterf.github.io/fratmscript/">
+<a href="https://fratmscript.kkratter.com/">
   <img alt="JavaScript ma comme si deve" src="https://github.com/kkratterf/fratmscript/blob/main/packages/playground/public/cover.jpeg">
 </a>
 
@@ -12,7 +12,7 @@
 
 A transpiler that converts Neapolitan code to JavaScript. Written in Rust.
 
-### 👉 [Prova 'o playground](https://kkratterf.github.io/fratmscript/) (try it in the browser, with a 12-lesson tour)
+### 👉 [Prova 'o playground](https://fratmscript.kkratter.com/) (try it in the browser, with a 12-lesson tour)
 
 ```fratm
 chist è nome = "Gennaro"
@@ -27,7 +27,7 @@ facc saluta(chi) {
 stamm a dì(saluta(nome))
 ```
 
-▶️ [Prova stu codice int'o playground](https://kkratterf.github.io/fratmscript/#code=MYCwlgzgLgBAFzAdgewLYFMYF4YCIDi6iiAhgE7K4BQVAZicMDBCQDYCuUJAFKGAJQwA3lRhjmYGL3DYciSMDDtEgkePUwADmADmrMJlwBRGHwkwo7APzV1AX1Hjteg3gCqCXDADUpmb9wAQmoHKmgSVFQYEhgAEwAb7hYOLm4UDH5+KiA)
+▶️ [Prova stu codice int'o playground](https://fratmscript.kkratter.com/#code=MYCwlgzgLgBAFzAdgewLYFMYF4YCIDi6iiAhgE7K4BQVAZicMDBCQDYCuUJAFKGAJQwA3lRhjmYGL3DYciSMDDtEgkePUwADmADmrMJlwBRGHwkwo7APzV1AX1Hjteg3gCqCXDADUpmb9wAQmoHKmgSVFQYEhgAEwAb7hYOLm4UDH5+KiA)
 
 ---
 
@@ -51,7 +51,7 @@ fratmscript/
 
 ## Install
 
-No install needed to try it: open the [playground](https://kkratterf.github.io/fratmscript/).
+No install needed to try it: open the [playground](https://fratmscript.kkratter.com/).
 
 To get the `fratm` CLI (it runs programs with Node.js):
 
@@ -117,7 +117,7 @@ Or, with no build step at all, in any HTML page:
 
 FratmScript is ready for coding agents (Claude Code, Cursor, Codex, Copilot...), both to discover it and to write it correctly:
 
-- **Reference for LLMs**: [`llms.txt`](https://kkratterf.github.io/fratmscript/llms.txt) and the full [`llms-full.txt`](https://kkratterf.github.io/fratmscript/llms-full.txt) (rules that differ from JavaScript, every construct with an example, error glossary), plus the keyword map [`keywords.json`](https://kkratterf.github.io/fratmscript/keywords.json). `fratm guida` prints the same reference offline.
+- **Reference for LLMs**: [`llms.txt`](https://fratmscript.kkratter.com/llms.txt) and the full [`llms-full.txt`](https://fratmscript.kkratter.com/llms-full.txt) (rules that differ from JavaScript, every construct with an example, error glossary), plus the keyword map [`keywords.json`](https://fratmscript.kkratter.com/keywords.json). `fratm guida` prints the same reference offline.
 - **MCP server**: `fratm mcp` gives agents the tools `fratm_reference`, `fratm_check`, `fratm_compile`, `fratm_run`, `fratm_format`, `fratm_gomorra` (checks a GomorraSQL query), `fratm_stile` (checks CSS in Neapolitan) and `fratm_nuovo` (the files of a new web app, without writing them), with errors as JSON (line, column, hint). In Claude Code: `claude mcp add fratm -- fratm mcp`.
 - **Claude Code plugin** with a `fratmscript` skill and the MCP server:
 
@@ -478,7 +478,7 @@ chist è care = aspett db.ripiglia(gomorra`ripigliammo nomme mmiez 'a pizze arò
 | `db.esegui(q)` | `{ cambiate, ultimo_id }`: rows changed, id of the last inserted row |
 | `db.chiude()` | closes the database |
 
-The methods are synchronous; writing `aspett` in front of them is fine and keeps the code working if a future driver is asynchronous. On older Node and in a plain browser page, `apri_db` throws an error that says so; the [playground](https://kkratterf.github.io/fratmscript/) runs it on [sql.js](https://sql.js.org) (SQLite in WebAssembly) with an in-memory database.
+The methods are synchronous; writing `aspett` in front of them is fine and keeps the code working if a future driver is asynchronous. On older Node and in a plain browser page, `apri_db` throws an error that says so; the [playground](https://fratmscript.kkratter.com/) runs it on [sql.js](https://sql.js.org) (SQLite in WebAssembly) with an in-memory database.
 
 The keywords come from [GomorraSQL](https://github.com/aurasphere/gomorra-sql) by Donato Rimenti (MIT), a Java translator over JDBC; FratmScript ports its dialect to JavaScript and adds ordering, limits, grouping and tables.
 
@@ -583,9 +583,9 @@ just wasm
 
 ## Playground
 
-The [playground](https://kkratterf.github.io/fratmscript/) is a web-based editor to try FratmScript in your browser. Press **Impara** (Learn, Scola) for *'A scola 'e FratmScript*, a tour of 12 short lessons with an exercise each, checked against the console output. Lessons live in `packages/playground/src/scola/` (starter, `.soluzione.fratm` and expected `.out`; CI runs every solution).
+The [playground](https://fratmscript.kkratter.com/) is a web-based editor to try FratmScript in your browser. Press **Impara** (Learn, Scola) for *'A scola 'e FratmScript*, a tour of 12 short lessons with an exercise each, checked against the console output. Lessons live in `packages/playground/src/scola/` (starter, `.soluzione.fratm` and expected `.out`; CI runs every solution).
 
-Press **Guida** (Guide) for the [language guide](https://kkratterf.github.io/fratmscript/#guida): every construct explained in Italian, English or Neapolitan, with examples you edit and run on the spot and their generated JavaScript. Link a section with `#guida=<id>`, e.g. [`#guida=cicli`](https://kkratterf.github.io/fratmscript/#guida=cicli). The guide lives in `packages/playground/src/guida/` (`guida.json` plus one `.fratm`/`.out` pair per example; CI runs every example).
+Press **Guida** (Guide) for the [language guide](https://fratmscript.kkratter.com/#guida): every construct explained in Italian, English or Neapolitan, with examples you edit and run on the spot and their generated JavaScript. Link a section with `#guida=<id>`, e.g. [`#guida=cicli`](https://fratmscript.kkratter.com/#guida=cicli). The guide lives in `packages/playground/src/guida/` (`guida.json` plus one `.fratm`/`.out` pair per example; CI runs every example).
 
 Next to the generated JavaScript, the **Token** and **Tree** tabs show how the compiler reads your code; hover an item to highlight it in the editor.
 

@@ -12,7 +12,7 @@
       "name": "fratmscript",
       "source": "./packages/agent-plugin",
       "description": "Write, check and run FratmScript (JavaScript with Neapolitan keywords)",
-      "homepage": "https://kkratterf.github.io/fratmscript/",
+      "homepage": "https://fratmscript.kkratter.com/",
       "repository": "https://github.com/kkratterf/fratmscript",
       "license": "MIT",
       "keywords": ["fratmscript", "javascript", "napoletano", "transpiler", "mcp"],

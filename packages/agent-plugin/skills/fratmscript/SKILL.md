@@ -17,7 +17,7 @@ keywords change.
    (macOS/Linux; it goes to `~/.local/bin`) or
    `cargo install --git https://github.com/kkratterf/fratmscript fratm-cli`.
 2. Read the full reference once per task: `fratm guida`, the `fratm_reference` tool of the
-   `fratm` MCP server, or https://kkratterf.github.io/fratmscript/llms-full.txt.
+   `fratm` MCP server, or https://fratmscript.kkratter.com/llms-full.txt.
 3. Write the code, then always verify it before answering:
    - `fratm check --json file.fratm` (or the `fratm_check` tool) for compile errors;
    - `fratm lancia --json --timeout 10 file.fratm` (or `fratm_run`) to run it with Node.js.

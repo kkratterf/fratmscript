@@ -6,7 +6,7 @@ the browser. Only the keywords change: operators, literals, numbers, strings, re
 calls and every JavaScript built-in (`Math`, `JSON`, `Array`, `Promise`, `Map`, `Set`, `fetch`,
 `process`, `console`, `Object`, `Date`...) are written exactly as in JavaScript.
 
-Playground: https://kkratterf.github.io/fratmscript/ · Repo: https://github.com/kkratterf/fratmscript
+Playground: https://fratmscript.kkratter.com/ · Repo: https://github.com/kkratterf/fratmscript
 
 ## Rules that trip up agents
 

@@ -8,7 +8,7 @@ import path from 'node:path'
 import type { Plugin } from 'vite'
 import { KEYWORDS } from '../vscode-extension/src/server/keywords'
 
-export const SITE = 'https://kkratterf.github.io/fratmscript/'
+export const SITE = 'https://fratmscript.kkratter.com/'
 export const REPO = 'https://github.com/kkratterf/fratmscript'
 const root = path.resolve(__dirname, '../..')
 export const guidaDir = path.join(__dirname, 'src/guida')
