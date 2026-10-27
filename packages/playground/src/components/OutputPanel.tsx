@@ -9,6 +9,7 @@ import { InspectView, type SourceRange } from '@/components/InspectView'
 import { useI18n, type Message, type MessageKey } from '@/lib/i18n'
 import { PreviewFrame } from '@/components/PreviewFrame'
 import type { PreviewEnvelope } from '@/lib/preview'
+import { highlightJs } from '@/lib/highlightJs'
 
 interface OutputPanelProps {
   jsOutput: string
@@ -52,42 +53,55 @@ const ERROR_TITLES: Record<PlaygroundError['kind'], MessageKey> = {
 }
 
 /**
- * Generated JS with each line linked to the FratmScript line it came from:
- * lines produced by the editor's current line are highlighted, and
- * clicking a line moves the editor cursor to its source.
+ * Generated JS, coloured like the editor, with a gutter of line numbers.
+ * With `linked`, each line is tied to the FratmScript line it came from:
+ * the gutter shows that line, lines produced by the editor's current line
+ * are highlighted, and clicking a line moves the editor cursor to its source.
  */
-function MappedJs({ code, lineMap, cursorLine, onLineClick }: {
+function JsCode({ code, lineMap, linked, cursorLine, onLineClick }: {
   code: string
   lineMap: (number | null)[]
+  linked: boolean
   cursorLine: number
   onLineClick: (line: number) => void
 }) {
   const { t } = useI18n()
-  const lines = code.replace(/\n$/, '').split('\n')
+  const lines = useMemo(() => highlightJs(code.replace(/\n$/, '')), [code])
   // Unmapped lines (closing braces) belong to the nearest mapped line above
   let owner: number | null = null
   const owners = lines.map((_, i) => (owner = lineMap[i] ?? owner))
+  const digits = String(lines.length).length
   return (
-    <div className="bg-card/50 py-2 border border-border rounded-md font-mono text-foreground/90 text-sm leading-relaxed">
-      {lines.map((text, i) => {
-        const src = owners[i]
-        return (
-          <div
-            key={i}
-            onClick={src !== null ? () => onLineClick(src) : undefined}
-            className={cn(
-              'flex gap-3 px-3 whitespace-pre-wrap break-words',
-              src !== null && 'cursor-pointer hover:bg-accent/60',
-              src === cursorLine && 'bg-primary/10',
-            )}
-          >
-            <span className="w-6 text-muted-foreground/60 text-xs text-right select-none shrink-0" title={src !== null ? t('output.fromLine', { line: src }) : undefined}>
-              {lineMap[i] ?? ''}
-            </span>
-            <span className="flex-1 min-w-0">{text || ' '}</span>
-          </div>
-        )
-      })}
+    <div className="bg-card/50 border border-border rounded-md overflow-x-auto font-mono text-foreground/90 text-sm leading-relaxed">
+      <div className="py-2 w-max min-w-full">
+        {lines.map((tokens, i) => {
+          const src = linked ? owners[i] : null
+          return (
+            <div
+              key={i}
+              onClick={src !== null ? () => onLineClick(src) : undefined}
+              className={cn(
+                'flex gap-3 pr-3 whitespace-pre',
+                src !== null && 'cursor-pointer hover:bg-accent/60',
+                linked && src === cursorLine && 'bg-primary/10',
+              )}
+            >
+              <span
+                className="bg-card pl-3 text-muted-foreground/60 text-xs text-right select-none shrink-0 sticky left-0"
+                style={{ minWidth: `calc(${Math.max(digits, 2)}ch + 0.75rem)` }}
+                title={linked && src !== null ? t('output.fromLine', { line: src }) : undefined}
+              >
+                {linked ? lineMap[i] ?? '' : i + 1}
+              </span>
+              <span>
+                {tokens.length === 0
+                  ? ' '
+                  : tokens.map((token, j) => (token.cls ? <span key={j} className={token.cls}>{token.text}</span> : token.text))}
+              </span>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -327,12 +341,10 @@ export function OutputPanel({ jsOutput, consoleLogs, errors, notice, isRunning, 
             ) : (
               <p className="text-muted-foreground text-sm">{t('output.jsPlaceholder')}</p>
             )
-          ) : mapLines && canMap ? (
-            <MappedJs code={jsOutput} lineMap={jsLineMap} cursorLine={cursorLine} onLineClick={onErrorClick} />
+          ) : jsOutput ? (
+            <JsCode code={jsOutput} lineMap={jsLineMap} linked={mapLines && canMap} cursorLine={cursorLine} onLineClick={onErrorClick} />
           ) : (
-            <pre className="bg-card/50 p-3 border border-border rounded-md font-mono text-foreground/90 text-sm break-words leading-relaxed whitespace-pre-wrap">
-              {jsOutput || <span className="text-muted-foreground">{t(hasCompileError ? 'output.jsUnavailable' : 'output.jsPlaceholder')}</span>}
-            </pre>
+            <p className="text-muted-foreground text-sm">{t(hasCompileError ? 'output.jsUnavailable' : 'output.jsPlaceholder')}</p>
           )}
         </section>
       )}

@@ -180,3 +180,28 @@
   --warning: var(--color-amber-500);
   --warning-foreground: var(--color-amber-400);
 }
+
+/* Generated JavaScript (OutputPanel): the editor's palette, light then dark */
+.tok-keyword { color: #7c3aed; }
+.tok-atom { color: #2563eb; }
+.tok-number { color: #b45309; }
+.tok-string { color: #047857; }
+.tok-comment { color: #6b7280; font-style: italic; }
+.tok-function { color: #2563eb; }
+.tok-variable { color: #374151; }
+.tok-property { color: #dc2626; }
+.tok-operator { color: #0e7490; }
+.tok-punctuation { color: #6b7280; }
+.tok-type { color: #b45309; }
+
+.dark .tok-keyword { color: #a78bfa; }
+.dark .tok-atom { color: #60a5fa; }
+.dark .tok-number { color: #fbbf24; }
+.dark .tok-string { color: #34d399; }
+.dark .tok-comment { color: #9ca3af; }
+.dark .tok-function { color: #60a5fa; }
+.dark .tok-variable { color: #e5e7eb; }
+.dark .tok-property { color: #f87171; }
+.dark .tok-operator { color: #22d3ee; }
+.dark .tok-punctuation { color: #9ca3af; }
+.dark .tok-type { color: #fbbf24; }
