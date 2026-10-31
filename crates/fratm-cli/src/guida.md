@@ -465,6 +465,27 @@ mann for predefinit facc Menu({ pizze }) {
   | `dialogo` | `dialog` |
   | `stampo` | `template` |
   | `fessura` | `slot` |
+  | `luccolata` | `hgroup` |
+  | `listino` | `menu` |
+  | `definizione` | `dfn` |
+  | `glossa` | `ruby` |
+  | `schermata` | `samp` |
+  | `incognita` | `var` |
+  | `forsacap` | `wbr` |
+  | `zona` | `area` |
+  | `mappa` | `map` |
+  | `ogget` | `object` |
+  | `traccia` | `track` |
+  | `cunte` | `math` |
+  | `culonna` | `col` |
+  | `culunnato` | `colgroup` |
+  | `cerca` | `search` |
+  | `isolato` | `bdi` |
+  | `allevers` | `bdo` |
+  | `dato` | `data` |
+  | `parentesi` | `rp` |
+  | `pronuncia` | `rt` |
+  | `ncastro` | `embed` |
 
 - Attributes and events of HTML tags have Neapolitan names (the output always has the React
   name; React names, `class`, `for`, `data-*` and `aria-*` work as written). On a component
@@ -552,6 +573,89 @@ mann for predefinit facc Menu({ pizze }) {
   | `quanno-piglie` | `onFocus` |
   | `quanno-perde` | `onBlur` |
   | `quanno-scorre` | `onScroll` |
+  | `funtane` | `srcSet` |
+  | `grannezze` | `sizes` |
+  | `schermo` | `media` |
+  | `mpacchetto` | `encType` |
+  | `nuncuntrolla` | `noValidate` |
+  | `mannaddo` | `formAction` |
+  | `mannacomme` | `formMethod` |
+  | `tastierino` | `inputMode` |
+  | `invio` | `enterKeyHint` |
+  | `maiuscole` | `autoCapitalize` |
+  | `ntestazione` | `httpEquiv` |
+  | `gabbia` | `sandbox` |
+  | `permesso` | `allow` |
+  | `dacheparte` | `referrerPolicy` |
+  | `sbroglia` | `decoding` |
+  | `precedenza` | `fetchPriority` |
+  | `zumpariello` | `popover` |
+  | `fazumpa` | `popoverTarget` |
+  | `muorto` | `inert` |
+  | `verso` | `dir` |
+  | `traduci` | `translate` |
+  | `scurciatoia` | `accessKey` |
+  | `linguaddo` | `hrefLang` |
+  | `spia` | `ping` |
+  | `mappa` | `useMap` |
+  | `capocaselle` | `headers` |
+  | `abbraccia` | `scope` |
+  | `quante` | `span` |
+  | `accummencia` | `start` |
+  | `arreto` | `reversed` |
+  | `pruvenienza` | `cite` |
+  | `vaacapo` | `wrap` |
+  | `modulo` | `form` |
+  | `grannezza` | `size` |
+  | `nommeverso` | `dirname` |
+  | `accettacodifica` | `acceptCharset` |
+  | `rrobbacosa` | `itemProp` |
+  | `cosa` | `itemScope` |
+  | `razza` | `itemType` |
+  | `dintapaggena` | `playsInline` |
+  | `precarica` | `preload` |
+  | `scuntrino` | `nonce` |
+  | `natura` | `as` |
+  | `blocca` | `blocking` |
+  | `culore` | `color` |
+  | `forma` | `shape` |
+  | `coordinate` | `coords` |
+  | `specie` | `kind` |
+  | `linguatraccia` | `srcLang` |
+  | `primmascelta` | `default` |
+  | `quanno-schiacce` | `onMouseDown` |
+  | `quanno-lasse` | `onMouseUp` |
+  | `quanno-muove` | `onMouseMove` |
+  | `quanno-passe` | `onMouseOver` |
+  | `quanno-fuje` | `onMouseOut` |
+  | `quanno-gire` | `onWheel` |
+  | `quanno-tuocche-a-destra` | `onContextMenu` |
+  | `quanno-appoggie` | `onPointerDown` |
+  | `quanno-stacche` | `onPointerUp` |
+  | `quanno-striscie` | `onPointerMove` |
+  | `quanno-sfiore` | `onTouchStart` |
+  | `quanno-lieve` | `onTouchEnd` |
+  | `quanno-trascine` | `onDrag` |
+  | `quanno-afferre` | `onDragStart` |
+  | `quanno-mulle` | `onDrop` |
+  | `quanno-sorvole` | `onDragOver` |
+  | `quanno-batte` | `onKeyPress` |
+  | `quanno-azzere` | `onReset` |
+  | `quanno-sbaglie` | `onInvalid` |
+  | `quanno-schiatta` | `onError` |
+  | `quanno-stire` | `onResize` |
+  | `quanno-parte` | `onPlay` |
+  | `quanno-ferma` | `onPause` |
+  | `quanno-fernesce` | `onEnded` |
+  | `quanno-cammina` | `onTimeUpdate` |
+  | `quanno-copie` | `onCopy` |
+  | `quanno-ncolle` | `onPaste` |
+  | `quanno-evidenzie` | `onSelect` |
+  | `quanno-arape-chiude` | `onToggle` |
+  | `quanno-chiude` | `onClose` |
+  | `quanno-te-ne-vaje` | `onBeforeUnload` |
+  | `quanno-fernesce-ammuina` | `onAnimationEnd` |
+  | `quanno-fernesce-passaggio` | `onTransitionEnd` |
 
   `addo` is `action` on `<modulo>` and `href` everywhere else. `cess={{ … }}` takes a style
   object whose keys and string values can be Neapolitan CSS, as in `` stile`…` ``:

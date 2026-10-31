@@ -38,7 +38,11 @@ export const STILE_TAGS = [
   'optgroup', 'ragionamento', 'textarea', 'recinto', 'fieldset', 'leggenda', 'legend',
   'suggerimenti', 'datalist', 'risultato', 'output', 'avanzamento', 'progress', 'misura', 'meter',
   'spoiler', 'details', 'anteprim', 'summary', 'dialogo', 'dialog', 'stampo', 'template',
-  'fessura', 'slot',
+  'fessura', 'slot', 'luccolata', 'hgroup', 'listino', 'menu', 'definizione', 'dfn', 'glossa',
+  'ruby', 'schermata', 'samp', 'incognita', 'var', 'forsacap', 'wbr', 'zona', 'area', 'mappa',
+  'map', 'ogget', 'object', 'traccia', 'track', 'cunte', 'math', 'culonna', 'col', 'culunnato',
+  'colgroup', 'cerca', 'search', 'isolato', 'bdi', 'allevers', 'bdo', 'dato', 'data', 'parentesi',
+  'rp', 'pronuncia', 'rt', 'ncastro', 'embed',
 ]
 
 /** GomorraSQL phrases of kind Statement (`gomorra::PHRASES`) */

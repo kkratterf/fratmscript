@@ -528,6 +528,22 @@ mod tests {
     }
 
     #[test]
+    fn test_jsx_words_added_with_htmlemmurt() {
+        assert_eq!(
+            jsx_js("x = <modulo mpacchetto=\"multipart/form-data\" nuncuntrolla><miett tastierino=\"numeric\" /></modulo>"),
+            "x = _jsx(\"form\", {\n  encType: \"multipart/form-data\",\n  noValidate: true,\n  children: _jsx(\"input\", { inputMode: \"numeric\" }),\n});\n"
+        );
+        assert_eq!(
+            jsx_js("x = <filmato quanno-gire={f}><traccia specie=\"subtitles\" da=\"it.vtt\" /></filmato>"),
+            "x = _jsx(\"video\", {\n  onWheel: f,\n  children: _jsx(\"track\", { kind: \"subtitles\", src: \"it.vtt\" }),\n});\n"
+        );
+        assert_eq!(
+            jsx_js("x = <cartulin funtane={s} grannezze=\"50vw\" />"),
+            "x = _jsx(\"img\", { srcSet: s, sizes: \"50vw\" });\n"
+        );
+    }
+
+    #[test]
     fn test_jsx_neapolitan_attributes_and_events_compile_to_react_props() {
         assert_eq!(
             jsx_js("x = <miett tipo=\"text\" esempio=\"Pizza\" valore={v} quanno-scrive={(e) => f(e.target.value)} stutato />"),
