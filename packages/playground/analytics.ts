@@ -3,7 +3,7 @@
 // the site needs no consent banner. It loads only on the production host,
 // so local dev, previews and forks send nothing. The project key is public
 // by design: it can only send events, not read them.
-const POSTHOG_KEY = 'phc_rz5QWsFu47b3BsBKcnpwNd7CfcXVqqecs3dfLtZVQb3a'
+const POSTHOG_KEY = 'phc_qVQWUkjw6VaNAVJipLwHSe3giAKQ2r9cw9kVppniRknA'
 const POSTHOG_HOST = 'https://eu.i.posthog.com'
 const PRODUCTION_HOST = 'fratmscript.kkratter.com'
 
