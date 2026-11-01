@@ -48,6 +48,10 @@ jobs:
           pnpm install
 
       - name: Build playground
+        env:
+          # PostHog project key (Settings → Secrets and variables → Actions →
+          # Variables); without it the site builds with no analytics.
+          POSTHOG_KEY: ${{ vars.POSTHOG_KEY }}
         run: |
           cd packages/playground
           pnpm build
