@@ -90,7 +90,8 @@ export function useCompiler() {
 
     const result = compile(source)
 
-    if (!result.success || !result.code) {
+    // An empty program (or only comments) compiles to empty JavaScript: not an error
+    if (!result.success || result.code === undefined) {
       setState(prev => ({
         ...prev,
         jsOutput: '',

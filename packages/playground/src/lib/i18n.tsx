@@ -1,4 +1,5 @@
-// UI language: Italian by default, English or Neapolitan on request. Only the
+// UI language: the browser's (Italian, Neapolitan, otherwise English), or the
+// one picked in the header or with `?lang=`. Only the
 // playground's own copy switches; compiler and runtime error messages are
 // always Neapolitan, and FratmScript code and examples never change.
 
@@ -471,13 +472,38 @@ export function translate(lang: Lang, key: MessageKey, params?: MessageParams): 
   return params ? text.replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match)) : text
 }
 
+function isLang(value: string | null | undefined): value is Lang {
+  return value === 'it' || value === 'en' || value === 'nap'
+}
+
+/**
+ * The browser's preferred language: Italian or Neapolitan when the visitor
+ * reads them, English for everyone else.
+ */
+export function langFromBrowser(languages: readonly string[]): Lang {
+  for (const tag of languages) {
+    const base = tag.toLowerCase().split('-')[0]
+    if (base === 'nap') return 'nap'
+    if (base === 'it') return 'it'
+  }
+  return languages.length > 0 ? 'en' : 'it'
+}
+
+/**
+ * Language at load: `?lang=` in the URL (so a shared link can pick one), then
+ * the visitor's saved choice, then the browser's language.
+ */
 function readLang(): Lang {
+  const fromUrl = new URLSearchParams(window.location.search).get('lang')
+  if (isLang(fromUrl)) return fromUrl
   try {
     const stored = localStorage.getItem(LANG_KEY)
-    return stored === 'en' || stored === 'nap' ? stored : 'it'
+    if (isLang(stored)) return stored
   } catch {
-    return 'it'
+    // Storage can be unavailable (private mode): fall back to the browser
   }
+  const languages = navigator.languages?.length ? navigator.languages : [navigator.language]
+  return langFromBrowser(languages.filter(Boolean))
 }
 
 interface I18nValue {

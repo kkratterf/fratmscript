@@ -14,6 +14,13 @@ A transpiler that converts Neapolitan code to JavaScript. Written in Rust.
 
 ### 👉 [Prova 'o playground](https://fratmscript.kkratter.com/) (try it in the browser, with a 12-lesson tour)
 
+<a href="https://fratmscript.kkratter.com/"><img alt="Writing FratmScript in the playground: the JavaScript and the console output update as you type" src="playground.gif" width="960"></a>
+
+<table>
+<tr><th>FratmScript</th><th>JavaScript</th></tr>
+<tr>
+<td>
+
 ```fratm
 chist è nome = "Gennaro"
 
@@ -27,25 +34,27 @@ facc saluta(chi) {
 stamm a dì(saluta(nome))
 ```
 
+</td>
+<td>
+
+```js
+const nome = "Gennaro";
+
+function saluta(chi) {
+  if (chi == null) {
+    return "E chi si tu?";
+  }
+  return "Uè " + chi + "!";
+}
+
+console.log(saluta(nome));
+```
+
+</td>
+</tr>
+</table>
+
 ▶️ [Prova stu codice int'o playground](https://fratmscript.kkratter.com/#code=MYCwlgzgLgBAFzAdgewLYFMYF4YCIDi6iiAhgE7K4BQVAZicMDBCQDYCuUJAFKGAJQwA3lRhjmYGL3DYciSMDDtEgkePUwADmADmrMJlwBRGHwkwo7APzV1AX1Hjteg3gCqCXDADUpmb9wAQmoHKmgSVFQYEhgAEwAb7hYOLm4UDH5+KiA)
-
----
-
-## Monorepo Structure
-
-```
-fratmscript/
-├── crates/
-│   ├── fratm-core/       # Core compiler (lexer, parser, codegen)
-│   ├── fratm-cli/        # CLI tool
-│   └── fratm-wasm/       # WebAssembly bindings
-├── packages/
-│   ├── fratmscript/      # npm package: WASM compiler + Vite plugin
-│   ├── vscode-extension/ # Syntax highlighting
-│   ├── agent-plugin/     # Claude Code plugin: skill + MCP server
-│   └── playground/       # Online editor
-└── examples/             # Example programs
-```
 
 ---
 
@@ -56,7 +65,7 @@ No install needed to try it: open the [playground](https://fratmscript.kkratter.
 To get the `fratm` CLI (it runs programs with Node.js):
 
 ```bash
-# macOS and Linux (x64)
+# macOS (Apple Silicon and Intel) and Linux (x86_64)
 curl -fsSL https://raw.githubusercontent.com/kkratterf/fratmscript/main/install.sh | sh
 
 # Windows (PowerShell)
@@ -64,6 +73,8 @@ irm https://raw.githubusercontent.com/kkratterf/fratmscript/main/install.ps1 | i
 ```
 
 The script downloads the binary for your system from the [latest release](https://github.com/kkratterf/fratmscript/releases/latest), checks its SHA-256 and puts it in `~/.local/bin` (`~\.fratm\bin` on Windows; `FRATM_INSTALL_DIR` changes it, `FRATM_VERSION=v0.5.0` picks a version). You can also download the archive from the release page yourself.
+
+Prebuilt binaries: macOS (arm64, x86_64), Linux (x86_64) and Windows (x86_64). On Linux arm64 and other systems, [build from source](#build-from-source) or use the [npm package](#npm-and-vite), which runs everywhere Node.js does.
 
 Then:
 
@@ -113,24 +124,6 @@ Or, with no build step at all, in any HTML page:
 
 ---
 
-## For AI agents
-
-FratmScript is ready for coding agents (Claude Code, Cursor, Codex, Copilot...), both to discover it and to write it correctly:
-
-- **Reference for LLMs**: [`llms.txt`](https://fratmscript.kkratter.com/llms.txt) and the full [`llms-full.txt`](https://fratmscript.kkratter.com/llms-full.txt) (rules that differ from JavaScript, every construct with an example, error glossary), plus the keyword map [`keywords.json`](https://fratmscript.kkratter.com/keywords.json). `fratm guida` prints the same reference offline.
-- **MCP server**: `fratm mcp` gives agents the tools `fratm_reference`, `fratm_check`, `fratm_compile`, `fratm_run`, `fratm_format`, `fratm_gomorra` (checks a GomorraSQL query), `fratm_stile` (checks CSS in Neapolitan) and `fratm_nuovo` (the files of a new web app, without writing them), with errors as JSON (line, column, hint). In Claude Code: `claude mcp add fratm -- fratm mcp`.
-- **Claude Code plugin** with a `fratmscript` skill and the MCP server:
-
-  ```text
-  /plugin marketplace add kkratterf/fratmscript
-  /plugin install fratmscript@fratmscript
-  ```
-
-  The skill is a plain [Agent Skill](packages/agent-plugin/skills/fratmscript/SKILL.md), usable by other agents too.
-- **JSON from the CLI**: `fratm check --json`, `fratm build --json`, `fratm lancia --json --timeout 10 -` (see below).
-
----
-
 ## CLI Commands
 
 ```bash
@@ -162,6 +155,97 @@ A `.fratm` file can start with a shebang line and be run as a script:
 #!/usr/bin/env -S fratm lancia
 stamm a dì("Uè!")
 ```
+
+---
+
+## Errors
+
+Compiler and runtime errors speak Neapolitan too, with the line, the column and a hint. A few of them, translated:
+
+```text
+✗ Error: Riga 1, colonna 10: E addò sta l'uguale? Ce vo' '=' pe assegnà 'o valore!
+  1 │ chist è x
+    │          ^
+
+Nun te preoccupà, capita a tutt'!
+```
+
+*"Where's the equals sign? You need '=' to assign the value!"* and, at the end of every error, *"Don't worry, it happens to everyone!"*
+
+```text
+✗ Errore a runtime: Riga 2, colonna 1: Nun se pò cagnà na costante ('chist è'): si 'o vuò cagnà, dichiaralo cu 'tien' (TypeError: Assignment to constant variable.)
+  2 │ x = 6
+    │ ^
+```
+
+*"You can't change a constant ('chist è'): if you want to change it, declare it with 'tien'."* Runtime errors keep the original JavaScript message in brackets.
+
+```text
+✗ Errore a runtime: Riga 1, colonna 12: 'nomme' nun esiste: nun l'hê maje dichiarato cu 'chist è' o 'tien' (ReferenceError: nomme is not defined)
+  1 │ stamm a dì(nomme)
+    │            ^
+```
+
+*"'nomme' doesn't exist: you never declared it with 'chist è' or 'tien'."*
+
+---
+
+## Keyword Reference
+
+| FratmScript | JavaScript | English |
+|-------------|------------|------------|
+| `chist è` | `const` | "this is" |
+| `tien` | `let` | "hold" |
+| `facc` | `function` | "I do" |
+| `piglie` | `return` | "take" |
+| `si` | `if` | "if" |
+| `sinnò` | `else` | "otherwise" |
+| `vedimm` / `caso` / `predefinit` | `switch` / `case` / `default` | "let's see" / "case" / "default" |
+| `mentre che` | `while` | "while" |
+| `primm fa … mentre che` | `do … while` | "first do … while" |
+| `pe` | `for` | "for" |
+| `dint` | `of` (for...of) | "inside" |
+| `'ncopp` | `in` (for...in) | "on top of" |
+| `overo` | `true` | "true" |
+| `sfòls` | `false` | "false" |
+| `nisciun` | `null` | "nobody" |
+| `boh` | `undefined` | "dunno" |
+| `stamm a dì` | `console.log` | "we say" |
+| `avvis a dì` | `console.warn` | "warn" |
+| `scrive a dì` | `console.error` | "write" |
+| `mo vir` | `async` | "now see" |
+| `aspett` | `await` | "wait" |
+| `facc*` / `caccia` | `function*` / `yield` | "throw out" |
+| `pruvamm` | `try` | "let's try" |
+| `e si schiatta` | `catch` | "if it breaks" |
+| `aropp` | `finally` | "afterwards" |
+| `iett` | `throw` | "throw" |
+| `nu bell` | `new` | "a nice" |
+| `na famiglie` | `class` | "a family" |
+| `figlio 'e` | `extends` | "child of" |
+| `'o pate` | `super` | "the father" |
+| `fisso` | `static` | "fixed/static" |
+| `damme` | `get` (in classes) | "give me" |
+| `miette` | `set` (in classes) | "put" |
+| `stu cos` | `this` | "this thing" |
+| `chiamm` | `import` | "call" |
+| `da` | `from` | "from" |
+| `mann for` | `export` | "send out" |
+| `comme` | `as` (imports/exports) | "like" |
+| `e` / `pure` | `&&` | "and" / "also" |
+| `o` | `\|\|` | "or" |
+| `no` / `manco` / `!` | `!` | "no" / "not even" |
+| `dint'a` | `in` (operator) | "inside" |
+| `leva` | `delete` | "remove" |
+| `fermete` | `debugger` | "stop" |
+| `<cascett>…</cascett>`, `<Pizza />` | JSX (React/Preact); `cascett` = `div`, `chiacchier` = `p`, `citofono` = `button`, ... | markup in the code |
+| `classe="…"`, `quanno-tuocche={f}` | JSX attributes and events on HTML tags: `className`, `onClick`, ... | class, when you touch it |
+| ``gomorra`ripigliammo …` `` | SQL query with bound parameters ([GomorraSQL](#gomorrasql-sql-in-neapolitan)) | Gomorrah |
+| ``stile`culore: russo` `` | CSS in Neapolitan ([`stile`](#css-in-neapolitan-with-stile)) | style |
+
+No accents on your keyboard? `sinno`, `sfols`, `di` (in `stamm a di`), `chist e` and `chè e` work like `sinnò`, `sfòls`, `dì`, `chist è` and `chè è`; `typeof` and `instanceof` are accepted for `chè è` and `è uno`.
+
+Short keywords (`e`, `o`, `no`, `da`, `de`, `na`, `nu`, `mo`, `che`, `cos`, `caso`, `pure`, `for`, `leva`, `scrive`) are keywords only where their construct can start, so they also work as names: `e si schiatta (e)`, `tien o = 1`, `facc f(da, a)`. `aropp`, `dint`, `vedimm`, `primm`, `fa`, `damme` and `miette` are not reserved at all (`damme`/`miette` mean get/set only before a class member name): they mean `finally` only right after a `pruvamm` block, `of` only in a `pe` header, `switch` only in `vedimm (…) {` and `do` only in `primm fa {`. Names that are reserved in JavaScript are renamed in the output (`tien for = 1` → `let $for = 1`).
 
 ---
 
@@ -497,87 +581,29 @@ fermete                      // debugger
 
 ---
 
-## Keyword Reference
+## Examples
 
-| FratmScript | JavaScript | English |
-|-------------|------------|------------|
-| `chist è` | `const` | "this is" |
-| `tien` | `let` | "hold" |
-| `facc` | `function` | "I do" |
-| `piglie` | `return` | "take" |
-| `si` | `if` | "if" |
-| `sinnò` | `else` | "otherwise" |
-| `vedimm` / `caso` / `predefinit` | `switch` / `case` / `default` | "let's see" / "case" / "default" |
-| `mentre che` | `while` | "while" |
-| `primm fa … mentre che` | `do … while` | "first do … while" |
-| `pe` | `for` | "for" |
-| `dint` | `of` (for...of) | "inside" |
-| `'ncopp` | `in` (for...in) | "on top of" |
-| `overo` | `true` | "true" |
-| `sfòls` | `false` | "false" |
-| `nisciun` | `null` | "nobody" |
-| `boh` | `undefined` | "dunno" |
-| `stamm a dì` | `console.log` | "we say" |
-| `avvis a dì` | `console.warn` | "warn" |
-| `scrive a dì` | `console.error` | "write" |
-| `mo vir` | `async` | "now see" |
-| `aspett` | `await` | "wait" |
-| `facc*` / `caccia` | `function*` / `yield` | "throw out" |
-| `pruvamm` | `try` | "let's try" |
-| `e si schiatta` | `catch` | "if it breaks" |
-| `aropp` | `finally` | "afterwards" |
-| `iett` | `throw` | "throw" |
-| `nu bell` | `new` | "a nice" |
-| `na famiglie` | `class` | "a family" |
-| `figlio 'e` | `extends` | "child of" |
-| `'o pate` | `super` | "the father" |
-| `fisso` | `static` | "fixed/static" |
-| `damme` | `get` (in classes) | "give me" |
-| `miette` | `set` (in classes) | "put" |
-| `stu cos` | `this` | "this thing" |
-| `chiamm` | `import` | "call" |
-| `da` | `from` | "from" |
-| `mann for` | `export` | "send out" |
-| `comme` | `as` (imports/exports) | "like" |
-| `e` / `pure` | `&&` | "and" / "also" |
-| `o` | `\|\|` | "or" |
-| `no` / `manco` / `!` | `!` | "no" / "not even" |
-| `dint'a` | `in` (operator) | "inside" |
-| `leva` | `delete` | "remove" |
-| `fermete` | `debugger` | "stop" |
-| `<cascett>…</cascett>`, `<Pizza />` | JSX (React/Preact); `cascett` = `div`, `chiacchier` = `p`, `citofono` = `button`, ... | markup in the code |
-| `classe="…"`, `quanno-tuocche={f}` | JSX attributes and events on HTML tags: `className`, `onClick`, ... | class, when you touch it |
-| ``gomorra`ripigliammo …` `` | SQL query with bound parameters ([GomorraSQL](#gomorrasql-sql-in-neapolitan)) | Gomorrah |
-| ``stile`culore: russo` `` | CSS in Neapolitan ([`stile`](#css-in-neapolitan-with-stile)) | style |
+Check the `examples/` folder for complete programs:
 
-No accents on your keyboard? `sinno`, `sfols`, `di` (in `stamm a di`), `chist e` and `chè e` work like `sinnò`, `sfòls`, `dì`, `chist è` and `chè è`; `typeof` and `instanceof` are accepted for `chè è` and `è uno`.
-
-Short keywords (`e`, `o`, `no`, `da`, `de`, `na`, `nu`, `mo`, `che`, `cos`, `caso`, `pure`, `for`, `leva`, `scrive`) are keywords only where their construct can start, so they also work as names: `e si schiatta (e)`, `tien o = 1`, `facc f(da, a)`. `aropp`, `dint`, `vedimm`, `primm`, `fa`, `damme` and `miette` are not reserved at all (`damme`/`miette` mean get/set only before a class member name): they mean `finally` only right after a `pruvamm` block, `of` only in a `pe` header, `switch` only in `vedimm (…) {` and `do` only in `primm fa {`. Names that are reserved in JavaScript are renamed in the output (`tien for = 1` → `let $for = 1`).
-
----
-
-## Development
-
-Install `just`: https://just.systems/man/en/
-
-```bash
-# Recommended task runner
-just --list
-
-# Build and test
-just build
-just test
-
-# Build/launch all examples
-just examples-build
-just examples-lancia
-
-# Build release CLI
-just release
-
-# Build WASM for playground
-just wasm
-```
+1. `01_salutatore.fratm` - Hello World
+2. `02_variabili_matematica.fratm` - Variables and operations
+3. `03_condizionali.fratm` - If/else
+4. `04_loop.fratm` - While and for
+5. `05_array_oggetti.fratm` - Data structures
+6. `06_funzioni.fratm` - Advanced functions
+7. `07_async.fratm` - Async/await
+8. `08_classi.fratm` - OOP
+9. `09_moduli.fratm` - Import/export without external deps
+10. `10_nuove_feature.fratm` - New features
+11. `11_oop_avanzato.fratm` - Inheritance, super and static methods
+12. `12_trycatch_validazione.fratm` - Try/catch and validation
+13. `13_pomodor_e_muzzarel.fratm` - Interactive tic-tac-toe in the terminal
+14. `14_sintassi_moderna.fratm` - Arrows, templates, destructuring, spread, `?.`/`??`, regex
+15. `15_libreria.fratm` - The `fratm` library: `a_caso`, `mischia`, `quanti`, `aspetta`…
+16. `16_pizzeria_jsx.fratm` - A React component written with JSX
+17. `17_gomorra.fratm` - GomorraSQL: SQL queries in Neapolitan with bound parameters
+18. `18_magazzino.fratm` - A SQLite database with `apri_db` and `gomorra` (Node 22.13+, or the playground)
+19. `19_pizzeria_cu_stile.fratm` - A React page all in Neapolitan: Neapolitan tags and CSS with `stile`
 
 ---
 
@@ -607,29 +633,64 @@ The playground also works in demo mode without WASM using a regex-based transpil
 
 ---
 
-## Examples
+## For AI agents
 
-Check the `examples/` folder for complete programs:
+FratmScript is ready for coding agents (Claude Code, Cursor, Codex, Copilot...), both to discover it and to write it correctly:
 
-1. `01_salutatore.fratm` - Hello World
-2. `02_variabili_matematica.fratm` - Variables and operations
-3. `03_condizionali.fratm` - If/else
-4. `04_loop.fratm` - While and for
-5. `05_array_oggetti.fratm` - Data structures
-6. `06_funzioni.fratm` - Advanced functions
-7. `07_async.fratm` - Async/await
-8. `08_classi.fratm` - OOP
-9. `09_moduli.fratm` - Import/export without external deps
-10. `10_nuove_feature.fratm` - New features
-11. `11_oop_avanzato.fratm` - Inheritance, super and static methods
-12. `12_trycatch_validazione.fratm` - Try/catch and validation
-13. `13_pomodor_e_muzzarel.fratm` - Interactive tic-tac-toe in the terminal
-14. `14_sintassi_moderna.fratm` - Arrows, templates, destructuring, spread, `?.`/`??`, regex
-15. `15_libreria.fratm` - The `fratm` library: `a_caso`, `mischia`, `quanti`, `aspetta`…
-16. `16_pizzeria_jsx.fratm` - A React component written with JSX
-17. `17_gomorra.fratm` - GomorraSQL: SQL queries in Neapolitan with bound parameters
-18. `18_magazzino.fratm` - A SQLite database with `apri_db` and `gomorra` (Node 22.13+, or the playground)
-19. `19_pizzeria_cu_stile.fratm` - A React page all in Neapolitan: Neapolitan tags and CSS with `stile`
+- **Reference for LLMs**: [`llms.txt`](https://fratmscript.kkratter.com/llms.txt) and the full [`llms-full.txt`](https://fratmscript.kkratter.com/llms-full.txt) (rules that differ from JavaScript, every construct with an example, error glossary), plus the keyword map [`keywords.json`](https://fratmscript.kkratter.com/keywords.json). `fratm guida` prints the same reference offline.
+- **MCP server**: `fratm mcp` gives agents the tools `fratm_reference`, `fratm_check`, `fratm_compile`, `fratm_run`, `fratm_format`, `fratm_gomorra` (checks a GomorraSQL query), `fratm_stile` (checks CSS in Neapolitan) and `fratm_nuovo` (the files of a new web app, without writing them), with errors as JSON (line, column, hint). In Claude Code: `claude mcp add fratm -- fratm mcp`.
+- **Claude Code plugin** with a `fratmscript` skill and the MCP server:
+
+  ```text
+  /plugin marketplace add kkratterf/fratmscript
+  /plugin install fratmscript@fratmscript
+  ```
+
+  The skill is a plain [Agent Skill](packages/agent-plugin/skills/fratmscript/SKILL.md), usable by other agents too.
+- **JSON from the CLI**: `fratm check --json`, `fratm build --json`, `fratm lancia --json --timeout 10 -` (see below).
+
+---
+
+## Monorepo Structure
+
+```
+fratmscript/
+├── crates/
+│   ├── fratm-core/       # Core compiler (lexer, parser, codegen)
+│   ├── fratm-cli/        # CLI tool
+│   └── fratm-wasm/       # WebAssembly bindings
+├── packages/
+│   ├── fratmscript/      # npm package: WASM compiler + Vite plugin
+│   ├── vscode-extension/ # Syntax highlighting
+│   ├── agent-plugin/     # Claude Code plugin: skill + MCP server
+│   └── playground/       # Online editor
+└── examples/             # Example programs
+```
+
+---
+
+## Development
+
+Install `just`: https://just.systems/man/en/
+
+```bash
+# Recommended task runner
+just --list
+
+# Build and test
+just build
+just test
+
+# Build/launch all examples
+just examples-build
+just examples-lancia
+
+# Build release CLI
+just release
+
+# Build WASM for playground
+just wasm
+```
 
 ---
 
@@ -645,7 +706,7 @@ Contributions are welcome, from a new example program to a compiler fix.
 
 ## License
 
-MIT
+MIT, see [`LICENSE`](LICENSE).
 
 ---
 

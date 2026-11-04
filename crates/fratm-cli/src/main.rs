@@ -7,13 +7,13 @@ use fratm_core::{compile, errors, CompileOptions};
 use std::fs;
 use std::io::{self, BufRead, Read, Write};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::time::Duration;
 
 mod esegui;
 mod gomorra;
 mod mcp;
 mod nuovo;
+mod repl;
 
 #[derive(ClapParser)]
 #[command(name = "fratm")]
@@ -140,7 +140,7 @@ fn main() {
             tailwind,
         } => new_project(&dir, senza_react, completa, semplice, tailwind),
         Commands::Gomorra { query, db, pg } => run_gomorra(query, db.as_deref(), pg),
-        Commands::Repl => run_repl(),
+        Commands::Repl => repl::run_repl(),
         Commands::Tokens { file } => show_tokens(&file),
         Commands::Ast { file } => show_ast(&file),
     }
@@ -501,75 +501,6 @@ fn read_source(path: &PathBuf) -> Option<String> {
                 e
             );
             None
-        }
-    }
-}
-
-fn run_repl() {
-    println!(
-        "{}",
-        "🤌 FratmScript REPL - Write JavaScript the way it should be"
-            .cyan()
-            .bold()
-    );
-    println!(
-        "{}",
-        format!(
-            "   Version {} - Type 'exit' to quit\n",
-            fratm_core::version()
-        )
-        .dimmed()
-    );
-    let stdin = io::stdin();
-    let mut accumulated = String::new();
-    loop {
-        let prompt = if accumulated.is_empty() {
-            "fratm> "
-        } else {
-            "  ...> "
-        };
-        print!("{}", prompt.green());
-        io::stdout().flush().unwrap();
-        let mut line = String::new();
-        if stdin.lock().read_line(&mut line).is_err() {
-            break;
-        }
-        let trimmed = line.trim();
-        if trimmed == "esci" || trimmed == "exit" {
-            println!("{}", "Goodbye! 👋".cyan());
-            break;
-        }
-        if trimmed.is_empty() {
-            continue;
-        }
-        accumulated.push_str(&line);
-        match compile(&accumulated, Default::default()) {
-            Ok(result) => {
-                println!("{}", "─".repeat(40).dimmed());
-                println!("{}", result.code.trim().blue());
-                println!("{}", "─".repeat(40).dimmed());
-                let temp_path = std::env::temp_dir().join("fratm_repl.js");
-                if fs::write(&temp_path, &result.code).is_ok() {
-                    if let Ok(output) = Command::new("node").arg(&temp_path).output() {
-                        let stdout = String::from_utf8_lossy(&output.stdout);
-                        let stderr = String::from_utf8_lossy(&output.stderr);
-                        if !stdout.is_empty() {
-                            print!("{}", stdout);
-                        }
-                        if !stderr.is_empty() {
-                            eprint!("{}", stderr.red());
-                        }
-                    }
-                }
-                accumulated.clear();
-            }
-            Err(e) => {
-                let msg = format!("{}", e);
-                if !msg.contains("'}'") && !msg.contains("')'") {
-                    println!("{} {}", "✗".red().bold(), msg.red());
-                    accumulated.clear();
-                }
-            }
         }
     }
 }
