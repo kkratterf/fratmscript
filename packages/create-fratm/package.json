@@ -1,6 +1,6 @@
 {
   "name": "create-fratm",
-  "version": "0.17.0",
+  "version": "0.17.1",
   "description": "Create a FratmScript app: npm create fratm@latest mia-app",
   "license": "MIT",
   "type": "module",
@@ -27,7 +27,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "fratmscript": "^0.17.0"
+    "fratmscript": "^0.17.1"
   },
   "scripts": {
     "test": "node --test test/*.test.js"
