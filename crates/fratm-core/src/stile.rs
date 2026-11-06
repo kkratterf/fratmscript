@@ -220,12 +220,42 @@ pub struct StileError {
     pub position: Position,
 }
 
+/// A CSS name written in English where the vocabulary has a Neapolitan
+/// word, found by [`english_words`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnglishWord {
+    /// The name as written: `color`, `hover`, `div`, `@media`, `!important`
+    pub word: String,
+    /// The Neapolitan word for it: `culore`, `passanno`, `cascett`,
+    /// `@quanno`, `!importante`
+    pub neapolitan: &'static str,
+    pub position: Position,
+}
+
 /// Stands for a `${ … }` between two chunks while the text is translated
 const HOLE: char = '\u{0}';
 
 /// Translates the text chunks of a `` stile`…` `` template, with a value
 /// between each pair of chunks; the result has as many chunks.
 pub fn translate(chunks: &[String]) -> Result<Vec<String>, StileError> {
+    let (out, _) = run(chunks)?;
+    // The translation copies each HOLE once and never writes a new one
+    Ok(out.split(HOLE).map(str::to_string).collect())
+}
+
+/// The English names in the text chunks of a `` stile`…` `` that have a
+/// Neapolitan word: property names, value keywords, tags and attribute
+/// names in selectors, pseudo-classes, `@media` and the words of its
+/// conditions, `from` and `to` in `@keyframes`, and `!important`.
+/// [`translate`] accepts them as they are; a tool that wants Neapolitan
+/// only, like htmlemmurt, reports them. Names without a Neapolitan word
+/// (`grid-column`, `:nth-child`, class names) are not listed.
+pub fn english_words(chunks: &[String]) -> Result<Vec<EnglishWord>, StileError> {
+    Ok(run(chunks)?.1)
+}
+
+/// The translation of the chunks joined by HOLE, and the English names in them.
+fn run(chunks: &[String]) -> Result<(String, Vec<EnglishWord>), StileError> {
     if let Some(chunk) = chunks.iter().position(|c| c.contains(HOLE)) {
         let column = chunks[chunk]
             .split('\n')
@@ -243,13 +273,12 @@ pub fn translate(chunks: &[String]) -> Result<Vec<String>, StileError> {
         });
     }
     let text: Vec<char> = chunks.join(&HOLE.to_string()).chars().collect();
-    let out = Translator {
+    Translator {
         text: &text,
         out: String::new(),
+        english: Vec::new(),
     }
-    .run()?;
-    // The translation copies each HOLE once and never writes a new one
-    Ok(out.split(HOLE).map(str::to_string).collect())
+    .run()
 }
 
 /// What a run of text between `{`, `}` and `;` turns out to be.
@@ -266,10 +295,12 @@ enum Segment {
 struct Translator<'a> {
     text: &'a [char],
     out: String,
+    /// English names with a Neapolitan word: (index in `text`, name, word)
+    english: Vec<(usize, String, &'static str)>,
 }
 
 impl Translator<'_> {
-    fn run(mut self) -> Result<String, StileError> {
+    fn run(mut self) -> Result<(String, Vec<EnglishWord>), StileError> {
         // Each open block: where its `{` is, and whether it is a @keyframes,
         // whose preludes are `da`/`a`/percentages instead of selectors
         let mut open: Vec<(usize, bool)> = Vec::new();
@@ -334,10 +365,31 @@ impl Translator<'_> {
         if let Some(&(at, _)) = open.last() {
             return Err(self.error("manca na '}' pe chiudere chesta '{'", at));
         }
-        Ok(self.out)
+        let english = self
+            .english
+            .iter()
+            .map(|(at, word, neapolitan)| EnglishWord {
+                word: word.clone(),
+                neapolitan,
+                position: self.position(*at),
+            })
+            .collect();
+        Ok((self.out, english))
     }
 
     fn error(&self, message: &str, at: usize) -> StileError {
+        StileError {
+            message: message.to_string(),
+            position: self.position(at),
+        }
+    }
+
+    /// Notes an English name at `at` in `text` that has the Neapolitan `word`.
+    fn english(&mut self, at: usize, name: &str, word: &'static str) {
+        self.english.push((at, name.to_string(), word));
+    }
+
+    fn position(&self, at: usize) -> Position {
         let mut position = Position {
             chunk: 0,
             line: 0,
@@ -359,10 +411,7 @@ impl Translator<'_> {
                 _ => position.column += 1,
             }
         }
-        StileError {
-            message: message.to_string(),
-            position,
-        }
+        position
     }
 
     /// Index after the `*/` of a comment starting at `at`.
@@ -469,11 +518,20 @@ impl Translator<'_> {
         let trimmed: String = part.iter().collect::<String>().trim().to_string();
         let first = part.iter().position(|c| !c.is_whitespace());
         if kind == Segment::Keyframe {
-            self.words(part, |w, _, _| match w {
-                "da" => Some("from"),
-                "a" => Some("to"),
-                _ => None,
-            });
+            self.words(
+                part,
+                start,
+                |w, _, _| match w {
+                    "da" => Some("from"),
+                    "a" => Some("to"),
+                    _ => None,
+                },
+                |w| match w {
+                    "from" => Some("da"),
+                    "to" => Some("a"),
+                    _ => None,
+                },
+            );
             return Ok(());
         }
         if kind == Segment::Prelude {
@@ -485,16 +543,28 @@ impl Translator<'_> {
                 let at = first.unwrap_or(0);
                 self.copy(&part[..at]);
                 self.out.push_str(css);
+                if *rule == "@media" {
+                    self.english(start + at, rule, "@quanno");
+                }
                 let rest = &part[at + rule.len()..];
-                self.words(rest, |w, _, _| {
-                    lookup(MEDIA, w)
-                        .or_else(|| lookup(PROPERTIES, w))
-                        .or_else(|| lookup(VALUES, w))
-                });
+                self.words(
+                    rest,
+                    start + at + rule.len(),
+                    |w, _, _| {
+                        lookup(MEDIA, w)
+                            .or_else(|| lookup(PROPERTIES, w))
+                            .or_else(|| lookup(VALUES, w))
+                    },
+                    |w| {
+                        neapolitan(MEDIA, w)
+                            .or_else(|| neapolitan(PROPERTIES, w))
+                            .or_else(|| neapolitan(VALUES, w))
+                    },
+                );
             } else if trimmed.starts_with('@') {
                 self.copy(part);
             } else {
-                self.selector(part);
+                self.selector(part, start);
             }
             return Ok(());
         }
@@ -522,9 +592,14 @@ impl Translator<'_> {
             lookup(PROPERTIES, &name).unwrap_or(&name),
             "transition" | "transition-property" | "will-change"
         );
-        self.words(property, |w, _, _| lookup(PROPERTIES, w));
+        self.words(
+            property,
+            start,
+            |w, _, _| lookup(PROPERTIES, w),
+            |w| neapolitan(PROPERTIES, w),
+        );
         self.out.push(':');
-        self.value(&value[1..], takes_properties);
+        self.value(&value[1..], start + colon + 1, takes_properties);
         Ok(())
     }
 
@@ -532,10 +607,10 @@ impl Translator<'_> {
         self.out.extend(part.iter());
     }
 
-    /// A value: keywords translated, `url(…)`, strings and comments kept.
-    /// With `properties`, property names are translated as well, for the
-    /// values that name a property.
-    fn value(&mut self, part: &[char], properties: bool) {
+    /// A value, starting at `at` in `text`: keywords translated, `url(…)`,
+    /// strings and comments kept. With `properties`, property names are
+    /// translated as well, for the values that name a property.
+    fn value(&mut self, part: &[char], at: usize, properties: bool) {
         let mut i = 0;
         while i < part.len() {
             let c = part[i];
@@ -546,6 +621,12 @@ impl Translator<'_> {
                 self.out.push_str("!important");
                 i += 11;
                 continue;
+            }
+            if c == '!'
+                && starts_with(&part[i + 1..], "important")
+                && !is_word_char(part_char(part, i + 10))
+            {
+                self.english(at + i, "!important", "!importante");
             }
             if c == '"' || c == '\'' || (c == '/' && part.get(i + 1) == Some(&'*')) {
                 let end = opaque_end(part, i);
@@ -567,14 +648,22 @@ impl Translator<'_> {
                     continue;
                 }
                 let next = part.get(end).copied().unwrap_or(' ');
-                let translated = (!word.starts_with(|c: char| c.is_ascii_digit())
+                let keyword = !word.starts_with(|c: char| c.is_ascii_digit())
                     && !matches!(prev, '#' | '.' | HOLE | '@' | '$')
-                    && next != HOLE)
+                    && next != HOLE;
+                let translated = keyword
                     .then(|| {
                         lookup(VALUES, &word)
                             .or_else(|| properties.then(|| lookup(PROPERTIES, &word)).flatten())
                     })
                     .flatten();
+                if keyword && translated.is_none() {
+                    let english = neapolitan(VALUES, &word)
+                        .or_else(|| properties.then(|| neapolitan(PROPERTIES, &word)).flatten());
+                    if let Some(nap) = english {
+                        self.english(at + i, &word, nap);
+                    }
+                }
                 self.out.push_str(translated.unwrap_or(&word));
                 i = end;
                 continue;
@@ -584,10 +673,10 @@ impl Translator<'_> {
         }
     }
 
-    /// Selectors: Neapolitan tags, pseudo-classes and the attribute names of
-    /// attribute selectors (`miett[tipo]` is `input[type]`), but not class
-    /// names, ids, attribute values or strings.
-    fn selector(&mut self, part: &[char]) {
+    /// Selectors, starting at `at` in `text`: Neapolitan tags, pseudo-classes
+    /// and the attribute names of attribute selectors (`miett[tipo]` is
+    /// `input[type]`), but not class names, ids, attribute values or strings.
+    fn selector(&mut self, part: &[char], at: usize) {
         let mut i = 0;
         let mut brackets = 0;
         // The HTML tag of the compound selector so far, for the attribute
@@ -620,7 +709,7 @@ impl Translator<'_> {
                     // `:not(cascett)`, `:is(…)`: a selector list inside
                     self.out.push('(');
                     let close = matching(part, i);
-                    self.selector(&part[i + 1..close.min(part.len())]);
+                    self.selector(&part[i + 1..close.min(part.len())], at + i + 1);
                     if close < part.len() {
                         self.out.push(')');
                     }
@@ -636,9 +725,15 @@ impl Translator<'_> {
                     let word: String = part[i..end].iter().collect();
                     let prev = part[i - 1];
                     let next = part.get(end).copied().unwrap_or(' ');
-                    let translated = (prev != HOLE && next != HOLE && next != '|')
+                    let name = prev != HOLE && next != HOLE && next != '|';
+                    let translated = name
                         .then(|| crate::html::html_attribute(&word, &tag))
                         .flatten();
+                    if name && translated.is_none() {
+                        if let Some(nap) = neapolitan_attribute(&word, &tag) {
+                            self.english(at + i, &word, nap);
+                        }
+                    }
                     self.out.push_str(translated.unwrap_or(&word));
                     i = end;
                     continue;
@@ -649,16 +744,20 @@ impl Translator<'_> {
                 let word: String = part[i..end].iter().collect();
                 let prev = if i == 0 { ' ' } else { part[i - 1] };
                 let next = part.get(end).copied().unwrap_or(' ');
-                let translated = if next == HOLE || matches!(prev, HOLE | '.' | '#' | '-') {
-                    None
-                } else if prev == ':' {
-                    lookup(PSEUDO, &word)
-                } else {
-                    // Tag names from v0.11 and v0.12 keep working here too
-                    let html = crate::html::jsx_tag(&word).0;
-                    tag = html.to_string();
-                    Some(html).filter(|tag| *tag != word)
-                };
+                let (translated, english) =
+                    if next == HOLE || matches!(prev, HOLE | '.' | '#' | '-') {
+                        (None, None)
+                    } else if prev == ':' {
+                        (lookup(PSEUDO, &word), neapolitan(PSEUDO, &word))
+                    } else {
+                        // Tag names from v0.11 and v0.12 keep working here too
+                        let html = crate::html::jsx_tag(&word).0;
+                        tag = html.to_string();
+                        (Some(html).filter(|tag| *tag != word), neapolitan_tag(&word))
+                    };
+                if let (None, Some(nap)) = (translated, english) {
+                    self.english(at + i, &word, nap);
+                }
                 self.out.push_str(translated.unwrap_or(&word));
                 i = end;
                 continue;
@@ -668,8 +767,16 @@ impl Translator<'_> {
         }
     }
 
-    /// Translates each word of `part` with `f`, copying everything else.
-    fn words(&mut self, part: &[char], f: impl Fn(&str, char, char) -> Option<&'static str>) {
+    /// Translates each word of `part`, starting at `at` in `text`, with `f`,
+    /// copying everything else. `english` gives the Neapolitan word for an
+    /// English one that `f` leaves as it is.
+    fn words(
+        &mut self,
+        part: &[char],
+        at: usize,
+        f: impl Fn(&str, char, char) -> Option<&'static str>,
+        english: impl Fn(&str) -> Option<&'static str>,
+    ) {
         let mut i = 0;
         while i < part.len() {
             if is_word_char(part[i]) {
@@ -677,9 +784,13 @@ impl Translator<'_> {
                 let word: String = part[i..end].iter().collect();
                 let prev = if i == 0 { ' ' } else { part[i - 1] };
                 let next = part.get(end).copied().unwrap_or(' ');
-                let translated = (prev != HOLE && next != HOLE && prev != '-')
-                    .then(|| f(&word, prev, next))
-                    .flatten();
+                let free = prev != HOLE && next != HOLE && prev != '-';
+                let translated = free.then(|| f(&word, prev, next)).flatten();
+                if free && translated.is_none() {
+                    if let Some(nap) = english(&word) {
+                        self.english(at + i, &word, nap);
+                    }
+                }
                 self.out.push_str(translated.unwrap_or(&word));
                 i = end;
             } else {
@@ -730,8 +841,9 @@ pub fn style_value(value: &str) -> String {
     let mut translator = Translator {
         text: &text,
         out: String::new(),
+        english: Vec::new(),
     };
-    translator.value(&text, false);
+    translator.value(&text, 0, false);
     translator.out
 }
 
@@ -740,6 +852,38 @@ fn lookup(table: &[(&str, &'static str)], word: &str) -> Option<&'static str> {
         .iter()
         .find(|(nap, _)| *nap == word)
         .map(|(_, css)| *css)
+}
+
+/// The first Neapolitan word of `table` for the CSS word `css`.
+fn neapolitan(table: &[(&'static str, &str)], css: &str) -> Option<&'static str> {
+    table
+        .iter()
+        .find(|(_, word)| *word == css)
+        .map(|(nap, _)| *nap)
+}
+
+/// The Neapolitan word for the HTML tag `html`.
+fn neapolitan_tag(html: &str) -> Option<&'static str> {
+    crate::html::TAGS
+        .iter()
+        .find(|(_, tag, _)| *tag == html)
+        .map(|(nap, _, _)| *nap)
+}
+
+/// The Neapolitan word for the HTML attribute or event `html` on the HTML
+/// tag `tag` (empty when the selector names no tag).
+fn neapolitan_attribute(html: &str, tag: &str) -> Option<&'static str> {
+    use crate::html::{applies, ATTRIBUTES, EVENTS};
+    EVENTS
+        .iter()
+        .find(|(_, event, _)| *event == html)
+        .map(|(nap, _, _)| *nap)
+        .or_else(|| {
+            ATTRIBUTES
+                .iter()
+                .find(|a| a.html == html && applies(a, tag))
+                .map(|a| a.nap)
+        })
 }
 
 /// Letters (accented ones too), digits, `-` and `_`: one CSS identifier.
@@ -1144,6 +1288,109 @@ mod tests {
             (e.position.chunk, e.position.line, e.position.column),
             (1, 1, 2)
         );
+    }
+
+    fn english(text: &str) -> Vec<(String, &'static str)> {
+        english_words(&[text.to_string()])
+            .unwrap()
+            .into_iter()
+            .map(|e| (e.word, e.neapolitan))
+            .collect()
+    }
+
+    fn pairs(list: &[(&str, &'static str)]) -> Vec<(String, &'static str)> {
+        list.iter().map(|(w, n)| (w.to_string(), *n)).collect()
+    }
+
+    #[test]
+    fn english_names_come_with_their_neapolitan_word() {
+        assert_eq!(
+            english("div:hover > p::before { color: red; display: flex !important }"),
+            pairs(&[
+                ("div", "cascett"),
+                ("hover", "passanno"),
+                ("p", "chiacchier"),
+                ("before", "primma"),
+                ("color", "culore"),
+                ("red", "russo"),
+                ("display", "mostra"),
+                ("flex", "flessibile"),
+                ("!important", "!importante"),
+            ])
+        );
+        assert_eq!(
+            english("@media screen and (max-width: 600px) { main { padding: 0 } }"),
+            pairs(&[
+                ("@media", "@quanno"),
+                ("screen", "schermo"),
+                ("and", "e"),
+                ("max-width", "larghezza-massima"),
+                ("main", "core"),
+                ("padding", "spazio"),
+            ])
+        );
+        assert_eq!(
+            english("@keyframes trase { from { opacity: 0 } to { opacity: 1 } }"),
+            pairs(&[
+                ("from", "da"),
+                ("opacity", "opacità"),
+                ("to", "a"),
+                ("opacity", "opacità"),
+            ])
+        );
+        // Attribute names depend on the tag, events too; values that name a
+        // property are property names
+        assert_eq!(
+            english("form[action], a[href][onclick] { transition: color 1s ease }"),
+            pairs(&[
+                ("form", "modulo"),
+                ("action", "addo"),
+                ("a", "vattenn"),
+                ("href", "addo"),
+                ("onclick", "quanno-tuocche"),
+                ("transition", "transizione"),
+                ("color", "culore"),
+                ("ease", "facile"),
+            ])
+        );
+    }
+
+    #[test]
+    fn neapolitan_and_names_without_a_word_are_not_english() {
+        let neapolitan = "@quanno schermo e (larghezza-massima: 600px) {\n  core > cascett:passanno::primma { culore: russo !importante }\n}\n@keyframes trase { da { opacità: 0 } a { opacità: 1 } }";
+        assert_eq!(english(neapolitan), []);
+        // Names with no word, class names, ids, custom properties, strings,
+        // urls, comments, numbers and attribute values
+        let free = ".red#blue > pizza-card:nth-child(2n)[data-x=\"red\"] { grid-column: 1 / 3; --blue: 1px; mask: url(red.png) /* red */; quotes: \"red\"; font-feature-settings: Georgia, serif; rotate: x 45deg }";
+        assert_eq!(english(free), []);
+        // `translate` still accepts English as it is
+        assert_eq!(css("div { color: red }"), "div { color: red }");
+    }
+
+    #[test]
+    fn english_names_have_their_position() {
+        let found = english_words(&[".a {\n  culore: russo\n  color: red\n}".to_string()]).unwrap();
+        let at: Vec<_> = found
+            .iter()
+            .map(|e| (e.word.as_str(), e.position.line, e.position.column))
+            .collect();
+        assert_eq!(at, [("color", 2, 2), ("red", 2, 9)]);
+        let chunks: Vec<String> = ["culore: ", ";\n  display: blocco"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        let e = &english_words(&chunks).unwrap()[0];
+        assert_eq!(
+            (
+                e.word.as_str(),
+                e.position.chunk,
+                e.position.line,
+                e.position.column
+            ),
+            ("display", 1, 1, 2)
+        );
+        // Syntax errors are errors here too
+        assert!(english_words(&[".a { color: red".to_string()]).is_err());
     }
 
     #[test]
