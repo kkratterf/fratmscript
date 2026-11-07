@@ -116,6 +116,8 @@ pub const VALUES: &[(&str, &str)] = &[
     ("blocco", "block"),
     ("in-linea", "inline"),
     ("blocco-in-linea", "inline-block"),
+    ("flessibile-in-linea", "inline-flex"),
+    ("griglia-in-linea", "inline-grid"),
     ("flessibile", "flex"),
     ("griglia", "grid"),
     ("miezo", "center"),
@@ -953,6 +955,14 @@ mod tests {
         assert_eq!(
             css("posizione: fissa !importante"),
             "position: fixed !important"
+        );
+    }
+
+    #[test]
+    fn inline_flex_and_grid_have_their_words() {
+        assert_eq!(
+            css(".a { mostra: flessibile-in-linea } .b { mostra: griglia-in-linea }"),
+            ".a { display: inline-flex } .b { display: inline-grid }"
         );
     }
 
