@@ -302,10 +302,10 @@ impl Translator<'_> {
                     } else {
                         Segment::Prelude
                     };
-                    let prelude: String = self.text[start..i].iter().collect();
+                    let keyframes = code(&self.text[start..i]).starts_with("@keyframes");
                     self.segment(start, i, kind, !open.is_empty())?;
                     self.out.push('{');
-                    open.push((i, prelude.trim_start().starts_with("@keyframes")));
+                    open.push((i, keyframes));
                     start = i + 1;
                 }
                 '}' => {
@@ -420,7 +420,7 @@ impl Translator<'_> {
     /// a value or a list of selectors.
     fn declaration_ends_here(&self, start: usize, at: usize) -> bool {
         let pending = &self.text[start..at];
-        let trimmed: String = pending.iter().collect::<String>().trim().to_string();
+        let trimmed = code(pending);
         if trimmed.is_empty() || trimmed.starts_with('@') || top_level_colon(pending).is_none() {
             return false;
         }
@@ -428,10 +428,9 @@ impl Translator<'_> {
         if trimmed.ends_with([',', '>', '+', '~', '(', ':', '/', '*']) {
             return false;
         }
+        // The next code, past blank lines and comments
         let mut j = at + 1;
-        while j < self.text.len() && self.text[j].is_whitespace() {
-            j += 1;
-        }
+        j += code_start(&self.text[j..]).unwrap_or(self.text.len() - j);
         // A `{` of its own opens the block of the selector just read
         if self.text.get(j).is_none_or(|&c| c == '{') {
             return false;
@@ -468,8 +467,9 @@ impl Translator<'_> {
         in_block: bool,
     ) -> Result<(), StileError> {
         let part = &self.text[start..end];
-        let trimmed: String = part.iter().collect::<String>().trim().to_string();
-        let first = part.iter().position(|c| !c.is_whitespace());
+        // Comments before the code do not change what the segment is
+        let trimmed = code(part);
+        let first = code_start(part);
         if kind == Segment::Keyframe {
             self.words(part, |w, _, _| match w {
                 "da" => Some("from"),
@@ -804,6 +804,33 @@ fn matching(part: &[char], open: usize) -> usize {
     part.len()
 }
 
+/// Index of the first char of `part` that is not whitespace or in a
+/// comment before it.
+fn code_start(part: &[char]) -> Option<usize> {
+    let mut i = 0;
+    while i < part.len() {
+        if part[i].is_whitespace() {
+            i += 1;
+        } else if part[i] == '/' && part.get(i + 1) == Some(&'*') {
+            i = opaque_end(part, i);
+        } else {
+            return Some(i);
+        }
+    }
+    None
+}
+
+/// `part` without the whitespace and comments before its code and the
+/// whitespace after it.
+fn code(part: &[char]) -> String {
+    let start = code_start(part).unwrap_or(part.len());
+    part[start..]
+        .iter()
+        .collect::<String>()
+        .trim_end()
+        .to_string()
+}
+
 /// The `:` between a property and its value: not inside parentheses,
 /// strings or comments.
 fn top_level_colon(part: &[char]) -> Option<usize> {
@@ -1100,6 +1127,31 @@ mod tests {
         assert_eq!(
             css("@keyframes trase {\n  da { opacità: 0 }\n  a { opacità: 1 }\n}"),
             "@keyframes trase {\n  from { opacity: 0 }\n  to { opacity: 1 }\n}"
+        );
+    }
+
+    #[test]
+    fn comments_before_code_do_not_change_it() {
+        assert_eq!(
+            css(".a { culore: russo; /* nota */ }"),
+            ".a { color: red; /* nota */ }"
+        );
+        assert_eq!(
+            css("/* tema */\n@import url(a.css);\ncore { culore: russo }"),
+            "/* tema */\n@import url(a.css);\nmain { color: red }"
+        );
+        assert_eq!(
+            css("/* x */\n@quanno (larghezza-massima: 600px) { core { spazio: 0 } }"),
+            "/* x */\n@media (max-width: 600px) { main { padding: 0 } }"
+        );
+        assert_eq!(
+            css("/* x */ @keyframes gira { da { opacità: 0 } /* y */ a { opacità: 1 } }"),
+            "/* x */ @keyframes gira { from { opacity: 0 } /* y */ to { opacity: 1 } }"
+        );
+        // A comment on its own line between declarations
+        assert_eq!(
+            css(".a {\n  culore: russo\n  /* nota */\n  spazio: 0\n}"),
+            ".a {\n  color: red;\n  /* nota */\n  padding: 0\n}"
         );
     }
 
