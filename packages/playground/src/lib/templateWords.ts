@@ -6,7 +6,7 @@
 export const STILE_VALUES = [
   'russo', 'janco', 'niro', 'nero', 'verde', 'blu', 'azzurro', 'celeste', 'giallo', 'arancione',
   'rosa', 'viola', 'grigio', 'marrone', 'oro', 'argiento', 'trasparente', 'culore-corrente',
-  'nisciuno', 'niente', 'blocco', 'in-linea', 'blocco-in-linea', 'flessibile', 'griglia', 'miezo',
+  'nisciuno', 'niente', 'blocco', 'in-linea', 'blocco-in-linea', 'flessibile-in-linea', 'griglia-in-linea', 'flessibile', 'griglia', 'miezo',
   'mmiezo', 'manca', 'destra', 'ncoppa', 'sotto', 'inizio', 'fine', 'spartuto', 'attuorno',
   'stiracchiato', 'riga', 'colonna', 'fisso', 'fissa', 'assoluto', 'assoluta', 'relativo',
   'relativa', 'appiccecato', 'appiccecata', 'statico', 'grassetto', 'corsivo', 'normale',

@@ -175,7 +175,7 @@
         },
         {
           "name": "support.constant.property-value.css",
-          "match": "(?<![\\p{L}\\p{N}_$-])(?:culore-corrente|blocco-in-linea|bordo-incluso|nun-va-a-capo|sottolineato|tratteggiato|stiracchiato|trasparente|appiccecata|appiccecato|nun-ripete|automatico|flessibile|puntinato|alternato|minuscolo|grassetto|arancione|ereditato|maiuscolo|relativo|relativa|iniziale|visibile|spartuto|assoluta|attuorno|in-linea|contiene|infinito|nisciuno|assoluto|nascosto|continuo|argiento|sbarrato|corsivo|griglia|azzurro|colonna|lineare|manella|aspetta|marrone|normale|celeste|statico|destra|niente|ripete|grigio|mmiezo|ncoppa|a-capo|scorre|facile|giallo|blocco|inizio|janco|copre|fisso|viola|miezo|manca|fissa|verde|russo|sotto|riga|niro|fine|nero|rosa|blu|oro)(?![\\p{L}\\p{N}_$-])"
+          "match": "(?<![\\p{L}\\p{N}_$-])(?:flessibile-in-linea|griglia-in-linea|culore-corrente|blocco-in-linea|bordo-incluso|nun-va-a-capo|sottolineato|tratteggiato|stiracchiato|trasparente|appiccecata|appiccecato|nun-ripete|automatico|flessibile|puntinato|alternato|minuscolo|grassetto|arancione|ereditato|maiuscolo|relativo|relativa|iniziale|visibile|spartuto|assoluta|attuorno|in-linea|contiene|infinito|nisciuno|assoluto|nascosto|continuo|argiento|sbarrato|corsivo|griglia|azzurro|colonna|lineare|manella|aspetta|marrone|normale|celeste|statico|destra|niente|ripete|grigio|mmiezo|ncoppa|a-capo|scorre|facile|giallo|blocco|inizio|janco|copre|fisso|viola|miezo|manca|fissa|verde|russo|sotto|riga|niro|fine|nero|rosa|blu|oro)(?![\\p{L}\\p{N}_$-])"
         },
         {
           "name": "support.function.css",
