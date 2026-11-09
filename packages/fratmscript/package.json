@@ -1,6 +1,6 @@
 {
   "name": "fratmscript",
-  "version": "0.17.1",
+  "version": "0.18.0",
   "description": "FratmScript compiler (WebAssembly) and Vite plugin: JavaScript, ma comme si deve 🤌",
   "license": "MIT",
   "type": "module",
