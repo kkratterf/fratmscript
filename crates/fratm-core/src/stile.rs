@@ -205,6 +205,11 @@ const MEDIA: &[(&str, &str)] = &[
     ("nun", "not"),
 ];
 
+/// (Neapolitan word, CSS word) for the value of a media feature, after the
+/// `:` in `(hover: nisciuno)`. The other value words are left alone there:
+/// `fine` is `end` in a declaration but `fine` in `(pointer: fine)`.
+const MEDIA_VALUES: &[(&str, &str)] = &[("nisciuno", "none"), ("niente", "none")];
+
 /// (at-rule as written, CSS at-rule) for the at-rules whose prelude holds
 /// conditions: `@quanno` is the Neapolitan `@media`, and the English names
 /// are translated as well so that English CSS keeps working.
@@ -549,20 +554,26 @@ impl Translator<'_> {
                     self.english(start + at, rule, "@quanno");
                 }
                 let rest = &part[at + rule.len()..];
-                self.words(
-                    rest,
-                    start + at + rule.len(),
-                    |w, _, _| {
-                        lookup(MEDIA, w)
-                            .or_else(|| lookup(PROPERTIES, w))
-                            .or_else(|| lookup(VALUES, w))
-                    },
-                    |w| {
-                        neapolitan(MEDIA, w)
-                            .or_else(|| neapolitan(PROPERTIES, w))
-                            .or_else(|| neapolitan(VALUES, w))
-                    },
-                );
+                let rest_at = start + at + rule.len();
+                if *css == "@supports" {
+                    // `@supports` tests declarations: values are CSS values
+                    self.words(
+                        rest,
+                        rest_at,
+                        |w, _, _| {
+                            lookup(MEDIA, w)
+                                .or_else(|| lookup(PROPERTIES, w))
+                                .or_else(|| lookup(VALUES, w))
+                        },
+                        |w| {
+                            neapolitan(MEDIA, w)
+                                .or_else(|| neapolitan(PROPERTIES, w))
+                                .or_else(|| neapolitan(VALUES, w))
+                        },
+                    );
+                } else {
+                    self.media_condition(rest, rest_at);
+                }
             } else if trimmed.starts_with('@') {
                 self.copy(part);
             } else {
@@ -766,6 +777,67 @@ impl Translator<'_> {
             }
             self.out.push(c);
             i += 1;
+        }
+    }
+
+    /// The condition of `@media` or `@container`. Inside parentheses a media
+    /// feature is a name before `:` and a value after it: the name is
+    /// translated with the property words (`larghezza-minima` is
+    /// `min-width`), the value only with [`MEDIA_VALUES`], so that
+    /// `(pointer: fine)` keeps its `fine` (a value word for `end`) and
+    /// `pointer` is not taken for the `cursor` value `manella`.
+    fn media_condition(&mut self, part: &[char], at: usize) {
+        // One flag per open parenthesis: whether its `:` was seen
+        let mut after_colon: Vec<bool> = Vec::new();
+        let mut i = 0;
+        while i < part.len() {
+            let end = (i..part.len())
+                .find(|&j| matches!(part[j], '(' | ')' | ':'))
+                .unwrap_or(part.len());
+            let piece = &part[i..end];
+            match after_colon.last() {
+                // Outside every parenthesis: media types and `e`/`o`/`nun`
+                None => self.words(
+                    piece,
+                    at + i,
+                    |w, _, _| {
+                        lookup(MEDIA, w)
+                            .or_else(|| lookup(PROPERTIES, w))
+                            .or_else(|| lookup(VALUES, w))
+                    },
+                    |w| {
+                        neapolitan(MEDIA, w)
+                            .or_else(|| neapolitan(PROPERTIES, w))
+                            .or_else(|| neapolitan(VALUES, w))
+                    },
+                ),
+                Some(false) => self.words(
+                    piece,
+                    at + i,
+                    |w, _, _| lookup(MEDIA, w).or_else(|| lookup(PROPERTIES, w)),
+                    |w| neapolitan(MEDIA, w).or_else(|| neapolitan(PROPERTIES, w)),
+                ),
+                Some(true) => self.words(
+                    piece,
+                    at + i,
+                    |w, _, _| lookup(MEDIA_VALUES, w),
+                    |w| neapolitan(MEDIA_VALUES, w),
+                ),
+            }
+            let Some(&c) = part.get(end) else { break };
+            match c {
+                '(' => after_colon.push(false),
+                ')' => {
+                    after_colon.pop();
+                }
+                _ => {
+                    if let Some(flag) = after_colon.last_mut() {
+                        *flag = true;
+                    }
+                }
+            }
+            self.out.push(c);
+            i = end + 1;
         }
     }
 
@@ -1202,6 +1274,23 @@ mod tests {
             css("@quanno stampa o schermo { core { spazio: 0 } }"),
             "@media print or screen { main { padding: 0 } }"
         );
+        // A feature value is not a CSS value: `fine` stays `fine` (#269)
+        assert_eq!(
+            css("@quanno (pointer: fine) { citofono { spazio: 4px } }"),
+            "@media (pointer: fine) { button { padding: 4px } }"
+        );
+        assert_eq!(
+            css("@quanno schermo e (any-pointer: fine) e (hover: nisciuno) { core { spazio: 0 } }"),
+            "@media screen and (any-pointer: fine) and (hover: none) { main { padding: 0 } }"
+        );
+        assert_eq!(
+            css("@quanno ((larghezza-minima: 600px) e (pointer: fine)) o stampa { core { spazio: 0 } }"),
+            "@media ((min-width: 600px) and (pointer: fine)) or print { main { padding: 0 } }"
+        );
+        assert_eq!(
+            css("@quanno (larghezza > 600px) { core { spazio: 0 } }"),
+            "@media (width > 600px) { main { padding: 0 } }"
+        );
         // Other at-rules still pass through
         assert_eq!(
             css("@layer base { core { spazio: 0 } }"),
@@ -1387,6 +1476,16 @@ mod tests {
                 ("screen", "schermo"),
                 ("and", "e"),
                 ("max-width", "larghezza-massima"),
+                ("main", "core"),
+                ("padding", "spazio"),
+            ])
+        );
+        // `pointer` and `fine` in a media feature are not the `cursor` value
+        // and the `end` value (#269)
+        assert_eq!(
+            english("@media (pointer: fine) { main { padding: 0 } }"),
+            pairs(&[
+                ("@media", "@quanno"),
                 ("main", "core"),
                 ("padding", "spazio"),
             ])

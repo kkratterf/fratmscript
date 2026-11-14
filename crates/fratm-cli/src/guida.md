@@ -739,6 +739,9 @@ stile`
   the value stays as written).
 - The conditions of `@quanno`, `@media`, `@supports` and `@container` are translated too
   (`@supports (mostra: griglia)` → `@supports (display: grid)`), with `e` and, `o` or, `nun` not.
+  In a media feature of `@quanno`/`@media`/`@container` only the name is translated
+  (`(larghezza-minima: 600px)` → `(min-width: 600px)`); the value stays as written, except
+  `nisciuno` none, so `(pointer: fine)` and `(hover: hover)` work as in CSS.
   Every other at-rule passes through as it is.
 - As in the rest of the language the `;` between declarations is optional: a new line ends a
   declaration, and the generated CSS gets its `;`. A value may still wrap over several lines, and
