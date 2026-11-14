@@ -1012,7 +1012,8 @@ Errors look like `Riga 3, colonna 7: <message>` (line 3, column 7). Common messa
 | `Ccà ce vo' 'x', ma aggio truvato 'y'` | expected `x` (for example `{`: braces are required) |
 | `... ma aggio truvato 'a fine d'a riga` / `'a fine d'o file` | the line or the file ended too early |
 | `Stu carattere '@' nun 'o canosco` | a character FratmScript does not use |
-| `Ccà ce vo' nu nome` | expected a name (often: a keyword used as a variable name) |
+| `'figlio' è na parola d'o linguaggio (figlio 'e) e nun pò fà 'a nomme` | a keyword used as a name: rename the variable, function or parameter |
+| `Ccà ce vo' nu nome` | expected a name |
 | `'x' già esiste: l'hai dichiarato a riga N` | name declared twice |
 | `'x' nun esiste` | runtime: name not defined |
 | `Nun se pò cagnà na costante` | runtime: assignment to a `chist è` constant |

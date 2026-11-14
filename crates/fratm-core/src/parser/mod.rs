@@ -411,10 +411,7 @@ impl Parser {
             ));
         };
         if !is_name {
-            return Err(ParseError::new(
-                format!("Expected an identifier, not '{}'", key_token.kind),
-                key_token.span,
-            ));
+            return Err(not_a_name(&key_token));
         }
         let mut value = Pattern::Identifier {
             name: name.clone(),
@@ -2335,10 +2332,7 @@ impl Parser {
         } else if let Some(name) = contextual_name(token) {
             Ok(name.to_string())
         } else {
-            Err(ParseError::new(
-                format!("Expected an identifier, not '{}'", token.kind),
-                token.span,
-            ))
+            Err(not_a_name(token))
         }
     }
     /// Property names (`x.si`, `{ for: 1 }`) can be any word, keywords included, as in JS.
@@ -2461,6 +2455,18 @@ fn contextual_name(token: &Token) -> Option<&str> {
     );
     // `!` and `&&` share token kinds with `no` and `e` but are never names
     (contextual && is_word(&token.literal)).then_some(token.literal.as_str())
+}
+
+/// The error for a token found where a name was expected. A keyword that is
+/// an ordinary word (`figlio`, `chist`, `mentre`) gets named, so the message
+/// does not read as if the name were missing.
+fn not_a_name(token: &Token) -> ParseError {
+    let message = if !matches!(token.kind, TokenKind::Identifier(_)) && is_word(&token.literal) {
+        format!("Keyword '{}' cannot be used as a name", token.literal)
+    } else {
+        format!("Expected an identifier, not '{}'", token.kind)
+    };
+    ParseError::new(message, token.span)
 }
 
 fn is_word(s: &str) -> bool {

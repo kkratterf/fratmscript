@@ -119,6 +119,16 @@ pub fn napoletanize_error(message: &str) -> String {
     if expects(message, "';'") {
         return "Manca 'o punto e virgola! Ma va bene, nun te preoccupà.".to_string();
     }
+    if let Some(word) = keyword_used_as_name(message) {
+        return match keyword_phrase(word) {
+            Some(phrase) => format!(
+                "'{word}' è na parola d'o linguaggio ({phrase}) e nun pò fà 'a nomme: chiammala n'ata manera!"
+            ),
+            None => format!(
+                "'{word}' è na parola d'o linguaggio e nun pò fà 'a nomme: chiammala n'ata manera!"
+            ),
+        };
+    }
     if expects(message, "un nome") || message.contains("Expected an identifier") {
         return "Ccà ce vo' nu nome! Che cosa vuò chiamà sta variabile?".to_string();
     }
@@ -409,6 +419,34 @@ fn found_token(message: &str) -> Option<String> {
     })
 }
 
+/// The keyword in `Keyword 'figlio' cannot be used as a name`.
+fn keyword_used_as_name(message: &str) -> Option<&str> {
+    message
+        .strip_prefix("Keyword '")?
+        .strip_suffix("' cannot be used as a name")
+}
+
+/// The phrase a keyword belongs to, when the word alone does not say it:
+/// `figlio` is reserved because of `figlio 'e`.
+fn keyword_phrase(word: &str) -> Option<&'static str> {
+    Some(match word {
+        "chist" => "chist è",
+        "figlio" => "figlio 'e",
+        "mentre" => "mentre che",
+        "ogni" => "pe ogni",
+        "stamm" => "stamm a dì",
+        "avvis" => "avvis a dì",
+        "scrive" => "scrive a dì",
+        "vir" => "mo vir facc",
+        "bell" => "nu bell",
+        "famiglie" => "na famiglie",
+        "stu" => "stu cos",
+        "mann" => "mann for",
+        "predefinit" => "mann for predefinit",
+        _ => return None,
+    })
+}
+
 /// The parser reports `Expected 'x', but found …`; older messages used `Aspettavo`.
 fn expects(message: &str, what: &str) -> bool {
     message.contains(&format!("Expected {}", what))
@@ -422,7 +460,11 @@ pub fn get_suggestion(error: &CompileError) -> Option<String> {
     match error {
         CompileError::ParseError { message, .. } => {
             // Checked first: the message quotes the offending token, which may be `stamm`, `}`...
-            if message.contains("after the end of the statement") {
+            if let Some(word) = keyword_used_as_name(message) {
+                Some(format!(
+                    "💡 Pe' esempio: '{word}1', 'nu_{word}' o nu nomme cchiù lungo"
+                ))
+            } else if message.contains("after the end of the statement") {
                 Some("💡 Scrive n'istruzione pe riga, o separale cu ';'".to_string())
             } else if message.contains("'primm fa'") {
                 Some("💡 Esempio: primm fa { i++ } mentre che (i < 3)".to_string())
@@ -742,6 +784,28 @@ mod tests {
             hint("function saluta() { }").as_deref(),
             Some("💡 In FratmScript 'function' se scrive 'facc'")
         );
+    }
+
+    #[test]
+    fn test_keywords_used_as_names_are_named() {
+        assert_eq!(
+            message("chist è figlio = 1"),
+            "Riga 1, colonna 9: 'figlio' è na parola d'o linguaggio (figlio 'e) e nun pò fà 'a nomme: chiammala n'ata manera!"
+        );
+        assert_eq!(
+            hint("chist è figlio = 1").as_deref(),
+            Some("💡 Pe' esempio: 'figlio1', 'nu_figlio' o nu nomme cchiù lungo")
+        );
+        assert!(message("tien tien = 1")
+            .contains("'tien' è na parola d'o linguaggio e nun pò fà 'a nomme"));
+        assert!(message("facc mentre() { }")
+            .contains("'mentre' è na parola d'o linguaggio (mentre che)"));
+        assert!(
+            message("facc f(chist) { }").contains("'chist' è na parola d'o linguaggio (chist è)")
+        );
+        assert!(message("chist è { figlio } = x").contains("'figlio' è na parola d'o linguaggio"));
+        // Not a keyword: the old message stays
+        assert!(message("chist è 3 = 1").contains("Ccà ce vo' nu nome!"));
     }
 
     #[test]

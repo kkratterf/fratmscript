@@ -1441,7 +1441,7 @@ na famiglie Pizzaiolo figlio 'e Persona {
             ("tien [...a, b] = x", "urdemo"),
             ("tien { ...a, b } = x", "urdemo"),
             ("tien { \"s\" } = x", "ce vo' ':'"),
-            ("tien { si } = x", "nu nome"),
+            ("tien { si } = x", "'si' è na parola d'o linguaggio"),
         ] {
             let err = compile(src, Default::default()).unwrap_err();
             assert!(err.to_string().contains(expected), "{}: {}", src, err);
